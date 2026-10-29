@@ -133,6 +133,14 @@ type
     FOpacityDelayMs: Double;
     FOpacityTimingFunction: string;
     FOpacityAnimationActive: Boolean;
+    FBgColorTarget: TPixieWebColor;
+    FBgColorFrom: TPixieWebColor;
+    FBgColorTo: TPixieWebColor;
+    FBgColorStartTimeMs: UInt64;
+    FBgColorDurationMs: Double;
+    FBgColorDelayMs: Double;
+    FBgColorTimingFunction: string;
+    FBgColorAnimationActive: Boolean;
     FTransformAnimationActive: Boolean;
     FAnimatedTransformOps: TPixieTransformOps;
     FTransformFromOps: TPixieTransformOps;
@@ -193,6 +201,7 @@ type
     function GetCssTransitionActive: Boolean;
     procedure UpdateTransitionRegistration;
     procedure CancelOpacityTransition;
+    procedure CancelBackgroundColorTransition;
     procedure CancelTransformTransition;
     function GetZIndex: Integer;
     procedure SetZIndex(Value: Integer);
@@ -205,7 +214,7 @@ type
     destructor Destroy; override;
 
     // Called by TPixieDocument from the FMX Display Link callback.
-    // Advances opacity and transform tweens using elapsed time.
+    // Advances opacity, background-color and transform tweens using elapsed time.
     function AdvanceCssTransitions(ATimeMs: UInt64): Boolean;
     property CssTransitionActive: Boolean read GetCssTransitionActive;
 
@@ -1297,6 +1306,14 @@ begin
   FOpacityDelayMs := 0;
   FOpacityTimingFunction := 'ease';
   FOpacityAnimationActive := False;
+  FBgColorTarget := TPixieWebColor.Transparent;
+  FBgColorFrom := TPixieWebColor.Transparent;
+  FBgColorTo := TPixieWebColor.Transparent;
+  FBgColorStartTimeMs := 0;
+  FBgColorDurationMs := 0;
+  FBgColorDelayMs := 0;
+  FBgColorTimingFunction := 'ease';
+  FBgColorAnimationActive := False;
   FTransformAnimationActive := False;
   FTransformStartTimeMs := 0;
   FTransformDurationMs := 0;
@@ -1327,6 +1344,7 @@ end;
 destructor TPixieCssProperties.Destroy;
 begin
   CancelOpacityTransition;
+  CancelBackgroundColorTransition;
   CancelTransformTransition;
   FGridTemplateColumns.Free;
   FGridTemplateRows.Free;
@@ -1352,7 +1370,8 @@ end;
 
 function TPixieCssProperties.GetCssTransitionActive: Boolean;
 begin
-  Result := FOpacityAnimationActive or FTransformAnimationActive;
+  Result := FOpacityAnimationActive or FBgColorAnimationActive or
+    FTransformAnimationActive;
 end;
 
 procedure TPixieCssProperties.UpdateTransitionRegistration;
@@ -1370,6 +1389,12 @@ begin
   UpdateTransitionRegistration;
 end;
 
+procedure TPixieCssProperties.CancelBackgroundColorTransition;
+begin
+  FBgColorAnimationActive := False;
+  UpdateTransitionRegistration;
+end;
+
 procedure TPixieCssProperties.CancelTransformTransition;
 begin
   FTransformAnimationActive := False;
@@ -1380,6 +1405,7 @@ function TPixieCssProperties.AdvanceCssTransitions(ATimeMs: UInt64): Boolean;
 var
   OldValue, NewValue, ElapsedMs, Progress, Eased: Double;
   NewOps: TPixieTransformOps;
+  OldBgColor, NewBgColor: TPixieWebColor;
 begin
   Result := False;
 
@@ -1442,6 +1468,37 @@ begin
     if not PixieTransformOpsEqual(FAnimatedTransformOps, NewOps) then
       Result := True;
     FAnimatedTransformOps := NewOps;
+  end;
+
+  if FBgColorAnimationActive then
+  begin
+    OldBgColor := FBg.Color;
+    ElapsedMs := Double(ATimeMs) - Double(FBgColorStartTimeMs);
+    if ElapsedMs < FBgColorDelayMs then
+      NewBgColor := FBgColorFrom
+    else if FBgColorDurationMs <= 0 then
+    begin
+      NewBgColor := FBgColorTo;
+      FBgColorAnimationActive := False;
+    end
+    else
+    begin
+      Progress := (ElapsedMs - FBgColorDelayMs) / FBgColorDurationMs;
+      if Progress >= 1 then
+      begin
+        NewBgColor := FBgColorTo;
+        FBgColorAnimationActive := False;
+      end
+      else
+      begin
+        if Progress < 0 then Progress := 0;
+        Eased := PixieEaseProgress(Progress, FBgColorTimingFunction);
+        NewBgColor := PixieColorBlend(FBgColorFrom, FBgColorTo, Eased);
+      end;
+    end;
+    FBg.Color := NewBgColor;
+    if OldBgColor <> NewBgColor then
+      Result := True;
   end;
 end;
 
@@ -2099,25 +2156,33 @@ var
   TmpLen: TPixieCssLength;
   FS: TPixiePixel;
   PreviousOpacity, PreviousOpacityTarget, NewOpacity: Single;
+  PreviousBgColor, PreviousBgColorTarget, NewBgColor: TPixieWebColor;
   TransitionDurationMs, TransitionDelayMs: Double;
   TransformDurationMs, TransformDelayMs: Double;
+  BgColorTransitionDurationMs, BgColorTransitionDelayMs: Double;
   TransitionTimingFunction, TransformTimingFunction: string;
+  BgColorTimingFunction: string;
   PreviousTransform: string;
   PreviousTransformOps, PreparedTransformFrom, PreparedTransformTo: TPixieTransformOps;
-  HasOpacityTransition, HasTransformTransition, HadComputedStyles,
-    WasOpacityAnimating, WasTransformAnimating: Boolean;
+  HasOpacityTransition, HasTransformTransition, HasBackgroundColorTransition,
+    HadComputedStyles, WasOpacityAnimating, WasTransformAnimating,
+    WasBgColorAnimating: Boolean;
 begin
   Assert(El is TPixieHtmlTag);
   PreviousOpacity := GetOpacity;
   PreviousOpacityTarget := FOpacity;
+  PreviousBgColor := FBg.Color;
+  PreviousBgColorTarget := FBgColorTarget;
   PreviousTransform := FTransform;
   PreviousTransformOps := GetTransformOps;
   HadComputedStyles := FHasComputedStyles;
   WasOpacityAnimating := FOpacityAnimationActive;
   WasTransformAnimating := FTransformAnimationActive;
+  WasBgColorAnimating := FBgColorAnimationActive;
   if (FTransitionDocument <> nil) and (FTransitionDocument <> Doc) then
   begin
     CancelOpacityTransition;
+    CancelBackgroundColorTransition;
     CancelTransformTransition;
     HadComputedStyles := False;
   end;
@@ -2531,6 +2596,10 @@ begin
     FTransition, FTransitionProperty, FTransitionDuration,
     FTransitionTimingFunction, FTransitionDelay, 'transform',
     TransformDurationMs, TransformDelayMs, TransformTimingFunction);
+  HasBackgroundColorTransition := PixieResolveCssTransition(
+    FTransition, FTransitionProperty, FTransitionDuration,
+    FTransitionTimingFunction, FTransitionDelay, 'background-color',
+    BgColorTransitionDurationMs, BgColorTransitionDelayMs, BgColorTimingFunction);
 
   if not HadComputedStyles then
   begin
@@ -2598,8 +2667,43 @@ begin
   FAspectRatio := Tag.GetPropertyFloat(Ord(psid_aspect_ratio), False, 0,
     PtrUInt(@FAspectRatio) - PtrUInt(Self));
 
-  // 19. Background
+  // 19. Background. FBg.Color stores the current rendered colour; keep the
+  // computed CSS target separately so repeated style computation can retarget
+  // an active tween without jumping straight to the target colour.
   ComputeBackground(El, Doc);
+  NewBgColor := FBg.Color;
+  FBgColorTarget := NewBgColor;
+
+  if not HadComputedStyles then
+  begin
+    CancelBackgroundColorTransition;
+    FBg.Color := FBgColorTarget;
+  end
+  else if PreviousBgColorTarget <> NewBgColor then
+  begin
+    if HasBackgroundColorTransition and (Doc is TPixieDocument) then
+    begin
+      FBgColorFrom := PreviousBgColor;
+      FBgColorTo := NewBgColor;
+      FBgColorStartTimeMs := TPixieDocument(Doc).AnimationTimeMs;
+      FBgColorDurationMs := BgColorTransitionDurationMs;
+      FBgColorDelayMs := BgColorTransitionDelayMs;
+      FBgColorTimingFunction := BgColorTimingFunction;
+      FBgColorAnimationActive := True;
+      FBg.Color := PreviousBgColor;
+      FTransitionDocument := Doc;
+      TPixieDocument(Doc).RegisterCssTransition(Self);
+    end
+    else
+    begin
+      CancelBackgroundColorTransition;
+      FBg.Color := FBgColorTarget;
+    end;
+  end
+  else if WasBgColorAnimating then
+    FBg.Color := PreviousBgColor
+  else
+    FBg.Color := FBgColorTarget;
 
   // 20. Flex
   ComputeFlex(El, Doc);
