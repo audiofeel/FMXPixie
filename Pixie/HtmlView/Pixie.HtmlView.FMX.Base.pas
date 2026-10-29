@@ -13,6 +13,9 @@ uses
   System.Rtti,
   FMX.Controls, FMX.Graphics, FMX.Types, FMX.Platform,
   FMX.Text, FMX.Forms,
+  {$IF CompilerVersion >= 37}
+  FMX.DisplayLink,
+  {$ENDIF}
   Pixie.Types, Pixie.WebColor, Pixie.Document,
   Pixie.Canvas, Pixie.NativeContainer,
   Pixie.CustomControl.FMX,
@@ -28,8 +31,18 @@ type
     FTextService: TTextService;
     FLastMouseX: Single;
     FLastMouseY: Single;
+    {$IF CompilerVersion >= 37}
+    FDisplayLinkService: IFMXDisplayLinkService;
+    FDisplayLinkSubscribed: Boolean;
+    {$ENDIF}
 
     procedure DoCaretTimer(Sender: TObject);
+    procedure HostCssTransitionActivityChanged;
+    procedure SyncDisplayLinkSubscription;
+    {$IF CompilerVersion >= 37}
+    procedure DisplayLinkUpdated(const ATime, ADeltaTime: Double);
+    procedure StopDisplayLink;
+    {$ENDIF}
     procedure ClipboardCopy(const S: string);
 
     // ITextInput
@@ -247,6 +260,10 @@ begin
   FTextService := nil;
   FLastMouseX := 0;
   FLastMouseY := 0;
+  {$IF CompilerVersion >= 37}
+  FDisplayLinkService := nil;
+  FDisplayLinkSubscribed := False;
+  {$ENDIF}
 
   inherited Create(AOwner);
   ClipChildren := True;
@@ -272,6 +289,7 @@ begin
   FCore.OnHostCopyToClipboard := HostCopyToClipboard;
   FCore.OnHostGetTickCount := HostGetTickCount;
   FCore.OnHostResetCaret := HostResetCaret;
+  FCore.OnHostCssTransitionActivityChanged := HostCssTransitionActivityChanged;
 
   FCaretTimer := TTimer.Create(Self);
   FCaretTimer.Interval := 530;
@@ -281,6 +299,10 @@ end;
 
 destructor TPixieHtmlViewBase.Destroy;
 begin
+  {$IF CompilerVersion >= 37}
+  StopDisplayLink;
+  FDisplayLinkService := nil;
+  {$ENDIF}
   FreeAndNil(FCaretTimer);
   FreeAndNil(FTextService);
   FreeAndNil(FCore);
@@ -311,6 +333,48 @@ procedure TPixieHtmlViewBase.HostSetCursor(ACursor: TPixieCursorKind);
 begin
   SetPixieCursor(ACursor);
 end;
+
+procedure TPixieHtmlViewBase.HostCssTransitionActivityChanged;
+begin
+  SyncDisplayLinkSubscription;
+end;
+
+procedure TPixieHtmlViewBase.SyncDisplayLinkSubscription;
+begin
+  {$IF CompilerVersion >= 37}
+  if (FCore <> nil) and Visible and
+     not (csDesigning in ComponentState) and
+     FCore.HasActiveCssTransitions then
+  begin
+    if (FDisplayLinkService = nil) and
+       not TPlatformServices.Current.SupportsPlatformService(
+         IFMXDisplayLinkService, FDisplayLinkService) then
+      Exit;
+    if (FDisplayLinkService <> nil) and not FDisplayLinkSubscribed then
+    begin
+      FDisplayLinkService.Subscribe(DisplayLinkUpdated);
+      FDisplayLinkSubscribed := True;
+    end;
+  end
+  else
+    StopDisplayLink;
+  {$ENDIF}
+end;
+
+{$IF CompilerVersion >= 37}
+procedure TPixieHtmlViewBase.StopDisplayLink;
+begin
+  if FDisplayLinkSubscribed and (FDisplayLinkService <> nil) then
+    FDisplayLinkService.Unsubscribe(DisplayLinkUpdated);
+  FDisplayLinkSubscribed := False;
+end;
+
+procedure TPixieHtmlViewBase.DisplayLinkUpdated(const ATime, ADeltaTime: Double);
+begin
+  if (FCore = nil) or not FCore.ProcessCssTransitions then
+    StopDisplayLink;
+end;
+{$ENDIF}
 
 procedure TPixieHtmlViewBase.HostSetFocus;
 begin
@@ -775,6 +839,7 @@ begin
     FCore.ResumeAnimations
   else
     FCore.PauseAnimations;
+  SyncDisplayLinkSubscription;
 end;
 
 // ---------------------------------------------------------------------------

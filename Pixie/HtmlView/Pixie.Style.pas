@@ -1922,6 +1922,19 @@ begin
     Exit;
   end;
 
+  // Store CSS transition declarations as normalized strings. Their values are
+  // interpreted by TPixieCssProperties, outside the style/cascade parser.
+  if (Name = Ord(psid_transition)) or
+     (Name = Ord(psid_transition_property)) or
+     (Name = Ord(psid_transition_duration)) or
+     (Name = Ord(psid_transition_timing_function)) or
+     (Name = Ord(psid_transition_delay)) then
+  begin
+    S := PixieCssGetRepr(Tokens, 0, -1, True);
+    AddParsedProperty(Name, TPixiePropertyValue.FromString(S, Important));
+    Exit;
+  end;
+
   // Legacy property aliases (word-wrap predates overflow-wrap, grid-*gap
   // predates *gap from the CSS Grid L1→L2 rename, font-variant-caps is the
   // CSS Fonts L3 longhand of the original font-variant — all collapse here)

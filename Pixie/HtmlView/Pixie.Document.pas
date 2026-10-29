@@ -17,6 +17,7 @@ uses
 
 type
   TPixieDocumentChangeEvent = procedure(Sender: TObject) of object;
+  TPixieDocumentGetTickCount = function: UInt64 of object;
 
   TPixieCssText = record
     Text: string;
@@ -56,6 +57,9 @@ type
     FMode: TPixieDocumentMode;
     FAllElements: TPixieElementList;
     FTabularElements: TPixiePointerList; // non-owning list of TPixieRenderItem
+    FActiveCssTransitions: TList<TPixieCssProperties>;
+    FOnCssTransitionActivityChanged: TPixieDocumentChangeEvent;
+    FOnGetTickCount: TPixieDocumentGetTickCount;
 
     // Focus state
     FFocusedElement: TPixieElement;
@@ -158,6 +162,14 @@ type
     procedure RegisterElement(El: TPixieElement);
     procedure UnregisterElement(El: TPixieElement);
 
+    // Active CSS transitions. FMX advances these from Display Link;
+    // animated images continue to use the existing core timer.
+    procedure RegisterCssTransition(Css: TPixieCssProperties);
+    procedure UnregisterCssTransition(Css: TPixieCssProperties);
+    function HasActiveCssTransitions: Boolean;
+    function AdvanceCssTransitions(ATimeMs: UInt64): Boolean;
+    function AnimationTimeMs: UInt64;
+
     // Focus management
     procedure SetFocus(El: TPixieElement);
     function FocusedElement: TPixieElement;
@@ -193,6 +205,10 @@ type
     procedure Changed;
     property OnChange: TPixieDocumentChangeEvent
       read FOnChange write FOnChange;
+    property OnCssTransitionActivityChanged: TPixieDocumentChangeEvent
+      read FOnCssTransitionActivityChanged write FOnCssTransitionActivityChanged;
+    property OnGetTickCount: TPixieDocumentGetTickCount
+      read FOnGetTickCount write FOnGetTickCount;
 
     // Text selection
     procedure SelectionStart(X, Y, ClientX, ClientY: TPixiePixel);
@@ -238,6 +254,9 @@ begin
   FFixedBoxes := TPixiePositionVector.Create;
   FTabularElements := TPixiePointerList.Create;
   FAllElements := TPixieElementList.Create(True); // owns elements
+  FActiveCssTransitions := TList<TPixieCssProperties>.Create;
+  FOnCssTransitionActivityChanged := nil;
+  FOnGetTickCount := nil;
   FSelMap := TPixieSelectionSet.Create;
   FFontFaceRegistry := TPixieFontFaceRegistry.Create;
   FSize.Width := 0;
@@ -264,6 +283,10 @@ var
   I: Integer;
   Pair: TPair<string, TPixieFontItem>;
 begin
+  // Prevent element destructors from re-entering the FMX host while this
+  // document is being torn down.
+  FOnCssTransitionActivityChanged := nil;
+  FOnGetTickCount := nil;
   FOverElement := nil;
   FActiveElement := nil;
   FFocusedElement := nil;
@@ -292,7 +315,10 @@ begin
 
   FFontFaceRegistry.Free;
   FSelMap.Free;
+  // Elements unregister active transitions in their destructors, so keep the
+  // non-owning registry alive until all elements have been freed.
   FAllElements.Free;
+  FActiveCssTransitions.Free;
   FTabularElements.Free;
   FFixedBoxes.Free;
   FUserCss.Free;
@@ -1485,6 +1511,66 @@ begin
 end;
 
 // --- Element registration ---
+
+
+function TPixieDocument.AnimationTimeMs: UInt64;
+begin
+  if Assigned(FOnGetTickCount) then
+    Result := FOnGetTickCount()
+  else
+    Result := UInt64(TThread.GetTickCount);
+end;
+
+function TPixieDocument.HasActiveCssTransitions: Boolean;
+begin
+  Result := (FActiveCssTransitions <> nil) and
+    (FActiveCssTransitions.Count > 0);
+end;
+
+procedure TPixieDocument.RegisterCssTransition(Css: TPixieCssProperties);
+var
+  WasEmpty: Boolean;
+begin
+  if (Css = nil) or (FActiveCssTransitions = nil) then Exit;
+  if FActiveCssTransitions.IndexOf(Css) >= 0 then Exit;
+  WasEmpty := FActiveCssTransitions.Count = 0;
+  FActiveCssTransitions.Add(Css);
+  if WasEmpty and Assigned(FOnCssTransitionActivityChanged) then
+    FOnCssTransitionActivityChanged(Self);
+end;
+
+procedure TPixieDocument.UnregisterCssTransition(Css: TPixieCssProperties);
+var
+  Index: Integer;
+begin
+  if (Css = nil) or (FActiveCssTransitions = nil) then Exit;
+  Index := FActiveCssTransitions.IndexOf(Css);
+  if Index < 0 then Exit;
+  FActiveCssTransitions.Delete(Index);
+  if (FActiveCssTransitions.Count = 0) and
+     Assigned(FOnCssTransitionActivityChanged) then
+    FOnCssTransitionActivityChanged(Self);
+end;
+
+function TPixieDocument.AdvanceCssTransitions(ATimeMs: UInt64): Boolean;
+var
+  I: Integer;
+  Css: TPixieCssProperties;
+begin
+  Result := False;
+  if FActiveCssTransitions = nil then Exit;
+  for I := FActiveCssTransitions.Count - 1 downto 0 do
+  begin
+    Css := FActiveCssTransitions[I];
+    if Css.AdvanceCssTransitions(ATimeMs) then
+      Result := True;
+    if not Css.CssTransitionActive then
+      FActiveCssTransitions.Delete(I);
+  end;
+  // The FMX Display Link callback checks HasActiveCssTransitions after
+  // this method returns and unsubscribes itself there. Avoid mutating the
+  // service subscription from inside the service callback.
+end;
 
 procedure TPixieDocument.RegisterElement(El: TPixieElement);
 begin

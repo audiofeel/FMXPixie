@@ -124,7 +124,30 @@ type
     FTextEmphasisColor: TPixieWebColor;
 
     // Float/integer fields
-    FOpacity: Single;
+    FOpacity: Single; // Computed target
+    FAnimatedOpacity: Single;
+    FOpacityFrom: Single;
+    FOpacityTo: Single;
+    FOpacityStartTimeMs: UInt64;
+    FOpacityDurationMs: Double;
+    FOpacityDelayMs: Double;
+    FOpacityTimingFunction: string;
+    FOpacityAnimationActive: Boolean;
+    FTransformAnimationActive: Boolean;
+    FAnimatedTransformOps: TPixieTransformOps;
+    FTransformFromOps: TPixieTransformOps;
+    FTransformToOps: TPixieTransformOps;
+    FTransformStartTimeMs: UInt64;
+    FTransformDurationMs: Double;
+    FTransformDelayMs: Double;
+    FTransformTimingFunction: string;
+    FHasComputedStyles: Boolean;
+    FTransitionDocument: TObject;
+    FTransition: string;
+    FTransitionProperty: string;
+    FTransitionDuration: string;
+    FTransitionTimingFunction: string;
+    FTransitionDelay: string;
     FFlexGrow: Single;
     FFlexShrink: Single;
     FAspectRatio: Single;  // 0 = auto/unset; otherwise width / height
@@ -165,6 +188,12 @@ type
     FComputeCtxPtr: Pointer;
 
     // Special accessors
+    function GetOpacity: Single;
+    function GetTransformOps: TPixieTransformOps;
+    function GetCssTransitionActive: Boolean;
+    procedure UpdateTransitionRegistration;
+    procedure CancelOpacityTransition;
+    procedure CancelTransformTransition;
     function GetZIndex: Integer;
     procedure SetZIndex(Value: Integer);
     function GetFontSize: TPixiePixel;
@@ -174,6 +203,11 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+
+    // Called by TPixieDocument from the FMX Display Link callback.
+    // Advances opacity and transform tweens using elapsed time.
+    function AdvanceCssTransitions(ATimeMs: UInt64): Boolean;
+    property CssTransitionActive: Boolean read GetCssTransitionActive;
 
     procedure DumpGetAttrs(List: TStringList);
 
@@ -268,7 +302,7 @@ type
     property TextEmphasisColor: TPixieWebColor read FTextEmphasisColor write FTextEmphasisColor;
 
     // Float/integer properties
-    property Opacity: Single read FOpacity write FOpacity;
+    property Opacity: Single read GetOpacity write FOpacity;
     property AspectRatio: Single read FAspectRatio write FAspectRatio;
     property FlexGrow: Single read FFlexGrow write FFlexGrow;
     property FlexShrink: Single read FFlexShrink write FFlexShrink;
@@ -293,7 +327,7 @@ type
     property Cursor: string read FCursor write FCursor;
 
     // CSS transform
-    property TransformOps: TPixieTransformOps read FTransformOps;
+    property TransformOps: TPixieTransformOps read GetTransformOps;
     property TransformOriginX: TPixieCssLength read FTransformOriginX;
     property TransformOriginY: TPixieCssLength read FTransformOriginY;
     function HasTransform: Boolean;
@@ -767,6 +801,446 @@ begin
       Dest.Add(Src[I]);
 end;
 
+
+function PixieTryParseCssNumber(const S: string; out Value: Double): Boolean;
+var
+  Fmt: TFormatSettings;
+begin
+  Fmt := TFormatSettings.Create('en-US');
+  Result := TryStrToFloat(Trim(S), Value, Fmt);
+end;
+
+function PixieTryParseCssTime(const S: string; out Milliseconds: Double): Boolean;
+var
+  V: string;
+  N: Double;
+begin
+  V := LowerCase(Trim(S));
+  Result := False;
+  Milliseconds := 0;
+  if Length(V) >= 2 then
+    if Copy(V, Length(V) - 1, 2) = 'ms' then
+    begin
+      V := Trim(Copy(V, 1, Length(V) - 2));
+      if not PixieTryParseCssNumber(V, N) then Exit;
+      Milliseconds := N;
+      Exit(True);
+    end;
+  if (Length(V) >= 1) and (V[Length(V)] = 's') then
+  begin
+    V := Trim(Copy(V, 1, Length(V) - 1));
+    if not PixieTryParseCssNumber(V, N) then Exit;
+    Milliseconds := N * 1000.0;
+    Exit(True);
+  end;
+end;
+
+function PixieSplitCssList(const S: string): TStringList;
+var
+  I, Depth, StartAt: Integer;
+  C: Char;
+begin
+  Result := TStringList.Create;
+  Depth := 0;
+  StartAt := 1;
+  for I := 1 to Length(S) do
+  begin
+    C := S[I];
+    if C = '(' then
+      Inc(Depth)
+    else if (C = ')') and (Depth > 0) then
+      Dec(Depth)
+    else if (C = ',') and (Depth = 0) then
+    begin
+      Result.Add(Trim(Copy(S, StartAt, I - StartAt)));
+      StartAt := I + 1;
+    end;
+  end;
+  if StartAt <= Length(S) then
+    Result.Add(Trim(Copy(S, StartAt, Length(S) - StartAt + 1)));
+end;
+
+function PixieNextCssWord(var S: string): string;
+var
+  I, Depth: Integer;
+  C: Char;
+begin
+  S := TrimLeft(S);
+  if S = '' then Exit('');
+  Depth := 0;
+  for I := 1 to Length(S) do
+  begin
+    C := S[I];
+    if C = '(' then
+      Inc(Depth)
+    else if (C = ')') and (Depth > 0) then
+      Dec(Depth)
+    else if (Depth = 0) and CharInSet(C, [#9, #10, #13, ' ']) then
+      Break;
+  end;
+  if I > Length(S) then
+  begin
+    Result := S;
+    S := '';
+  end
+  else
+  begin
+    Result := Copy(S, 1, I - 1);
+    S := TrimLeft(Copy(S, I + 1, Length(S) - I));
+  end;
+end;
+
+function PixieIsTimingFunction(const S: string): Boolean;
+var
+  V: string;
+begin
+  V := LowerCase(Trim(S));
+  Result := (V = 'linear') or (V = 'ease') or (V = 'ease-in') or
+    (V = 'ease-out') or (V = 'ease-in-out') or
+    (V = 'step-start') or (V = 'step-end') or
+    (Copy(V, 1, 13) = 'cubic-bezier(') or
+    (Copy(V, 1, 6) = 'steps(');
+end;
+
+procedure PixieParseTransitionEntry(const Item: string;
+  out AProperty, ATiming: string; out DurationMs, DelayMs: Double);
+var
+  Rest, Word_: string;
+  TimeValue: Double;
+  TimeCount: Integer;
+begin
+  AProperty := 'all';
+  ATiming := 'ease';
+  DurationMs := 0;
+  DelayMs := 0;
+  TimeCount := 0;
+  Rest := Trim(Item);
+  while Rest <> '' do
+  begin
+    Word_ := PixieNextCssWord(Rest);
+    if Word_ = '' then Break;
+    if PixieTryParseCssTime(Word_, TimeValue) then
+    begin
+      if TimeCount = 0 then
+        DurationMs := TimeValue
+      else if TimeCount = 1 then
+        DelayMs := TimeValue;
+      Inc(TimeCount);
+    end
+    else if PixieIsTimingFunction(Word_) then
+      ATiming := LowerCase(Word_)
+    else
+      AProperty := LowerCase(Word_);
+  end;
+end;
+
+function PixieCssListItem(const S: string; Index: Integer): string;
+var
+  Items: TStringList;
+begin
+  Result := '';
+  Items := PixieSplitCssList(S);
+  try
+    if Items.Count > 0 then
+      Result := Trim(Items[Index mod Items.Count]);
+  finally
+    Items.Free;
+  end;
+end;
+
+function PixieResolveCssTransition(const AShorthand, AProperty,
+  ADuration, ATiming, ADelay, ATargetProperty: string;
+  out DurationMs, DelayMs: Double; out Timing: string): Boolean;
+var
+  Items: TStringList;
+  I, SelectedIndex: Integer;
+  Prop, EntryTiming, RawProperty: string;
+  EntryDuration, EntryDelay, V: Double;
+begin
+  Result := False;
+  DurationMs := 0;
+  DelayMs := 0;
+  Timing := 'ease';
+  SelectedIndex := -1;
+
+  // Select the last shorthand entry matching the requested property or all.
+  if (Trim(AShorthand) <> '') and
+     (not SameText(Trim(AShorthand), 'initial')) then
+  begin
+    Items := PixieSplitCssList(AShorthand);
+    try
+      for I := 0 to Items.Count - 1 do
+      begin
+        PixieParseTransitionEntry(Items[I], Prop, EntryTiming,
+          EntryDuration, EntryDelay);
+        if SameText(Prop, ATargetProperty) or SameText(Prop, 'all') then
+        begin
+          SelectedIndex := I;
+          DurationMs := EntryDuration;
+          DelayMs := EntryDelay;
+          Timing := EntryTiming;
+        end;
+      end;
+    finally
+      Items.Free;
+    end;
+  end
+  else
+    SelectedIndex := 0; // Longhand-only declarations default to property: all.
+
+  // Longhand declarations override the matching shorthand components.
+  if (Trim(AProperty) <> '') and
+     (not SameText(Trim(AProperty), 'initial')) then
+  begin
+    Items := PixieSplitCssList(AProperty);
+    try
+      SelectedIndex := -1;
+      for I := 0 to Items.Count - 1 do
+      begin
+        RawProperty := LowerCase(Trim(Items[I]));
+        if SameText(RawProperty, ATargetProperty) or SameText(RawProperty, 'all') then
+          SelectedIndex := I;
+      end;
+    finally
+      Items.Free;
+    end;
+  end;
+
+  if SelectedIndex < 0 then Exit;
+
+  if (Trim(ADuration) <> '') and
+     (not SameText(Trim(ADuration), 'initial')) then
+  begin
+    if not PixieTryParseCssTime(PixieCssListItem(ADuration, SelectedIndex), V) then
+      Exit;
+    DurationMs := V;
+  end;
+
+  if (Trim(ATiming) <> '') and
+     (not SameText(Trim(ATiming), 'initial')) then
+    Timing := LowerCase(PixieCssListItem(ATiming, SelectedIndex));
+
+  if (Trim(ADelay) <> '') and
+     (not SameText(Trim(ADelay), 'initial')) then
+  begin
+    if not PixieTryParseCssTime(PixieCssListItem(ADelay, SelectedIndex), V) then
+      Exit;
+    DelayMs := V;
+  end;
+
+  Result := DurationMs > 0;
+end;
+
+function PixieTransformOpsEqual(const A, B: TPixieTransformOps): Boolean;
+var
+  I, J: Integer;
+begin
+  Result := False;
+  if Length(A) <> Length(B) then Exit;
+  for I := 0 to High(A) do
+  begin
+    if A[I].Func <> B[I].Func then Exit;
+    if A[I].LenX.Units <> B[I].LenX.Units then Exit;
+    if A[I].LenY.Units <> B[I].LenY.Units then Exit;
+    if Abs(A[I].LenX.Val - B[I].LenX.Val) > 0.00001 then Exit;
+    if Abs(A[I].LenY.Val - B[I].LenY.Val) > 0.00001 then Exit;
+    for J := 0 to High(A[I].Num) do
+      if Abs(A[I].Num[J] - B[I].Num[J]) > 0.00001 then Exit;
+  end;
+  Result := True;
+end;
+
+function PixieTransformIdentityLike(const Template: TPixieTransformOps): TPixieTransformOps;
+var
+  I: Integer;
+begin
+  SetLength(Result, Length(Template));
+  for I := 0 to High(Template) do
+  begin
+    FillChar(Result[I], SizeOf(Result[I]), 0);
+    Result[I].Func := Template[I].Func;
+    Result[I].LenX := TPixieCssLength.Create(0, Template[I].LenX.Units);
+    Result[I].LenY := TPixieCssLength.Create(0, Template[I].LenY.Units);
+    case Template[I].Func of
+      ptfScale:
+      begin
+        Result[I].Num[0] := 1;
+        Result[I].Num[1] := 1;
+      end;
+      ptfMatrix:
+      begin
+        Result[I].Num[0] := 1;
+        Result[I].Num[3] := 1;
+      end;
+    end;
+  end;
+end;
+
+function PixiePrepareTransformPair(const FromOps, ToOps: TPixieTransformOps;
+  out PreparedFrom, PreparedTo: TPixieTransformOps): Boolean;
+var
+  I: Integer;
+begin
+  PreparedFrom := FromOps;
+  PreparedTo := ToOps;
+  if (Length(PreparedFrom) = 0) and (Length(PreparedTo) > 0) then
+    PreparedFrom := PixieTransformIdentityLike(PreparedTo)
+  else if (Length(PreparedTo) = 0) and (Length(PreparedFrom) > 0) then
+    PreparedTo := PixieTransformIdentityLike(PreparedFrom);
+
+  Result := (Length(PreparedFrom) > 0) and
+    (Length(PreparedFrom) = Length(PreparedTo));
+  if not Result then Exit;
+
+  // Interpolate matching transform functions in the same order. Unit changes
+  // and calc/min/max lengths fall back to the target style without animation.
+  for I := 0 to High(PreparedFrom) do
+  begin
+    if PreparedFrom[I].Func <> PreparedTo[I].Func then Exit(False);
+    if PreparedFrom[I].Func = ptfTranslate then
+    begin
+      if PreparedFrom[I].LenX.Units <> PreparedTo[I].LenX.Units then Exit(False);
+      if PreparedFrom[I].LenY.Units <> PreparedTo[I].LenY.Units then Exit(False);
+      if PreparedFrom[I].LenX.IsPredefined or PreparedTo[I].LenX.IsPredefined or
+         PreparedFrom[I].LenX.IsCalc or PreparedTo[I].LenX.IsCalc or
+         PreparedFrom[I].LenX.IsMath or PreparedTo[I].LenX.IsMath then Exit(False);
+      if PreparedFrom[I].LenY.IsPredefined or PreparedTo[I].LenY.IsPredefined or
+         PreparedFrom[I].LenY.IsCalc or PreparedTo[I].LenY.IsCalc or
+         PreparedFrom[I].LenY.IsMath or PreparedTo[I].LenY.IsMath then Exit(False);
+    end;
+  end;
+end;
+
+function PixieInterpolateTransformOps(const FromOps, ToOps: TPixieTransformOps;
+  Progress: Double): TPixieTransformOps;
+var
+  I, J: Integer;
+  V: Single;
+begin
+  SetLength(Result, Length(FromOps));
+  for I := 0 to High(FromOps) do
+  begin
+    Result[I] := FromOps[I];
+    if FromOps[I].Func = ptfTranslate then
+    begin
+      V := FromOps[I].LenX.Val +
+        (ToOps[I].LenX.Val - FromOps[I].LenX.Val) * Progress;
+      Result[I].LenX := TPixieCssLength.Create(V, FromOps[I].LenX.Units);
+      V := FromOps[I].LenY.Val +
+        (ToOps[I].LenY.Val - FromOps[I].LenY.Val) * Progress;
+      Result[I].LenY := TPixieCssLength.Create(V, FromOps[I].LenY.Units);
+    end;
+    for J := 0 to High(FromOps[I].Num) do
+      Result[I].Num[J] := FromOps[I].Num[J] +
+        (ToOps[I].Num[J] - FromOps[I].Num[J]) * Progress;
+  end;
+end;
+
+function PixieCubicCoord(T, P1, P2: Double): Double;
+var
+  U: Double;
+begin
+  U := 1.0 - T;
+  Result := 3.0 * U * U * T * P1 +
+    3.0 * U * T * T * P2 + T * T * T;
+end;
+
+function PixieCubicBezierProgress(X, X1, Y1, X2, Y2: Double): Double;
+var
+  LowT, HighT, T, CurX: Double;
+  I: Integer;
+begin
+  LowT := 0;
+  HighT := 1;
+  T := X;
+  for I := 0 to 15 do
+  begin
+    CurX := PixieCubicCoord(T, X1, X2);
+    if CurX < X then
+      LowT := T
+    else
+      HighT := T;
+    T := (LowT + HighT) * 0.5;
+  end;
+  Result := PixieCubicCoord(T, Y1, Y2);
+end;
+
+function PixieEaseProgress(Progress: Double; const ATiming: string): Double;
+var
+  Timing, ArgsText, StepPosition: string;
+  Args: TStringList;
+  X1, Y1, X2, Y2: Double;
+  OpenPos, StepCount: Integer;
+begin
+  if Progress < 0 then Progress := 0;
+  if Progress > 1 then Progress := 1;
+  Timing := LowerCase(Trim(ATiming));
+  if Timing = 'linear' then Exit(Progress);
+  if Timing = 'step-start' then Exit(1.0);
+  if Timing = 'step-end' then
+    if Progress < 1 then Exit(0.0) else Exit(1.0);
+  if Copy(Timing, 1, 6) = 'steps(' then
+  begin
+    OpenPos := Pos('(', Timing);
+    ArgsText := Copy(Timing, OpenPos + 1, Length(Timing) - OpenPos - 1);
+    Args := PixieSplitCssList(ArgsText);
+    try
+      StepCount := 1;
+      if (Args.Count >= 1) then
+        StepCount := StrToIntDef(Trim(Args[0]), 1);
+      if StepCount < 1 then StepCount := 1;
+      StepPosition := 'end';
+      if Args.Count >= 2 then StepPosition := LowerCase(Trim(Args[1]));
+      if Progress >= 1 then Exit(1.0);
+      if (StepPosition = 'start') or (StepPosition = 'jump-start') then
+        Exit((Floor(Progress * StepCount) + 1) / StepCount);
+      if StepPosition = 'jump-none' then
+      begin
+        if StepCount <= 1 then Exit(1.0);
+        Exit(Floor(Progress * (StepCount - 1)) / (StepCount - 1));
+      end;
+      if StepPosition = 'jump-both' then
+        Exit((Floor(Progress * StepCount) + 1) / (StepCount + 1));
+      Exit(Floor(Progress * StepCount) / StepCount);
+    finally
+      Args.Free;
+    end;
+  end;
+  X1 := 0.25; Y1 := 0.1; X2 := 0.25; Y2 := 1.0; // CSS ease
+  if Timing = 'ease-in' then
+  begin
+    X1 := 0.42; Y1 := 0; X2 := 1; Y2 := 1;
+  end
+  else if Timing = 'ease-out' then
+  begin
+    X1 := 0; Y1 := 0; X2 := 0.58; Y2 := 1;
+  end
+  else if Timing = 'ease-in-out' then
+  begin
+    X1 := 0.42; Y1 := 0; X2 := 0.58; Y2 := 1;
+  end
+  else if Copy(Timing, 1, 13) = 'cubic-bezier(' then
+  begin
+    OpenPos := Pos('(', Timing);
+    ArgsText := Copy(Timing, OpenPos + 1, Length(Timing) - OpenPos - 1);
+    Args := PixieSplitCssList(ArgsText);
+    try
+      if Args.Count = 4 then
+      begin
+        if PixieTryParseCssNumber(Args[0], X1) and
+           PixieTryParseCssNumber(Args[1], Y1) and
+           PixieTryParseCssNumber(Args[2], X2) and
+           PixieTryParseCssNumber(Args[3], Y2) and
+           (X1 >= 0) and (X1 <= 1) and (X2 >= 0) and (X2 <= 1) then
+          Exit(PixieCubicBezierProgress(Progress, X1, Y1, X2, Y2));
+      end;
+    finally
+      Args.Free;
+    end;
+  end;
+  Result := PixieCubicBezierProgress(Progress, X1, Y1, X2, Y2);
+end;
+
 { TPixieCssProperties }
 
 constructor TPixieCssProperties.Create;
@@ -815,6 +1289,26 @@ begin
 
   // Float/integer defaults
   FOpacity := 1;
+  FAnimatedOpacity := 1;
+  FOpacityFrom := 1;
+  FOpacityTo := 1;
+  FOpacityStartTimeMs := 0;
+  FOpacityDurationMs := 0;
+  FOpacityDelayMs := 0;
+  FOpacityTimingFunction := 'ease';
+  FOpacityAnimationActive := False;
+  FTransformAnimationActive := False;
+  FTransformStartTimeMs := 0;
+  FTransformDurationMs := 0;
+  FTransformDelayMs := 0;
+  FTransformTimingFunction := 'ease';
+  FHasComputedStyles := False;
+  FTransitionDocument := nil;
+  FTransition := '';
+  FTransitionProperty := '';
+  FTransitionDuration := '';
+  FTransitionTimingFunction := '';
+  FTransitionDelay := '';
   FFlexGrow := 0;
   FFlexShrink := 1;
   FAspectRatio := 0;  // 0 = auto/unset
@@ -832,15 +1326,131 @@ end;
 
 destructor TPixieCssProperties.Destroy;
 begin
+  CancelOpacityTransition;
+  CancelTransformTransition;
   FGridTemplateColumns.Free;
   FGridTemplateRows.Free;
   FBg.Free;
   inherited Destroy;
 end;
 
-function TPixieCssProperties.HasTransform: Boolean;
+function TPixieCssProperties.GetOpacity: Single;
 begin
-  Result := Length(FTransformOps) > 0;
+  if FOpacityAnimationActive then
+    Result := FAnimatedOpacity
+  else
+    Result := FOpacity;
+end;
+
+function TPixieCssProperties.GetTransformOps: TPixieTransformOps;
+begin
+  if FTransformAnimationActive then
+    Result := FAnimatedTransformOps
+  else
+    Result := FTransformOps;
+end;
+
+function TPixieCssProperties.GetCssTransitionActive: Boolean;
+begin
+  Result := FOpacityAnimationActive or FTransformAnimationActive;
+end;
+
+procedure TPixieCssProperties.UpdateTransitionRegistration;
+begin
+  if not (FTransitionDocument is TPixieDocument) then Exit;
+  if GetCssTransitionActive then
+    TPixieDocument(FTransitionDocument).RegisterCssTransition(Self)
+  else
+    TPixieDocument(FTransitionDocument).UnregisterCssTransition(Self);
+end;
+
+procedure TPixieCssProperties.CancelOpacityTransition;
+begin
+  FOpacityAnimationActive := False;
+  UpdateTransitionRegistration;
+end;
+
+procedure TPixieCssProperties.CancelTransformTransition;
+begin
+  FTransformAnimationActive := False;
+  UpdateTransitionRegistration;
+end;
+
+function TPixieCssProperties.AdvanceCssTransitions(ATimeMs: UInt64): Boolean;
+var
+  OldValue, NewValue, ElapsedMs, Progress, Eased: Double;
+  NewOps: TPixieTransformOps;
+begin
+  Result := False;
+
+  if FOpacityAnimationActive then
+  begin
+    OldValue := FAnimatedOpacity;
+    ElapsedMs := Double(ATimeMs) - Double(FOpacityStartTimeMs);
+    if ElapsedMs < FOpacityDelayMs then
+      NewValue := FOpacityFrom
+    else if FOpacityDurationMs <= 0 then
+    begin
+      NewValue := FOpacityTo;
+      FOpacityAnimationActive := False;
+    end
+    else
+    begin
+      Progress := (ElapsedMs - FOpacityDelayMs) / FOpacityDurationMs;
+      if Progress >= 1 then
+      begin
+        NewValue := FOpacityTo;
+        FOpacityAnimationActive := False;
+      end
+      else
+      begin
+        if Progress < 0 then Progress := 0;
+        Eased := PixieEaseProgress(Progress, FOpacityTimingFunction);
+        NewValue := FOpacityFrom + (FOpacityTo - FOpacityFrom) * Eased;
+      end;
+    end;
+    FAnimatedOpacity := NewValue;
+    Result := Abs(NewValue - OldValue) > 0.00001;
+  end;
+
+  if FTransformAnimationActive then
+  begin
+    ElapsedMs := Double(ATimeMs) - Double(FTransformStartTimeMs);
+    if ElapsedMs < FTransformDelayMs then
+      NewOps := FTransformFromOps
+    else if FTransformDurationMs <= 0 then
+    begin
+      NewOps := FTransformToOps;
+      FTransformAnimationActive := False;
+    end
+    else
+    begin
+      Progress := (ElapsedMs - FTransformDelayMs) / FTransformDurationMs;
+      if Progress >= 1 then
+      begin
+        NewOps := FTransformToOps;
+        FTransformAnimationActive := False;
+      end
+      else
+      begin
+        if Progress < 0 then Progress := 0;
+        Eased := PixieEaseProgress(Progress, FTransformTimingFunction);
+        NewOps := PixieInterpolateTransformOps(
+          FTransformFromOps, FTransformToOps, Eased);
+      end;
+    end;
+    if not PixieTransformOpsEqual(FAnimatedTransformOps, NewOps) then
+      Result := True;
+    FAnimatedTransformOps := NewOps;
+  end;
+end;
+
+function TPixieCssProperties.HasTransform: Boolean;
+var
+  Ops: TPixieTransformOps;
+begin
+  Ops := GetTransformOps;
+  Result := Length(Ops) > 0;
 end;
 
 function TPixieCssProperties.GetZIndex: Integer;
@@ -1488,8 +2098,30 @@ var
   ZeroLen: TPixieCssLength;
   TmpLen: TPixieCssLength;
   FS: TPixiePixel;
+  PreviousOpacity, PreviousOpacityTarget, NewOpacity: Single;
+  TransitionDurationMs, TransitionDelayMs: Double;
+  TransformDurationMs, TransformDelayMs: Double;
+  TransitionTimingFunction, TransformTimingFunction: string;
+  PreviousTransform: string;
+  PreviousTransformOps, PreparedTransformFrom, PreparedTransformTo: TPixieTransformOps;
+  HasOpacityTransition, HasTransformTransition, HadComputedStyles,
+    WasOpacityAnimating, WasTransformAnimating: Boolean;
 begin
   Assert(El is TPixieHtmlTag);
+  PreviousOpacity := GetOpacity;
+  PreviousOpacityTarget := FOpacity;
+  PreviousTransform := FTransform;
+  PreviousTransformOps := GetTransformOps;
+  HadComputedStyles := FHasComputedStyles;
+  WasOpacityAnimating := FOpacityAnimationActive;
+  WasTransformAnimating := FTransformAnimationActive;
+  if (FTransitionDocument <> nil) and (FTransitionDocument <> Doc) then
+  begin
+    CancelOpacityTransition;
+    CancelTransformTransition;
+    HadComputedStyles := False;
+  end;
+  FTransitionDocument := Doc;
   Tag := TPixieHtmlTag(El);
   InitComputeContext(Tag, Ctx);
   FComputeCtxPtr := @Ctx;
@@ -1874,11 +2506,95 @@ begin
   FOrder := Tag.GetPropertyInt(Ord(psid_order), False, 0,
     PtrUInt(@FOrder) - PtrUInt(Self));
 
-  // 18a. Opacity
-  FOpacity := Tag.GetPropertyFloat(Ord(psid_opacity), False, 1,
-    PtrUInt(@FOpacity) - PtrUInt(Self));
+  // 18a. Transition configuration (non-inherited CSS properties).
+  FTransition := Tag.GetPropertyString(Ord(psid_transition), False, '',
+    PtrUInt(@FTransition) - PtrUInt(Self));
+  FTransitionProperty := Tag.GetPropertyString(Ord(psid_transition_property), False, '',
+    PtrUInt(@FTransitionProperty) - PtrUInt(Self));
+  FTransitionDuration := Tag.GetPropertyString(Ord(psid_transition_duration), False, '',
+    PtrUInt(@FTransitionDuration) - PtrUInt(Self));
+  FTransitionTimingFunction := Tag.GetPropertyString(Ord(psid_transition_timing_function), False, '',
+    PtrUInt(@FTransitionTimingFunction) - PtrUInt(Self));
+  FTransitionDelay := Tag.GetPropertyString(Ord(psid_transition_delay), False, '',
+    PtrUInt(@FTransitionDelay) - PtrUInt(Self));
 
-  // 18b. Aspect-ratio (0 = unset/auto)
+  // 18b. Opacity target. Rendering reads the interpolated value; CSS keeps the
+  // target value separately so a new hover state can retarget an active tween.
+  NewOpacity := Tag.GetPropertyFloat(Ord(psid_opacity), False, 1,
+    PtrUInt(@FOpacity) - PtrUInt(Self));
+  FOpacity := NewOpacity;
+  HasOpacityTransition := PixieResolveCssTransition(
+    FTransition, FTransitionProperty, FTransitionDuration,
+    FTransitionTimingFunction, FTransitionDelay, 'opacity',
+    TransitionDurationMs, TransitionDelayMs, TransitionTimingFunction);
+  HasTransformTransition := PixieResolveCssTransition(
+    FTransition, FTransitionProperty, FTransitionDuration,
+    FTransitionTimingFunction, FTransitionDelay, 'transform',
+    TransformDurationMs, TransformDelayMs, TransformTimingFunction);
+
+  if not HadComputedStyles then
+  begin
+    FOpacityAnimationActive := False;
+    FAnimatedOpacity := FOpacity;
+  end
+  else if Abs(FOpacity - PreviousOpacityTarget) > 0.0001 then
+  begin
+    if HasOpacityTransition and (Doc is TPixieDocument) then
+    begin
+      FOpacityFrom := PreviousOpacity;
+      FOpacityTo := FOpacity;
+      FOpacityStartTimeMs := TPixieDocument(Doc).AnimationTimeMs;
+      FOpacityDurationMs := TransitionDurationMs;
+      FOpacityDelayMs := TransitionDelayMs;
+      FOpacityTimingFunction := TransitionTimingFunction;
+      FOpacityAnimationActive := True;
+      FAnimatedOpacity := PreviousOpacity;
+      FTransitionDocument := Doc;
+      TPixieDocument(Doc).RegisterCssTransition(Self);
+    end
+    else
+    begin
+      CancelOpacityTransition;
+      FAnimatedOpacity := FOpacity;
+    end;
+  end
+  else if not WasOpacityAnimating then
+    FAnimatedOpacity := FOpacity;
+
+  // 18c. Transform target. Interpolate compatible transform operation lists so
+  // translate/scale transitions can be inspected visually on the Display Link.
+  if not HadComputedStyles then
+  begin
+    CancelTransformTransition;
+    FAnimatedTransformOps := FTransformOps;
+  end
+  else if not SameText(Trim(FTransform), Trim(PreviousTransform)) then
+  begin
+    if HasTransformTransition and (Doc is TPixieDocument) and
+       PixiePrepareTransformPair(PreviousTransformOps, FTransformOps,
+         PreparedTransformFrom, PreparedTransformTo) then
+    begin
+      FTransformFromOps := PreparedTransformFrom;
+      FTransformToOps := PreparedTransformTo;
+      FTransformStartTimeMs := TPixieDocument(Doc).AnimationTimeMs;
+      FTransformDurationMs := TransformDurationMs;
+      FTransformDelayMs := TransformDelayMs;
+      FTransformTimingFunction := TransformTimingFunction;
+      FTransformAnimationActive := True;
+      FAnimatedTransformOps := FTransformFromOps;
+      FTransitionDocument := Doc;
+      TPixieDocument(Doc).RegisterCssTransition(Self);
+    end
+    else
+    begin
+      CancelTransformTransition;
+      FAnimatedTransformOps := FTransformOps;
+    end;
+  end
+  else if not WasTransformAnimating then
+    FAnimatedTransformOps := FTransformOps;
+
+  // 18c. Aspect-ratio (0 = unset/auto)
   FAspectRatio := Tag.GetPropertyFloat(Ord(psid_aspect_ratio), False, 0,
     PtrUInt(@FAspectRatio) - PtrUInt(Self));
 
@@ -1892,6 +2608,7 @@ begin
   ComputeGrid(El, Doc);
 
   FComputeCtxPtr := nil;
+  FHasComputedStyles := True;
 end;
 
 procedure TPixieCssProperties.ComputeGrid(El: TObject; Doc: TObject);

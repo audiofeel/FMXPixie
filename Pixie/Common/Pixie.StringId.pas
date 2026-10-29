@@ -366,6 +366,11 @@ type
     psid_order,
 
     psid_opacity,
+    psid_transition,
+    psid_transition_property,
+    psid_transition_duration,
+    psid_transition_timing_function,
+    psid_transition_delay,
     psid_overflow_wrap,
     psid_word_wrap,
 
