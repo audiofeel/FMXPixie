@@ -341,8 +341,15 @@ end;
 
 procedure TPixieHtmlViewCore.Invalidate;
 begin
-  if Assigned(OnHostInvalidate) then
-    OnHostInvalidate;
+  // Reuse the GIF animation timer for the opacity-transition prototype.
+  // Request a 16 ms cadence only while a CSS transition is active.
+  if (FDocument <> nil) and FDocument.HasActiveTransitions and
+     (FAnimTimer <> nil) then
+  begin
+    FAnimTimer.Interval := 16;
+    if not FAnimTimer.Enabled then FAnimTimer.Enabled := True;
+  end;
+  if Assigned(OnHostInvalidate) then OnHostInvalidate;
 end;
 
 procedure TPixieHtmlViewCore.InvalidateRect(const R: TPixiePosition);
@@ -680,10 +687,13 @@ procedure TPixieHtmlViewCore.DoReleaseAnimationCursor(Sender: TObject;
 begin
   if (Cursor = nil) or (FAnimCursors = nil) then Exit;
   FAnimCursors.Remove(Cursor);
-  // FAnimTimer may already have been freed when this fires from an
-  // element destructor late in shutdown; guard the disable.
-  if (FAnimCursors.Count = 0) and (FAnimTimer <> nil) then
+  // Keep the shared timer running if a CSS transition is still active.
+  if (FAnimCursors.Count = 0) and (FAnimTimer <> nil) and
+     ((FDocument = nil) or not FDocument.HasActiveTransitions) then
+  begin
     FAnimTimer.Enabled := False;
+    FAnimTimer.Interval := 33;
+  end;
 end;
 
 procedure TPixieHtmlViewCore.DoAnimationTick(Sender: TObject);
@@ -693,11 +703,22 @@ var
   Cursor: TPixieAnimationCursor;
   Bounds, ViewRect: TPixiePosition;
   Scale: Single;
-  AllFinished: Boolean;
+  AllFinished, TransitionChanged, HasTransitions: Boolean;
 begin
+  Tick := NowMs;
+  TransitionChanged := False;
+  if FDocument <> nil then
+    TransitionChanged := FDocument.AdvanceOpacityTransitions(Tick);
+  HasTransitions := (FDocument <> nil) and FDocument.HasActiveTransitions;
+  if TransitionChanged then Invalidate;
+
   if FAnimCursors.Count = 0 then
   begin
-    FAnimTimer.Enabled := False;
+    if not HasTransitions then
+    begin
+      FAnimTimer.Enabled := False;
+      FAnimTimer.Interval := 33;
+    end;
     Exit;
   end;
 
@@ -707,25 +728,23 @@ begin
   ViewRect := TPixiePosition.Create(0, FScrollY,
     Round(OnHostGetViewWidth  / Scale),
     Round(OnHostGetViewHeight / Scale));
-
-  Tick := NowMs;
   AllFinished := True;
   for I := 0 to FAnimCursors.Count - 1 do
   begin
     Cursor := FAnimCursors[I];
-    if not Cursor.Finished then
-      AllFinished := False;
+    if not Cursor.Finished then AllFinished := False;
     if Cursor.Tick(Tick) then
     begin
       Bounds := ElementDocBounds(Cursor.Element);
-      if (Bounds.Width > 0) and (Bounds.Height > 0)
-        and Bounds.DoesIntersect(ViewRect) then
-        InvalidateRect(Bounds);
+      if (Bounds.Width > 0) and (Bounds.Height > 0) and
+         Bounds.DoesIntersect(ViewRect) then InvalidateRect(Bounds);
     end;
   end;
 
-  if AllFinished then
-    FAnimTimer.Enabled := False;
+  HasTransitions := (FDocument <> nil) and FDocument.HasActiveTransitions;
+  if not HasTransitions and (FAnimTimer.Interval <> 33) then
+    FAnimTimer.Interval := 33;
+  if AllFinished and not HasTransitions then FAnimTimer.Enabled := False;
 end;
 
 procedure TPixieHtmlViewCore.PauseAnimations;
@@ -748,7 +767,8 @@ var
   HasUnfinished: Boolean;
 begin
   if (FAnimTimer = nil) or (FAnimCursors = nil) then Exit;
-  if FAnimCursors.Count = 0 then Exit;
+  if (FAnimCursors.Count = 0) and
+     ((FDocument = nil) or not FDocument.HasActiveTransitions) then Exit;
   Tick := NowMs;
   HasUnfinished := False;
   for I := 0 to FAnimCursors.Count - 1 do
@@ -757,8 +777,12 @@ begin
     if not FAnimCursors[I].Finished then
       HasUnfinished := True;
   end;
-  if HasUnfinished then
+  if HasUnfinished or ((FDocument <> nil) and FDocument.HasActiveTransitions) then
+  begin
+    if (FDocument <> nil) and FDocument.HasActiveTransitions then
+      FAnimTimer.Interval := 16;
     FAnimTimer.Enabled := True;
+  end;
 end;
 
 function TPixieHtmlViewCore.ElementDocBounds(
@@ -907,6 +931,7 @@ begin
     FContainer.ViewportHeight := H;
     FDocument := TPixieDocument.CreateFromString(HtmlStr, FContainer,
       PixieMasterCss, FUserCss);
+    FDocument.SetTickCountProvider(NowMs);
     FDocument.OnChange := DoDocumentChange;
     if Assigned(FOnAfterParse) then
       FOnAfterParse(Owner);
