@@ -70,6 +70,7 @@ type
     FRebuilding: Boolean;
     FRenderTreeDirty: Boolean;
     FHasActiveTransitions: Boolean;
+    FActiveOpacityTransitions: TList<TObject>;
     FTickCountProvider: TPixieTickCountProvider;
 
     // Selection state
@@ -142,7 +143,7 @@ type
     // Opacity-transition prototype: use the host's monotonic timer clock.
     procedure SetTickCountProvider(const Provider: TPixieTickCountProvider);
     function GetTickCount: UInt64;
-    procedure MarkOpacityTransitionActive;
+    procedure MarkOpacityTransitionActive(Tag: TObject);
     function AdvanceOpacityTransitions(TickMs: UInt64): Boolean;
     property HasActiveTransitions: Boolean read FHasActiveTransitions;
 
@@ -268,6 +269,7 @@ begin
   FSelecting := False;
   FWordSelAnchor := nil;
   FHasActiveTransitions := False;
+  FActiveOpacityTransitions := TList<TObject>.Create;
   FTickCountProvider := nil;
 end;
 
@@ -304,6 +306,7 @@ begin
 
   FFontFaceRegistry.Free;
   FSelMap.Free;
+  FActiveOpacityTransitions.Free;
   FAllElements.Free;
   FTabularElements.Free;
   FFixedBoxes.Free;
@@ -945,29 +948,37 @@ begin
   else Result := 0;
 end;
 
-procedure TPixieDocument.MarkOpacityTransitionActive;
+procedure TPixieDocument.MarkOpacityTransitionActive(Tag: TObject);
 begin
-  FHasActiveTransitions := True;
+  if (Tag <> nil) and (FActiveOpacityTransitions.IndexOf(Tag) < 0) then
+    FActiveOpacityTransitions.Add(Tag);
+  FHasActiveTransitions := FActiveOpacityTransitions.Count > 0;
 end;
 
 function TPixieDocument.AdvanceOpacityTransitions(TickMs: UInt64): Boolean;
 var
   I: Integer;
   Tag: TPixieHtmlTag;
-  AnyActive: Boolean;
 begin
   Result := False;
-  if not FHasActiveTransitions then Exit;
-  AnyActive := False;
-  for I := 0 to FAllElements.Count - 1 do
+  for I := FActiveOpacityTransitions.Count - 1 downto 0 do
   begin
-    if not (FAllElements[I] is TPixieHtmlTag) then Continue;
-    Tag := TPixieHtmlTag(FAllElements[I]);
-    if not Tag.HasOpacityTransition then Continue;
+    if not (FActiveOpacityTransitions[I] is TPixieHtmlTag) then
+    begin
+      FActiveOpacityTransitions.Delete(I);
+      Continue;
+    end;
+    Tag := TPixieHtmlTag(FActiveOpacityTransitions[I]);
+    if not Tag.HasOpacityTransition then
+    begin
+      FActiveOpacityTransitions.Delete(I);
+      Continue;
+    end;
     Result := Tag.AdvanceOpacityTransition(TickMs) or Result;
-    if Tag.HasOpacityTransition then AnyActive := True;
+    if not Tag.HasOpacityTransition then
+      FActiveOpacityTransitions.Delete(I);
   end;
-  FHasActiveTransitions := AnyActive;
+  FHasActiveTransitions := FActiveOpacityTransitions.Count > 0;
 end;
 
 procedure TPixieDocument.MarkRenderTreeDirty;
@@ -1543,6 +1554,13 @@ procedure TPixieDocument.UnregisterElement(El: TPixieElement);
 var
   I, Idx: Integer;
 begin
+  // Remove the element from the non-owning animation list before destruction.
+  if FActiveOpacityTransitions <> nil then
+  begin
+    FActiveOpacityTransitions.Remove(El);
+    FHasActiveTransitions := FActiveOpacityTransitions.Count > 0;
+  end;
+
   // Recursively unregister children first
   for I := El.Children.Count - 1 downto 0 do
     UnregisterElement(El.Children[I]);
