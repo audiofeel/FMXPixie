@@ -1600,6 +1600,9 @@ end;
 procedure TPixieHtmlTag.ResetStyle;
 begin
   FStyle.Clear;
+  // A full document/style rebuild is not a CSS transition.
+  FHasComputedCssStyle := False;
+  FOpacityTransitionActive := False;
 end;
 
 procedure TPixieHtmlTag.ParseAttributes;
