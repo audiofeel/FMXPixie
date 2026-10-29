@@ -244,10 +244,10 @@ begin
   I := 1;
   while I <= Length(S) do
   begin
-    while (I <= Length(S)) and (S[I] in [' ', #9, #10, #13]) do Inc(I);
+    while (I <= Length(S)) and CharInSet(S[I], [' ', #9, #10, #13]) do Inc(I);
     if I > Length(S) then Break;
     StartPos := I;
-    while (I <= Length(S)) and not (S[I] in [' ', #9, #10, #13]) do Inc(I);
+    while (I <= Length(S)) and not CharInSet(S[I], [' ', #9, #10, #13]) do Inc(I);
     Token := Copy(S, StartPos, I - StartPos);
     TokenLen := Length(Token);
     Multiplier := 0;
