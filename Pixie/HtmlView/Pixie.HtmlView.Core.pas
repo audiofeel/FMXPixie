@@ -341,6 +341,16 @@ end;
 
 procedure TPixieHtmlViewCore.Invalidate;
 begin
+  // Keep the existing animation timer idle unless a transform transition is
+  // active. Use a 16 ms target cadence while CSS motion is in progress.
+  if (FDocument <> nil) and FDocument.HasActiveTransformTransitions and
+     (FAnimTimer <> nil) then
+  begin
+    FAnimTimer.Interval := 16;
+    if not FAnimTimer.Enabled then
+      FAnimTimer.Enabled := True;
+  end;
+
   if Assigned(OnHostInvalidate) then
     OnHostInvalidate;
 end;
@@ -693,11 +703,25 @@ var
   Cursor: TPixieAnimationCursor;
   Bounds, ViewRect: TPixiePosition;
   Scale: Single;
-  AllFinished: Boolean;
+  AllFinished, TransformChanged, HasTransitions: Boolean;
 begin
+  Tick := NowMs;
+  TransformChanged := False;
+  if FDocument <> nil then
+    TransformChanged := FDocument.AdvanceTransformTransitions(Tick);
+  HasTransitions := (FDocument <> nil) and
+    FDocument.HasActiveTransformTransitions;
+  if TransformChanged then
+    Invalidate;
+
+  // The timer also serves CSS transform transitions when no GIF cursor exists.
   if FAnimCursors.Count = 0 then
   begin
-    FAnimTimer.Enabled := False;
+    if not HasTransitions then
+    begin
+      FAnimTimer.Enabled := False;
+      FAnimTimer.Interval := 33;
+    end;
     Exit;
   end;
 
@@ -708,7 +732,6 @@ begin
     Round(OnHostGetViewWidth  / Scale),
     Round(OnHostGetViewHeight / Scale));
 
-  Tick := NowMs;
   AllFinished := True;
   for I := 0 to FAnimCursors.Count - 1 do
   begin
@@ -724,7 +747,11 @@ begin
     end;
   end;
 
-  if AllFinished then
+  HasTransitions := (FDocument <> nil) and
+    FDocument.HasActiveTransformTransitions;
+  if not HasTransitions and (FAnimTimer.Interval <> 33) then
+    FAnimTimer.Interval := 33;
+  if AllFinished and not HasTransitions then
     FAnimTimer.Enabled := False;
 end;
 
@@ -907,6 +934,7 @@ begin
     FContainer.ViewportHeight := H;
     FDocument := TPixieDocument.CreateFromString(HtmlStr, FContainer,
       PixieMasterCss, FUserCss);
+    FDocument.SetTickCountProvider(NowMs);
     FDocument.OnChange := DoDocumentChange;
     if Assigned(FOnAfterParse) then
       FOnAfterParse(Owner);
