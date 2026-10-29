@@ -938,6 +938,8 @@ var
   Ops: TPixieTransformOps;
   Fm: TPixieFontMetrics;
   BorderW, BorderH, OriginX, OriginY, TX, TY: TPixiePixel;
+  AnimatedX, AnimatedY: TPixiePixel;
+  AnimatedTranslate: Boolean;
   I: Integer;
   Cur, MOp: TPixieMatrix;
 begin
@@ -960,14 +962,26 @@ begin
   OriginY := BaseY + FPos.Y - FPadding.Top - FBorders.Top +
     Doc.ToPixels(FElement.Css.TransformOriginY, Fm, BorderH);
 
+  AnimatedTranslate := (Length(Ops) = 1) and
+    (Ops[0].Func = ptfTranslate) and
+    FElement.GetTransformTransitionTranslate(AnimatedX, AnimatedY);
+
   Cur := TPixieMatrix.Identity;
   for I := 0 to High(Ops) do
   begin
     case Ops[I].Func of
       ptfTranslate:
       begin
-        TX := Doc.ToPixels(Ops[I].LenX, Fm, BorderW);
-        TY := Doc.ToPixels(Ops[I].LenY, Fm, BorderH);
+        if AnimatedTranslate then
+        begin
+          TX := AnimatedX;
+          TY := AnimatedY;
+        end
+        else
+        begin
+          TX := Doc.ToPixels(Ops[I].LenX, Fm, BorderW);
+          TY := Doc.ToPixels(Ops[I].LenY, Fm, BorderH);
+        end;
         Cur := Cur.Multiply(TPixieMatrix.CreateTranslate(TX, TY));
       end;
       ptfScale:
