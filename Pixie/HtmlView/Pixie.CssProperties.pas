@@ -133,6 +133,18 @@ type
     FOpacityDelayMs: Double;
     FOpacityTimingFunction: string;
     FOpacityAnimationActive: Boolean;
+    FWidthAnimationActive: Boolean;
+    FAnimatedCssWidth: TPixieCssLength;
+    FWidthFrom, FWidthTo: TPixiePixel;
+    FWidthStartTimeMs: UInt64;
+    FWidthDurationMs, FWidthDelayMs: Double;
+    FWidthTimingFunction: string;
+    FHeightAnimationActive: Boolean;
+    FAnimatedCssHeight: TPixieCssLength;
+    FHeightFrom, FHeightTo: TPixiePixel;
+    FHeightStartTimeMs: UInt64;
+    FHeightDurationMs, FHeightDelayMs: Double;
+    FHeightTimingFunction: string;
     FBgColorTarget: TPixieWebColor;
     FBgColorFrom: TPixieWebColor;
     FBgColorTo: TPixieWebColor;
@@ -197,10 +209,15 @@ type
 
     // Special accessors
     function GetOpacity: Single;
+    function GetCssWidth: TPixieCssLength;
+    function GetCssHeight: TPixieCssLength;
     function GetTransformOps: TPixieTransformOps;
     function GetCssTransitionActive: Boolean;
+    function GetCssLayoutTransitionActive: Boolean;
     procedure UpdateTransitionRegistration;
     procedure CancelOpacityTransition;
+    procedure CancelWidthTransition;
+    procedure CancelHeightTransition;
     procedure CancelBackgroundColorTransition;
     procedure CancelTransformTransition;
     function GetZIndex: Integer;
@@ -214,9 +231,10 @@ type
     destructor Destroy; override;
 
     // Called by TPixieDocument from the FMX Display Link callback.
-    // Advances opacity, background-color and transform tweens using elapsed time.
+    // Advances CSS property tweens using elapsed time.
     function AdvanceCssTransitions(ATimeMs: UInt64): Boolean;
     property CssTransitionActive: Boolean read GetCssTransitionActive;
+    property CssLayoutTransitionActive: Boolean read GetCssLayoutTransitionActive;
 
     procedure DumpGetAttrs(List: TStringList);
 
@@ -269,8 +287,8 @@ type
     property JustifySelf: TPixieFlexAlignItems read FJustifySelf write FJustifySelf;
 
     // CSS length properties
-    property CssWidth: TPixieCssLength read FCssWidth write FCssWidth;
-    property CssHeight: TPixieCssLength read FCssHeight write FCssHeight;
+    property CssWidth: TPixieCssLength read GetCssWidth write FCssWidth;
+    property CssHeight: TPixieCssLength read GetCssHeight write FCssHeight;
     property CssMinWidth: TPixieCssLength read FCssMinWidth write FCssMinWidth;
     property CssMinHeight: TPixieCssLength read FCssMinHeight write FCssMinHeight;
     property CssMaxWidth: TPixieCssLength read FCssMaxWidth write FCssMaxWidth;
@@ -899,6 +917,20 @@ begin
   end;
 end;
 
+function PixieCssSizeLengthEqual(const A, B: TPixieCssLength): Boolean;
+begin
+  Result := A.ToString = B.ToString;
+end;
+
+function PixieIsAnimatableCssSize(const AValue: TPixieCssLength): Boolean;
+begin
+  // The first layout-transition implementation only interpolates resolved,
+  // absolute pixel lengths. auto, percentages and calc()/min()/max()/clamp()
+  // remain discrete because their value depends on layout context.
+  Result := not AValue.IsPredefined and not AValue.IsCalc and
+    not AValue.IsMath and (AValue.Units = cssUnitsPx);
+end;
+
 function PixieIsTimingFunction(const S: string): Boolean;
 var
   V: string;
@@ -1306,6 +1338,22 @@ begin
   FOpacityDelayMs := 0;
   FOpacityTimingFunction := 'ease';
   FOpacityAnimationActive := False;
+  FWidthAnimationActive := False;
+  FAnimatedCssWidth := TPixieCssLength.Create(0, cssUnitsPx);
+  FWidthFrom := 0;
+  FWidthTo := 0;
+  FWidthStartTimeMs := 0;
+  FWidthDurationMs := 0;
+  FWidthDelayMs := 0;
+  FWidthTimingFunction := 'ease';
+  FHeightAnimationActive := False;
+  FAnimatedCssHeight := TPixieCssLength.Create(0, cssUnitsPx);
+  FHeightFrom := 0;
+  FHeightTo := 0;
+  FHeightStartTimeMs := 0;
+  FHeightDurationMs := 0;
+  FHeightDelayMs := 0;
+  FHeightTimingFunction := 'ease';
   FBgColorTarget := TPixieWebColor.Transparent;
   FBgColorFrom := TPixieWebColor.Transparent;
   FBgColorTo := TPixieWebColor.Transparent;
@@ -1344,6 +1392,8 @@ end;
 destructor TPixieCssProperties.Destroy;
 begin
   CancelOpacityTransition;
+  CancelWidthTransition;
+  CancelHeightTransition;
   CancelBackgroundColorTransition;
   CancelTransformTransition;
   FGridTemplateColumns.Free;
@@ -1360,6 +1410,22 @@ begin
     Result := FOpacity;
 end;
 
+function TPixieCssProperties.GetCssWidth: TPixieCssLength;
+begin
+  if FWidthAnimationActive then
+    Result := FAnimatedCssWidth
+  else
+    Result := FCssWidth;
+end;
+
+function TPixieCssProperties.GetCssHeight: TPixieCssLength;
+begin
+  if FHeightAnimationActive then
+    Result := FAnimatedCssHeight
+  else
+    Result := FCssHeight;
+end;
+
 function TPixieCssProperties.GetTransformOps: TPixieTransformOps;
 begin
   if FTransformAnimationActive then
@@ -1370,8 +1436,14 @@ end;
 
 function TPixieCssProperties.GetCssTransitionActive: Boolean;
 begin
-  Result := FOpacityAnimationActive or FBgColorAnimationActive or
+  Result := FOpacityAnimationActive or FWidthAnimationActive or
+    FHeightAnimationActive or FBgColorAnimationActive or
     FTransformAnimationActive;
+end;
+
+function TPixieCssProperties.GetCssLayoutTransitionActive: Boolean;
+begin
+  Result := FWidthAnimationActive or FHeightAnimationActive;
 end;
 
 procedure TPixieCssProperties.UpdateTransitionRegistration;
@@ -1386,6 +1458,18 @@ end;
 procedure TPixieCssProperties.CancelOpacityTransition;
 begin
   FOpacityAnimationActive := False;
+  UpdateTransitionRegistration;
+end;
+
+procedure TPixieCssProperties.CancelWidthTransition;
+begin
+  FWidthAnimationActive := False;
+  UpdateTransitionRegistration;
+end;
+
+procedure TPixieCssProperties.CancelHeightTransition;
+begin
+  FHeightAnimationActive := False;
   UpdateTransitionRegistration;
 end;
 
@@ -1437,6 +1521,68 @@ begin
     end;
     FAnimatedOpacity := NewValue;
     Result := Abs(NewValue - OldValue) > 0.00001;
+  end;
+
+  if FWidthAnimationActive then
+  begin
+    OldValue := FAnimatedCssWidth.Val;
+    ElapsedMs := Double(ATimeMs) - Double(FWidthStartTimeMs);
+    if ElapsedMs < FWidthDelayMs then
+      NewValue := FWidthFrom
+    else if FWidthDurationMs <= 0 then
+    begin
+      NewValue := FWidthTo;
+      FWidthAnimationActive := False;
+    end
+    else
+    begin
+      Progress := (ElapsedMs - FWidthDelayMs) / FWidthDurationMs;
+      if Progress >= 1 then
+      begin
+        NewValue := FWidthTo;
+        FWidthAnimationActive := False;
+      end
+      else
+      begin
+        if Progress < 0 then Progress := 0;
+        Eased := PixieEaseProgress(Progress, FWidthTimingFunction);
+        NewValue := FWidthFrom + (FWidthTo - FWidthFrom) * Eased;
+      end;
+    end;
+    FAnimatedCssWidth := TPixieCssLength.Create(NewValue, cssUnitsPx);
+    if Abs(NewValue - OldValue) > 0.001 then
+      Result := True;
+  end;
+
+  if FHeightAnimationActive then
+  begin
+    OldValue := FAnimatedCssHeight.Val;
+    ElapsedMs := Double(ATimeMs) - Double(FHeightStartTimeMs);
+    if ElapsedMs < FHeightDelayMs then
+      NewValue := FHeightFrom
+    else if FHeightDurationMs <= 0 then
+    begin
+      NewValue := FHeightTo;
+      FHeightAnimationActive := False;
+    end
+    else
+    begin
+      Progress := (ElapsedMs - FHeightDelayMs) / FHeightDurationMs;
+      if Progress >= 1 then
+      begin
+        NewValue := FHeightTo;
+        FHeightAnimationActive := False;
+      end
+      else
+      begin
+        if Progress < 0 then Progress := 0;
+        Eased := PixieEaseProgress(Progress, FHeightTimingFunction);
+        NewValue := FHeightFrom + (FHeightTo - FHeightFrom) * Eased;
+      end;
+    end;
+    FAnimatedCssHeight := TPixieCssLength.Create(NewValue, cssUnitsPx);
+    if Abs(NewValue - OldValue) > 0.001 then
+      Result := True;
   end;
 
   if FTransformAnimationActive then
@@ -2161,27 +2307,41 @@ var
   TransformDurationMs, TransformDelayMs: Double;
   BgColorTransitionDurationMs, BgColorTransitionDelayMs: Double;
   TransitionTimingFunction, TransformTimingFunction: string;
+  WidthTimingFunction, HeightTimingFunction: string;
+  WidthDurationMs, WidthDelayMs: Double;
+  HeightDurationMs, HeightDelayMs: Double;
   BgColorTimingFunction: string;
+  PreviousWidth, PreviousWidthTarget: TPixieCssLength;
+  PreviousHeight, PreviousHeightTarget: TPixieCssLength;
   PreviousTransform: string;
   PreviousTransformOps, PreparedTransformFrom, PreparedTransformTo: TPixieTransformOps;
-  HasOpacityTransition, HasTransformTransition, HasBackgroundColorTransition,
-    HadComputedStyles, WasOpacityAnimating, WasTransformAnimating,
-    WasBgColorAnimating: Boolean;
+  HasOpacityTransition, HasWidthTransition, HasHeightTransition,
+    HasTransformTransition, HasBackgroundColorTransition,
+    HadComputedStyles, WasOpacityAnimating, WasWidthAnimating,
+    WasHeightAnimating, WasTransformAnimating, WasBgColorAnimating: Boolean;
 begin
   Assert(El is TPixieHtmlTag);
   PreviousOpacity := GetOpacity;
   PreviousOpacityTarget := FOpacity;
+  PreviousWidth := CssWidth;
+  PreviousWidthTarget := FCssWidth;
+  PreviousHeight := CssHeight;
+  PreviousHeightTarget := FCssHeight;
   PreviousBgColor := FBg.Color;
   PreviousBgColorTarget := FBgColorTarget;
   PreviousTransform := FTransform;
   PreviousTransformOps := GetTransformOps;
   HadComputedStyles := FHasComputedStyles;
   WasOpacityAnimating := FOpacityAnimationActive;
+  WasWidthAnimating := FWidthAnimationActive;
+  WasHeightAnimating := FHeightAnimationActive;
   WasTransformAnimating := FTransformAnimationActive;
   WasBgColorAnimating := FBgColorAnimationActive;
   if (FTransitionDocument <> nil) and (FTransitionDocument <> Doc) then
   begin
     CancelOpacityTransition;
+    CancelWidthTransition;
+    CancelHeightTransition;
     CancelBackgroundColorTransition;
     CancelTransformTransition;
     HadComputedStyles := False;
@@ -2600,6 +2760,14 @@ begin
     FTransition, FTransitionProperty, FTransitionDuration,
     FTransitionTimingFunction, FTransitionDelay, 'background-color',
     BgColorTransitionDurationMs, BgColorTransitionDelayMs, BgColorTimingFunction);
+  HasWidthTransition := PixieResolveCssTransition(
+    FTransition, FTransitionProperty, FTransitionDuration,
+    FTransitionTimingFunction, FTransitionDelay, 'width',
+    WidthDurationMs, WidthDelayMs, WidthTimingFunction);
+  HasHeightTransition := PixieResolveCssTransition(
+    FTransition, FTransitionProperty, FTransitionDuration,
+    FTransitionTimingFunction, FTransitionDelay, 'height',
+    HeightDurationMs, HeightDelayMs, HeightTimingFunction);
 
   if not HadComputedStyles then
   begin
@@ -2630,7 +2798,70 @@ begin
   else if not WasOpacityAnimating then
     FAnimatedOpacity := FOpacity;
 
-  // 18c. Transform target. Interpolate compatible transform operation lists so
+  // 18c. Width/height are layout properties: their intermediate pixel values
+  // are fed back through the layout engine on each Display Link frame.
+  // Only resolved absolute pixel lengths are interpolated in this first pass.
+  if not HadComputedStyles then
+  begin
+    CancelWidthTransition;
+    FAnimatedCssWidth := FCssWidth;
+  end
+  else if not PixieCssSizeLengthEqual(FCssWidth, PreviousWidthTarget) then
+  begin
+    if HasWidthTransition and PixieIsAnimatableCssSize(PreviousWidth) and
+       PixieIsAnimatableCssSize(FCssWidth) and (Doc is TPixieDocument) then
+    begin
+      FWidthFrom := PreviousWidth.Val;
+      FWidthTo := FCssWidth.Val;
+      FWidthStartTimeMs := TPixieDocument(Doc).AnimationTimeMs;
+      FWidthDurationMs := WidthDurationMs;
+      FWidthDelayMs := WidthDelayMs;
+      FWidthTimingFunction := WidthTimingFunction;
+      FWidthAnimationActive := True;
+      FAnimatedCssWidth := PreviousWidth;
+      FTransitionDocument := Doc;
+      TPixieDocument(Doc).RegisterCssTransition(Self);
+    end
+    else
+    begin
+      CancelWidthTransition;
+      FAnimatedCssWidth := FCssWidth;
+    end;
+  end
+  else if not WasWidthAnimating then
+    FAnimatedCssWidth := FCssWidth;
+
+  if not HadComputedStyles then
+  begin
+    CancelHeightTransition;
+    FAnimatedCssHeight := FCssHeight;
+  end
+  else if not PixieCssSizeLengthEqual(FCssHeight, PreviousHeightTarget) then
+  begin
+    if HasHeightTransition and PixieIsAnimatableCssSize(PreviousHeight) and
+       PixieIsAnimatableCssSize(FCssHeight) and (Doc is TPixieDocument) then
+    begin
+      FHeightFrom := PreviousHeight.Val;
+      FHeightTo := FCssHeight.Val;
+      FHeightStartTimeMs := TPixieDocument(Doc).AnimationTimeMs;
+      FHeightDurationMs := HeightDurationMs;
+      FHeightDelayMs := HeightDelayMs;
+      FHeightTimingFunction := HeightTimingFunction;
+      FHeightAnimationActive := True;
+      FAnimatedCssHeight := PreviousHeight;
+      FTransitionDocument := Doc;
+      TPixieDocument(Doc).RegisterCssTransition(Self);
+    end
+    else
+    begin
+      CancelHeightTransition;
+      FAnimatedCssHeight := FCssHeight;
+    end;
+  end
+  else if not WasHeightAnimating then
+    FAnimatedCssHeight := FCssHeight;
+
+  // 18d. Transform target. Interpolate compatible transform operation lists so
   // translate/scale transitions can be inspected visually on the Display Link.
   if not HadComputedStyles then
   begin
