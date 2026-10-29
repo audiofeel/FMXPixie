@@ -73,12 +73,12 @@ begin
     '.card-title{margin-top:23px;font-size:19px;font-weight:600;color:#f1f6fc;}' +
     '.card-copy{margin-top:8px;color:#acbbcf;font-size:12px;line-height:1.5;}' +
     '.card-hint{position:absolute;left:17px;right:17px;bottom:16px;padding-top:10px;border-top:1px solid #3b4b65;color:#8fc8ff;font-size:10px;letter-spacing:.8px;}' +
-    '#linear{transform:translate(0px,0px) scale(1);transition:transform 1400ms linear;}' +
-    '#linear:hover{transform:translate(30px,12px) scale(1.02);}' +
-    '#eased{transform:translate(0px,0px) scale(1);transition:transform 2200ms ease-in-out;}' +
-    '#eased:hover{transform:translate(0px,-12px) scale(1.12);}' +
-    '#delayed{transform:translate(0px,0px) scale(1);transition-property:transform;transition-duration:1600ms;transition-timing-function:ease-in-out;transition-delay:350ms;}' +
-    '#delayed:hover{transform:translate(-22px,12px) scale(0.88);}' +
+    '#linear{transform:translate(0px,0px) scale(1);transition:transform 320ms linear;}' +
+    '#linear:hover{transform:translate(26px,8px) scale(1.02);}' +
+    '#eased{transform:translate(0px,0px) scale(1);transition:transform 280ms ease-out;}' +
+    '#eased:hover{transform:translate(0px,-7px) scale(1.07);}' +
+    '#delayed{transform:translate(0px,0px) scale(1);transition-property:transform;transition-duration:320ms;transition-timing-function:ease-out;transition-delay:80ms;}' +
+    '#delayed:hover{transform:translate(-18px,8px) scale(0.94);}' +
     '.note{margin-top:22px;padding:13px 15px;border:1px solid #293d58;background:#101b2e;color:#a9b8cb;font-size:11px;line-height:1.55;}' +
     '.note strong{color:#d7eaff;}' +
     '.footer{margin-top:18px;padding-top:10px;border-top:1px solid #263750;color:#72859f;font-size:9px;letter-spacing:.7px;}' +
@@ -95,9 +95,9 @@ begin
     '<div class="headline">CSS transform transition</div>' +
     '<div class="intro">Наведите курсор на карточку и уберите его. Здесь анимируется геометрия: одна карточка смещается, вторая увеличивается, третья перемещается и уменьшается. Края карточек помогают увидеть пропущенные кадры.</div>' +
     '<div class="grid">' +
-    '<div id="linear" class="card"><div class="card-index">TEST 01 / TRANSLATE</div><div class="card-title">Linear move</div><div class="card-copy">Смещение по диагонали на 30 × 12 px за 1400 мс.</div><div class="card-hint">HOVER → MOVE → RETURN</div></div>' +
-    '<div id="eased" class="card"><div class="card-index">TEST 02 / SCALE</div><div class="card-title">Ease scale</div><div class="card-copy">Увеличение до 112% за 2200 мс. Следите за границами и углами.</div><div class="card-hint">HOVER → GROW → RETURN</div></div>' +
-    '<div id="delayed" class="card"><div class="card-index">TEST 03 / COMBINED</div><div class="card-title">Move + shrink</div><div class="card-copy">Пауза 350 мс, смещение и уменьшение до 88%.</div><div class="card-hint">HOVER → WAIT → MOVE</div></div>' +
+    '<div id="linear" class="card"><div class="card-index">TEST 01 / TRANSLATE</div><div class="card-title">Linear move</div><div class="card-copy">Смещение на 26 × 8 px за 320 мс с постоянной скоростью.</div><div class="card-hint">HOVER → MOVE → RETURN</div></div>' +
+    '<div id="eased" class="card"><div class="card-index">TEST 02 / SCALE</div><div class="card-title">Ease scale</div><div class="card-copy">Увеличение до 107% за 280 мс с замедлением к концу.</div><div class="card-hint">HOVER → GROW → RETURN</div></div>' +
+    '<div id="delayed" class="card"><div class="card-index">TEST 03 / COMBINED</div><div class="card-title">Move + shrink</div><div class="card-copy">Задержка 80 мс, смещение и уменьшение до 94%.</div><div class="card-hint">HOVER → WAIT → MOVE</div></div>' +
     '</div>' +
     '<div class="note"><strong>Проверяйте именно плавность:</strong> повторно наведите курсор до завершения движения; быстро переводите его между карточками; отследите равномерность перемещения и изменение размера. Таймер GIF/WebP остаётся отдельным от CSS Display Link.</div>' +
     '<div class="footer">FMXPIXIE · CSS TRANSFORM · TRANSLATE + SCALE · NO JAVASCRIPT</div>' +
