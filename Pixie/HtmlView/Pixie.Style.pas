@@ -2463,7 +2463,7 @@ begin
 
   // =============================  OTHER  =============================
 
-  if Name = Ord(psid_cursor) then
+  if (Name = Ord(psid_cursor)) or (Name = Ord(psid_transition)) then
   begin
     S := PixieCssGetRepr(Tokens, 0, -1, True);
     AddParsedProperty(Name, TPixiePropertyValue.FromString(S, Important));
