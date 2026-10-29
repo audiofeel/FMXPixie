@@ -100,9 +100,6 @@ type
     function HasTransformTransition: Boolean; override;
     function AdvanceTransformTransition(TickMs: UInt64): Boolean; override;
     function GetTransformTransitionTranslate(out X, Y: TPixiePixel): Boolean; override;
-    function HasTransformTransition: Boolean; override;
-    function AdvanceTransformTransition(TickMs: UInt64): Boolean; override;
-    function GetTransformTransitionTranslate(out X, Y: TPixiePixel): Boolean; override;
 
     function Select(const SelectorList: TPixieCssSelectorList;
       ApplyPseudo: Boolean = True): Integer; override;
