@@ -34,6 +34,17 @@ type
     FAttrs: TPixieStringMap;
     FPseudoClasses: TPixieIntVector;
 
+    // CSS transform transition: currently supports one translate() function
+    // with px coordinates and linear timing. The computed CSS transform stays
+    // at its destination; rendering uses the animated offset while active.
+    FHasComputedCssStyle: Boolean;
+    FTransformTransitionActive: Boolean;
+    FTransformTransitionStartMs: UInt64;
+    FTransformTransitionDurationMs: Cardinal;
+    FTransformTransitionFromX, FTransformTransitionFromY: Single;
+    FTransformTransitionToX, FTransformTransitionToY: Single;
+    FTransformTransitionCurrentX, FTransformTransitionCurrentY: Single;
+
   public
     procedure SelectAll(const Selector: TPixieCssSelector;
       Res: TPixieElementList); override;
@@ -86,6 +97,12 @@ type
       Stylesheet: TPixieStylesheet); override;
     procedure RefreshStyles; override;
     procedure ComputeStyles(Recursive: Boolean = True); override;
+    function HasTransformTransition: Boolean; override;
+    function AdvanceTransformTransition(TickMs: UInt64): Boolean; override;
+    function GetTransformTransitionTranslate(out X, Y: TPixiePixel): Boolean; override;
+    function HasTransformTransition: Boolean; override;
+    function AdvanceTransformTransition(TickMs: UInt64): Boolean; override;
+    function GetTransformTransitionTranslate(out X, Y: TPixiePixel): Boolean; override;
 
     function Select(const SelectorList: TPixieCssSelectorList;
       ApplyPseudo: Boolean = True): Integer; override;
@@ -187,6 +204,7 @@ type
 
   private
     procedure HandleCounterProperties(const AStyle: TPixieStyle);
+    function TryGetSimpleTranslate(out X, Y: Single): Boolean;
 
     function GetDocumentMode: TPixieDocumentMode;
     function MatchDocLang(const Lang: string): Boolean;
@@ -206,6 +224,64 @@ uses
   Pixie.RenderItem, Pixie.MediaQuery;
 
 { Helpers }
+
+function ParseTransformTransitionDuration(const Value: string;
+  out DurationMs: Cardinal): Boolean;
+var
+  S, Rest, TimeToken, NumberText, Tail: string;
+  P, I, TokenStart: Integer;
+  Multiplier, D: Double;
+  FS: TFormatSettings;
+begin
+  Result := False;
+  DurationMs := 0;
+  S := LowerCase(Trim(Value));
+  P := Pos('transform', S);
+  if P = 0 then Exit;
+
+  // Do not accept a substring of another transition-property name.
+  if (P > 1) and not CharInSet(S[P - 1], [' ', #9, #10, #13, ',']) then Exit;
+  I := P + Length('transform');
+  if (I <= Length(S)) and not CharInSet(S[I], [' ', #9, #10, #13]) then Exit;
+
+  Rest := Trim(Copy(S, I, MaxInt));
+  if Rest = '' then Exit;
+  TokenStart := 1;
+  while (TokenStart <= Length(Rest)) and
+    CharInSet(Rest[TokenStart], [' ', #9, #10, #13]) do Inc(TokenStart);
+  I := TokenStart;
+  while (I <= Length(Rest)) and
+    not CharInSet(Rest[I], [' ', #9, #10, #13, ',']) do Inc(I);
+  TimeToken := Copy(Rest, TokenStart, I - TokenStart);
+  if TimeToken = '' then Exit;
+
+  if (Length(TimeToken) > 2) and
+     (Copy(TimeToken, Length(TimeToken) - 1, 2) = 'ms') then
+  begin
+    NumberText := Copy(TimeToken, 1, Length(TimeToken) - 2);
+    Multiplier := 1.0;
+  end
+  else if (Length(TimeToken) > 1) and (TimeToken[Length(TimeToken)] = 's') then
+  begin
+    NumberText := Copy(TimeToken, 1, Length(TimeToken) - 1);
+    Multiplier := 1000.0;
+  end
+  else
+    Exit;
+
+  FS := TFormatSettings.Create;
+  FS.DecimalSeparator := '.';
+  if not TryStrToFloat(NumberText, D, FS) then Exit;
+  if (D <= 0) or (D * Multiplier > High(Cardinal)) then Exit;
+
+  Tail := Trim(Copy(Rest, I, MaxInt));
+  // The prototype implements linear interpolation only; reject CSS that asks
+  // for a different easing instead of silently rendering the wrong motion.
+  if Tail <> 'linear' then Exit;
+
+  DurationMs := Round(D * Multiplier);
+  Result := DurationMs > 0;
+end;
 
 function ListContainsInt(List: TPixieIntVector;
   Val: Integer): Boolean;
@@ -302,6 +378,16 @@ begin
   FStyle := TPixieStyle.Create;
   FAttrs := TPixieStringMap.Create;
   FPseudoClasses := TPixieIntVector.Create;
+  FHasComputedCssStyle := False;
+  FTransformTransitionActive := False;
+  FTransformTransitionStartMs := 0;
+  FTransformTransitionDurationMs := 0;
+  FTransformTransitionFromX := 0;
+  FTransformTransitionFromY := 0;
+  FTransformTransitionToX := 0;
+  FTransformTransitionToY := 0;
+  FTransformTransitionCurrentX := 0;
+  FTransformTransitionCurrentY := 0;
 end;
 
 constructor TPixieHtmlTag.CreateAnonymous(AParent: TPixieElement;
@@ -1209,11 +1295,29 @@ end;
 
 procedure TPixieHtmlTag.ComputeStyles(Recursive: Boolean);
 var
-  StyleAttr: string;
+  StyleAttr, TransitionValue: string;
   I: Integer;
   OldDisplay: TPixieDisplay;
+  OldHasTranslate, NewHasTranslate, WasTransformTransitionActive: Boolean;
+  OldX, OldY, OldTargetX, OldTargetY, NewX, NewY: Single;
+  CurrentX, CurrentY: Single;
+  DurationMs: Cardinal;
 begin
   OldDisplay := FCss.Display;
+  OldHasTranslate := TryGetSimpleTranslate(OldX, OldY);
+  WasTransformTransitionActive := FTransformTransitionActive;
+  CurrentX := FTransformTransitionCurrentX;
+  CurrentY := FTransformTransitionCurrentY;
+  if WasTransformTransitionActive then
+  begin
+    OldTargetX := FTransformTransitionToX;
+    OldTargetY := FTransformTransitionToY;
+  end
+  else
+  begin
+    OldTargetX := OldX;
+    OldTargetY := OldY;
+  end;
 
   StyleAttr := GetAttr('style');
   if StyleAttr <> '' then
@@ -1221,6 +1325,48 @@ begin
 
   FStyle.SubstVars(Self);
   FCss.Compute(Self, FDoc);
+
+  NewHasTranslate := TryGetSimpleTranslate(NewX, NewY);
+  if not FHasComputedCssStyle then
+    FTransformTransitionActive := False
+  else if WasTransformTransitionActive and NewHasTranslate and
+    (Abs(NewX - OldTargetX) <= 0.0001) and
+    (Abs(NewY - OldTargetY) <= 0.0001) then
+  begin
+    // A style refresh unrelated to the transform must not snap or restart it.
+    FTransformTransitionActive := True;
+  end
+  else if OldHasTranslate and NewHasTranslate and
+    ((Abs(NewX - OldTargetX) > 0.0001) or
+     (Abs(NewY - OldTargetY) > 0.0001)) then
+  begin
+    TransitionValue := GetPropertyString(Ord(psid_transition), False, '', 0);
+    if ParseTransformTransitionDuration(TransitionValue, DurationMs) and
+       (FDoc <> nil) then
+    begin
+      FTransformTransitionActive := True;
+      FTransformTransitionFromX := CurrentX;
+      FTransformTransitionFromY := CurrentY;
+      if not WasTransformTransitionActive then
+      begin
+        FTransformTransitionFromX := OldTargetX;
+        FTransformTransitionFromY := OldTargetY;
+      end;
+      FTransformTransitionToX := NewX;
+      FTransformTransitionToY := NewY;
+      FTransformTransitionCurrentX := FTransformTransitionFromX;
+      FTransformTransitionCurrentY := FTransformTransitionFromY;
+      FTransformTransitionStartMs := TPixieDocument(FDoc).GetTickCount;
+      FTransformTransitionDurationMs := DurationMs;
+      TPixieDocument(FDoc).MarkTransformTransitionActive(Self);
+    end
+    else
+      FTransformTransitionActive := False;
+  end
+  else if WasTransformTransitionActive then
+    FTransformTransitionActive := False;
+
+  FHasComputedCssStyle := True;
 
   // A change in display (e.g. :hover toggling display:none/block) alters the
   // render-tree structure, so a repaint alone is not enough — flag the
@@ -1231,6 +1377,80 @@ begin
   if Recursive then
     for I := 0 to FChildren.Count - 1 do
       FChildren[I].ComputeStyles;
+end;
+
+function TPixieHtmlTag.TryGetSimpleTranslate(out X, Y: Single): Boolean;
+var
+  Ops: TPixieTransformOps;
+begin
+  X := 0;
+  Y := 0;
+  Ops := FCss.TransformOps;
+  Result := (Length(Ops) = 1) and (Ops[0].Func = ptfTranslate);
+  if not Result then Exit;
+
+  // This first transition implementation interpolates explicit px values only.
+  if Ops[0].LenX.IsPredefined or Ops[0].LenY.IsPredefined or
+     Ops[0].LenX.IsCalc or Ops[0].LenY.IsCalc or
+     Ops[0].LenX.IsMath or Ops[0].LenY.IsMath or
+     (Ops[0].LenX.Units <> cssUnitsPx) or
+     (Ops[0].LenY.Units <> cssUnitsPx) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  X := Ops[0].LenX.Val;
+  Y := Ops[0].LenY.Val;
+end;
+
+function TPixieHtmlTag.HasTransformTransition: Boolean;
+begin
+  Result := FTransformTransitionActive;
+end;
+
+function TPixieHtmlTag.GetTransformTransitionTranslate(
+  out X, Y: TPixiePixel): Boolean;
+begin
+  Result := FTransformTransitionActive;
+  if Result then
+  begin
+    X := FTransformTransitionCurrentX;
+    Y := FTransformTransitionCurrentY;
+  end
+  else
+  begin
+    X := 0;
+    Y := 0;
+  end;
+end;
+
+function TPixieHtmlTag.AdvanceTransformTransition(TickMs: UInt64): Boolean;
+var
+  ElapsedMs: UInt64;
+  Progress: Single;
+begin
+  Result := FTransformTransitionActive;
+  if not FTransformTransitionActive then Exit;
+
+  if TickMs >= FTransformTransitionStartMs then
+    ElapsedMs := TickMs - FTransformTransitionStartMs
+  else
+    ElapsedMs := 0;
+
+  if ElapsedMs >= FTransformTransitionDurationMs then
+  begin
+    FTransformTransitionCurrentX := FTransformTransitionToX;
+    FTransformTransitionCurrentY := FTransformTransitionToY;
+    FTransformTransitionActive := False;
+    Exit;
+  end;
+
+  Progress := ElapsedMs / FTransformTransitionDurationMs;
+  FTransformTransitionCurrentX := FTransformTransitionFromX +
+    (FTransformTransitionToX - FTransformTransitionFromX) * Progress;
+  FTransformTransitionCurrentY := FTransformTransitionFromY +
+    (FTransformTransitionToY - FTransformTransitionFromY) * Progress;
 end;
 
 // Refresh styles
@@ -1465,6 +1685,8 @@ end;
 procedure TPixieHtmlTag.ResetStyle;
 begin
   FStyle.Clear;
+  FHasComputedCssStyle := False;
+  FTransformTransitionActive := False;
 end;
 
 procedure TPixieHtmlTag.ParseAttributes;
