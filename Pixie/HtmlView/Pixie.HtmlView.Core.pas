@@ -692,7 +692,8 @@ begin
   FAnimCursors.Remove(Cursor);
   // FAnimTimer may already have been freed when this fires from an
   // element destructor late in shutdown; guard the disable.
-  if (FAnimCursors.Count = 0) and (FAnimTimer <> nil) then
+  if (FAnimCursors.Count = 0) and (FAnimTimer <> nil) and
+     ((FDocument = nil) or not FDocument.HasActiveTransformTransitions) then
     FAnimTimer.Enabled := False;
 end;
 
@@ -772,10 +773,13 @@ procedure TPixieHtmlViewCore.ResumeAnimations;
 var
   I: Integer;
   Tick: UInt64;
-  HasUnfinished: Boolean;
+  HasUnfinished, HasTransitions: Boolean;
 begin
   if (FAnimTimer = nil) or (FAnimCursors = nil) then Exit;
-  if FAnimCursors.Count = 0 then Exit;
+  HasTransitions := (FDocument <> nil) and
+    FDocument.HasActiveTransformTransitions;
+  if (FAnimCursors.Count = 0) and not HasTransitions then Exit;
+
   Tick := NowMs;
   HasUnfinished := False;
   for I := 0 to FAnimCursors.Count - 1 do
@@ -784,7 +788,10 @@ begin
     if not FAnimCursors[I].Finished then
       HasUnfinished := True;
   end;
-  if HasUnfinished then
+
+  if HasTransitions then
+    FAnimTimer.Interval := 16;
+  if HasUnfinished or HasTransitions then
     FAnimTimer.Enabled := True;
 end;
 
