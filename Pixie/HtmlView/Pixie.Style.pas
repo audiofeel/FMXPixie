@@ -2470,7 +2470,9 @@ begin
     Exit;
   end;
 
-  if (Name = Ord(psid_transform)) or (Name = Ord(psid_transform_origin)) then
+  if (Name = Ord(psid_transform)) or
+     (Name = Ord(psid_transform_origin)) or
+     (Name = Ord(psid_transition)) then
   begin
     S := PixieCssGetRepr(Tokens, 0, -1, True);
     AddParsedProperty(Name, TPixiePropertyValue.FromString(S, Important));
