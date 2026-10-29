@@ -141,6 +141,11 @@ type
     // CSS cursor for a document point; overridable for sub-element regions.
     function CursorForPoint(DocX, DocY: TPixiePixel): string; virtual;
 
+    // CSS transform-transition hooks. Most element types are not animatable.
+    function HasTransformTransition: Boolean; virtual;
+    function AdvanceTransformTransition(TickMs: UInt64): Boolean; virtual;
+    function GetTransformTransitionTranslate(out X, Y: TPixiePixel): Boolean; virtual;
+
     procedure GetText(var Text: string); virtual;
     function GetDisplayText: string; virtual;
     function GetTextContent: string; virtual;
@@ -576,6 +581,24 @@ end;
 function TPixieElement.CursorForPoint(DocX, DocY: TPixiePixel): string;
 begin
   Result := Css.Cursor;
+end;
+
+function TPixieElement.HasTransformTransition: Boolean;
+begin
+  Result := False;
+end;
+
+function TPixieElement.AdvanceTransformTransition(TickMs: UInt64): Boolean;
+begin
+  Result := False;
+end;
+
+function TPixieElement.GetTransformTransitionTranslate(
+  out X, Y: TPixiePixel): Boolean;
+begin
+  X := 0;
+  Y := 0;
+  Result := False;
 end;
 
 procedure TPixieElement.GetText(var Text: string);
