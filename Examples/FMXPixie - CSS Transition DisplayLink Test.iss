@@ -1,12 +1,11 @@
 ﻿; ============================================================================
 ; FMXPixie - CSS Transition DisplayLink Test
 ;
-; Regression coverage for the currently implemented CSS transitions:
-;   opacity, background-color, transform (translate/scale), transition: all,
-;   multiple transition entries, longhand timing/delay and rapid retargeting.
+; Regression coverage for opacity, background-color and transform
+; transitions, including transition:all, longhand timing/delay and retargeting.
 ;
-; Note: transform:scale() does not change layout and therefore does not push
-; adjacent boxes. CSS width/height layout transitions are not implemented here.
+; Layout-aware width/height transitions are covered by the separate
+; "FMXPixie - CSS Size Layout Transition Test.iss" example.
 ;
 ; Build from the Examples directory beside Modules\ and Files\.
 ; ============================================================================
@@ -112,7 +111,7 @@ begin
     '<div id="t-all" class="card"><div class="card-index">TEST 07 / ALL</div><div class="card-title">transition: all</div><div class="card-copy">Проверка всех трёх поддерживаемых свойств вместе.</div><div class="card-hint">170 ms · EASE-OUT</div></div>' +
     '<div id="t-retarget" class="card"><div class="card-index">TEST 08 / RETARGET</div><div class="card-title">Быстрый реверс</div><div class="card-copy">Входите и выходите до окончания анимации.</div><div class="card-hint">210 ms · EASE-IN-OUT</div></div>' +
     '</div>' +
-    '<div class="note"><strong>Проверка соседних элементов:</strong> transform:scale() только визуально меняет размер и не двигает соседей — это ожидаемое поведение CSS. Анимация width/height с перерасчётом layout здесь не реализована. Поддерживаемые переходы этой ветки: opacity, background-color и совместимые transform translate/scale.</div>' +
+    '<div class="note"><strong>Проверка соседних элементов:</strong> transform:scale() только визуально меняет размер и не двигает соседей — это ожидаемое поведение CSS. Для анимации width/height с перерасчётом layout используйте отдельный CSS Size Layout Transition Test. Этот набор проверяет opacity, background-color и совместимые transform translate/scale.</div>' +
     '<div class="footer">FMXPIXIE · CSS TRANSITIONS ON FMX DISPLAY LINK · GIF/WEBP AND SCROLLBAR TIMERS ARE UNCHANGED</div>' +
     '</div></body></html>';
 end;
