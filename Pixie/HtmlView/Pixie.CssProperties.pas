@@ -928,7 +928,9 @@ begin
   // absolute pixel lengths. auto, percentages and calc()/min()/max()/clamp()
   // remain discrete because their value depends on layout context.
   Result := not AValue.IsPredefined and not AValue.IsCalc and
-    not AValue.IsMath and (AValue.Units = cssUnitsPx);
+    not AValue.IsMath and
+    ((AValue.Units = cssUnitsPx) or
+     ((AValue.Units = cssUnitsNone) and (AValue.Val = 0)));
 end;
 
 function PixieIsTimingFunction(const S: string): Boolean;
