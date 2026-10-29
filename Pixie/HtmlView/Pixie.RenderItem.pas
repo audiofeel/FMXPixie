@@ -44,6 +44,8 @@ type
     FStickyShiftY: TPixiePixel;          // (kept current for hit-testing)
     FRelShiftDone: Boolean;              // True after ApplyRelativeShift ran
     FPositioned: TPixieRenderItemVector; // non-owning
+    FPositionedZIndexes: TPixieIntVector; // cached sorted unique z-indexes
+    FPositionedZIndexesDirty: Boolean;
     FScrollView: TPixieScrollView;       // owned, can be nil
     FIntrinsicMinWidth: TPixiePixel;     // CSS min-content width; 0 = unknown
 
@@ -178,6 +180,7 @@ type
     function FetchPositioned: Boolean;
     procedure RenderPositioned(Rt: TPixieRenderType = rtAll);
     procedure AddPositioned(El: TPixieRenderItem);
+    function GetPositionedZIndexes: TPixieIntVector;
     function ElementStaticOffset(
       El: TPixieRenderItem): TPixiePointF;
 
@@ -259,6 +262,8 @@ begin
   FStickyShiftY := 0;
   FRelShiftDone := False;
   FPositioned := nil;
+  FPositionedZIndexes := nil;
+  FPositionedZIndexesDirty := True;
   FScrollView := nil;
   FIntrinsicMinWidth := 0;
   FPos.Clear;
@@ -300,6 +305,7 @@ destructor TPixieRenderItem.Destroy;
 begin
   FScrollView.Free;
   FPositioned.Free;
+  FPositionedZIndexes.Free;
   FChildren.Free;
   inherited Destroy;
 end;
@@ -1104,6 +1110,7 @@ var
   ElPos: TPixieElementPosition;
 begin
   Result := False;
+  FPositionedZIndexesDirty := True;
   if FPositioned <> nil then
     FPositioned.Clear;
 
@@ -1130,6 +1137,7 @@ begin
     if FPositioned = nil then
       FPositioned := TPixieRenderItemVector.Create;
     FPositioned.Add(El);
+    FPositionedZIndexesDirty := True;
   end
   else
   begin
@@ -1137,6 +1145,29 @@ begin
     if ElParent <> nil then
       ElParent.AddPositioned(El);
   end;
+end;
+
+function TPixieRenderItem.GetPositionedZIndexes: TPixieIntVector;
+var
+  I, Idx: Integer;
+begin
+  if FPositionedZIndexes = nil then
+    FPositionedZIndexes := TPixieIntVector.Create;
+
+  if not FPositionedZIndexesDirty then
+    Exit(FPositionedZIndexes);
+
+  FPositionedZIndexes.Clear;
+  if FPositioned <> nil then
+    for I := 0 to FPositioned.Count - 1 do
+    begin
+      Idx := FPositioned[I].SrcEl.Css.ZIndex;
+      if FPositionedZIndexes.IndexOf(Idx) < 0 then
+        FPositionedZIndexes.Add(Idx);
+    end;
+  FPositionedZIndexes.Sort;
+  FPositionedZIndexesDirty := False;
+  Result := FPositionedZIndexes;
 end;
 
 function TPixieRenderItem.ElementStaticOffset(
@@ -1676,46 +1707,36 @@ begin
 
   if WithPositioned and (FPositioned <> nil) then
   begin
-    ZIndexes := TPixieIntVector.Create;
-    try
-      // Collect unique z-indexes
-      for I := 0 to FPositioned.Count - 1 do
-      begin
-        Idx := FPositioned[I].SrcEl.Css.ZIndex;
-        if ZIndexes.IndexOf(Idx) < 0 then
-          ZIndexes.Add(Idx);
-      end;
-      ZIndexes.Sort;
+    // The positioned list and z-indexes change during layout, not paint.
+    // Reuse the sorted unique z-index list on steady-state repaint frames.
+    ZIndexes := GetPositionedZIndexes;
 
-      // Negative z-index positioned elements
-      for I := 0 to ZIndexes.Count - 1 do
-      begin
-        if ZIndexes[I] < 0 then
-          DrawChildren(Hdc, X, Y, Clip, dfPositioned, ZIndexes[I]);
-      end;
+    // Negative z-index positioned elements
+    for I := 0 to ZIndexes.Count - 1 do
+    begin
+      if ZIndexes[I] < 0 then
+        DrawChildren(Hdc, X, Y, Clip, dfPositioned, ZIndexes[I]);
+    end;
 
-      // Block children
-      DrawChildren(Hdc, X, Y, Clip, dfBlock, 0);
-      // Float children
-      DrawChildren(Hdc, X, Y, Clip, dfFloats, 0);
-      // Inline children
-      DrawChildren(Hdc, X, Y, Clip, dfInlines, 0);
+    // Block children
+    DrawChildren(Hdc, X, Y, Clip, dfBlock, 0);
+    // Float children
+    DrawChildren(Hdc, X, Y, Clip, dfFloats, 0);
+    // Inline children
+    DrawChildren(Hdc, X, Y, Clip, dfInlines, 0);
 
-      // Zero z-index positioned elements
-      for I := 0 to ZIndexes.Count - 1 do
-      begin
-        if ZIndexes[I] = 0 then
-          DrawChildren(Hdc, X, Y, Clip, dfPositioned, ZIndexes[I]);
-      end;
+    // Zero z-index positioned elements
+    for I := 0 to ZIndexes.Count - 1 do
+    begin
+      if ZIndexes[I] = 0 then
+        DrawChildren(Hdc, X, Y, Clip, dfPositioned, ZIndexes[I]);
+    end;
 
-      // Positive z-index positioned elements
-      for I := 0 to ZIndexes.Count - 1 do
-      begin
-        if ZIndexes[I] > 0 then
-          DrawChildren(Hdc, X, Y, Clip, dfPositioned, ZIndexes[I]);
-      end;
-    finally
-      ZIndexes.Free;
+    // Positive z-index positioned elements
+    for I := 0 to ZIndexes.Count - 1 do
+    begin
+      if ZIndexes[I] > 0 then
+        DrawChildren(Hdc, X, Y, Clip, dfPositioned, ZIndexes[I]);
     end;
   end
   else
