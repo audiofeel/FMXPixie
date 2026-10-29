@@ -17,6 +17,7 @@ uses
 
 type
   TPixieDocumentChangeEvent = procedure(Sender: TObject) of object;
+  TPixieTickCountProvider = function: UInt64 of object;
 
   TPixieCssText = record
     Text: string;
@@ -68,6 +69,8 @@ type
     FUpdateDirty: Boolean;
     FRebuilding: Boolean;
     FRenderTreeDirty: Boolean;
+    FHasActiveTransitions: Boolean;
+    FTickCountProvider: TPixieTickCountProvider;
 
     // Selection state
     FSelAnchor: TPixieElement;
@@ -135,6 +138,13 @@ type
     procedure AddFixedBox(const Box: TPixiePosition);
     procedure AddTabular(Ri: TObject);
     procedure MarkRenderTreeDirty;
+
+    // Opacity-transition prototype: use the host's monotonic timer clock.
+    procedure SetTickCountProvider(const Provider: TPixieTickCountProvider);
+    function GetTickCount: UInt64;
+    procedure MarkOpacityTransitionActive;
+    function AdvanceOpacityTransitions(TickMs: UInt64): Boolean;
+    property HasActiveTransitions: Boolean read FHasActiveTransitions;
 
     // Rendering (Phase 5 stubs)
     function Render(MaxWidth: TPixiePixel): TPixiePixel;
@@ -257,6 +267,8 @@ begin
   FSelFocusIdx := -1;
   FSelecting := False;
   FWordSelAnchor := nil;
+  FHasActiveTransitions := False;
+  FTickCountProvider := nil;
 end;
 
 destructor TPixieDocument.Destroy;
@@ -921,6 +933,42 @@ begin
 end;
 
 // --- Rendering (Phase 5 stubs) ---
+
+procedure TPixieDocument.SetTickCountProvider(const Provider: TPixieTickCountProvider);
+begin
+  FTickCountProvider := Provider;
+end;
+
+function TPixieDocument.GetTickCount: UInt64;
+begin
+  if Assigned(FTickCountProvider) then Result := FTickCountProvider()
+  else Result := 0;
+end;
+
+procedure TPixieDocument.MarkOpacityTransitionActive;
+begin
+  FHasActiveTransitions := True;
+end;
+
+function TPixieDocument.AdvanceOpacityTransitions(TickMs: UInt64): Boolean;
+var
+  I: Integer;
+  Tag: TPixieHtmlTag;
+  AnyActive: Boolean;
+begin
+  Result := False;
+  if not FHasActiveTransitions then Exit;
+  AnyActive := False;
+  for I := 0 to FAllElements.Count - 1 do
+  begin
+    if not (FAllElements[I] is TPixieHtmlTag) then Continue;
+    Tag := TPixieHtmlTag(FAllElements[I]);
+    if not Tag.HasOpacityTransition then Continue;
+    Result := Tag.AdvanceOpacityTransition(TickMs) or Result;
+    if Tag.HasOpacityTransition then AnyActive := True;
+  end;
+  FHasActiveTransitions := AnyActive;
+end;
 
 procedure TPixieDocument.MarkRenderTreeDirty;
 begin
