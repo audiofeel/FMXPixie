@@ -331,6 +331,7 @@ type
     psid_text_transform,
     psid_transform,
     psid_transform_origin,
+    psid_transition,
 
     psid_flex,
     psid_flex_flow,
