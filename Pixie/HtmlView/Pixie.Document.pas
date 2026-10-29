@@ -167,6 +167,7 @@ type
     procedure RegisterCssTransition(Css: TPixieCssProperties);
     procedure UnregisterCssTransition(Css: TPixieCssProperties);
     function HasActiveCssTransitions: Boolean;
+    function HasActiveLayoutCssTransitions: Boolean;
     function AdvanceCssTransitions(ATimeMs: UInt64): Boolean;
     function AnimationTimeMs: UInt64;
 
@@ -1525,6 +1526,17 @@ function TPixieDocument.HasActiveCssTransitions: Boolean;
 begin
   Result := (FActiveCssTransitions <> nil) and
     (FActiveCssTransitions.Count > 0);
+end;
+
+function TPixieDocument.HasActiveLayoutCssTransitions: Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  if FActiveCssTransitions = nil then Exit;
+  for I := 0 to FActiveCssTransitions.Count - 1 do
+    if TPixieCssProperties(FActiveCssTransitions[I]).CssLayoutTransitionActive then
+      Exit(True);
 end;
 
 procedure TPixieDocument.RegisterCssTransition(Css: TPixieCssProperties);
