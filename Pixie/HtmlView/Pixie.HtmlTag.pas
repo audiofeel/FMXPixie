@@ -1316,7 +1316,7 @@ begin
         if FOpacityTransitionActive then
         begin
           FOpacityTransitionStartMs := TPixieDocument(FDoc).GetTickCount;
-          TPixieDocument(FDoc).MarkOpacityTransitionActive;
+          TPixieDocument(FDoc).MarkOpacityTransitionActive(Self);
           FCss.Opacity := OldOpacity;
         end;
       end
