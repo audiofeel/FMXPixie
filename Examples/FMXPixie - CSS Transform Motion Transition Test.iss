@@ -42,6 +42,7 @@ const
 var
   FMXForm: FForm;
   View: FPixieHtmlView;
+  Elem: FPixieElement;
 
 function BuildMotionHtml: String;
 begin
@@ -52,7 +53,11 @@ begin
     'body{background:#0b1220;color:#e5e7eb;font-family:"Segoe UI",Arial,sans-serif;font-size:14px;}' +
     '.titlebar{height:44px;padding:0 18px;display:flex;align-items:center;' +
     'background:#101827;border-bottom:1px solid #263248;color:#cbd5e1;' +
-    'font-size:12px;letter-spacing:1.3px;text-transform:uppercase;}' +
+    'font-size:12px;letter-spacing:1.3px;text-transform:uppercase;position:relative;}' +
+    '.title-close{position:absolute;right:10px;top:8px;width:42px;height:27px;' +
+    'border:1px solid #334155;border-radius:5px;text-align:center;line-height:25px;' +
+    'letter-spacing:0;cursor:pointer;}' +
+    '.title-close:hover{background:#172033;border-color:#64748b;}' +
     '.content{padding:20px 28px;}' +
     '.eyebrow{font-size:11px;letter-spacing:2px;color:#93c5fd;text-transform:uppercase;}' +
     'h1{font-size:25px;font-weight:600;margin:7px 0 6px;color:#f8fafc;}' +
@@ -80,7 +85,8 @@ begin
     'font-size:12px;color:#94a3b8;line-height:1.65;}' +
     '.code{font-family:Consolas,monospace;color:#bfdbfe;}' +
     '</style></head><body>' +
-    '<div class="titlebar">FMXPixie / CSS Transform Motion Test</div>' +
+    '<div class="titlebar">FMXPixie / CSS Transform Motion Test' +
+    '<div id="btn-close" class="title-close">X</div></div>' +
     '<div class="content">' +
     '<div class="eyebrow">Visual transition test</div>' +
     '<h1>Movement, not color</h1>' +
@@ -98,6 +104,28 @@ begin
     '</div></div></body></html>';
 end;
 
+function ElementClick(Sender, El: TObject): Boolean;
+var
+  H: NativeInt;
+  Id: String;
+begin
+  Result := False;
+  if El = nil then Exit;
+  H := NativeInt(El);
+  while H <> 0 do
+  begin
+    Elem.FCreate(H);
+    Id := Elem.GetAttr('id', '');
+    if Id = 'btn-close' then
+    begin
+      WizardForm.CancelButton.OnClick(WizardForm.CancelButton);
+      Result := True;
+      Exit;
+    end;
+    H := Elem.Parent;
+  end;
+end;
+
 procedure ViewMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Single);
 begin
@@ -110,6 +138,7 @@ procedure FMXInit;
 begin
   FMXForm := InitFormHandle;
   View := InitPixieHtmlView;
+  Elem := InitPixieElement;
 end;
 
 function InitializeSetup(): Boolean;
@@ -127,10 +156,16 @@ begin
   View.FCreate(FMXForm.Handle);
   View.SetBounds(0, 0, TEST_FORM_WIDTH, TEST_FORM_HEIGHT);
   View.ColorScheme(pcsDark);
+  View.OnElementClick(@ElementClick);
   View.OnMouseDown(@ViewMouseDown);
   View.LoadFromString(BuildMotionHtml);
 
   FMXForm.Show;
+end;
+
+procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);
+begin
+  Confirm := False;
 end;
 
 procedure DeinitializeSetup;
