@@ -17,6 +17,7 @@ uses
 
 type
   TPixieDocumentChangeEvent = procedure(Sender: TObject) of object;
+  TPixieTickCountProvider = function: UInt64 of object;
 
   TPixieCssText = record
     Text: string;
@@ -56,6 +57,9 @@ type
     FMode: TPixieDocumentMode;
     FAllElements: TPixieElementList;
     FTabularElements: TPixiePointerList; // non-owning list of TPixieRenderItem
+    FActiveTransformTransitions: TList<TPixieElement>; // non-owning
+    FHasActiveTransformTransitions: Boolean;
+    FTickCountProvider: TPixieTickCountProvider;
 
     // Focus state
     FFocusedElement: TPixieElement;
@@ -135,6 +139,13 @@ type
     procedure AddFixedBox(const Box: TPixiePosition);
     procedure AddTabular(Ri: TObject);
     procedure MarkRenderTreeDirty;
+
+    // CSS transform-transition scheduler. The host supplies its monotonic clock.
+    procedure SetTickCountProvider(const Provider: TPixieTickCountProvider);
+    function GetTickCount: UInt64;
+    procedure MarkTransformTransitionActive(El: TPixieElement);
+    function AdvanceTransformTransitions(TickMs: UInt64): Boolean;
+    property HasActiveTransformTransitions: Boolean read FHasActiveTransformTransitions;
 
     // Rendering (Phase 5 stubs)
     function Render(MaxWidth: TPixiePixel): TPixiePixel;
@@ -238,6 +249,9 @@ begin
   FFixedBoxes := TPixiePositionVector.Create;
   FTabularElements := TPixiePointerList.Create;
   FAllElements := TPixieElementList.Create(True); // owns elements
+  FActiveTransformTransitions := TList<TPixieElement>.Create;
+  FHasActiveTransformTransitions := False;
+  FTickCountProvider := nil;
   FSelMap := TPixieSelectionSet.Create;
   FFontFaceRegistry := TPixieFontFaceRegistry.Create;
   FSize.Width := 0;
@@ -292,6 +306,7 @@ begin
 
   FFontFaceRegistry.Free;
   FSelMap.Free;
+  FActiveTransformTransitions.Free;
   FAllElements.Free;
   FTabularElements.Free;
   FFixedBoxes.Free;
