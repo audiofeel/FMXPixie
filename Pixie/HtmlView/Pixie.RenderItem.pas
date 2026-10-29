@@ -181,6 +181,7 @@ type
     procedure RenderPositioned(Rt: TPixieRenderType = rtAll);
     procedure AddPositioned(El: TPixieRenderItem);
     function GetPositionedZIndexes: TPixieIntVector;
+    procedure InvalidatePositionedZIndexes;
     function ElementStaticOffset(
       El: TPixieRenderItem): TPixiePointF;
 
@@ -1168,6 +1169,20 @@ begin
   FPositionedZIndexes.Sort;
   FPositionedZIndexesDirty := False;
   Result := FPositionedZIndexes;
+end;
+
+procedure TPixieRenderItem.InvalidatePositionedZIndexes;
+var
+  Item: TPixieRenderItem;
+begin
+  // A z-index change affects every stacking context up the render tree that
+  // may hold this item in its positioned list.
+  Item := Self;
+  while Item <> nil do
+  begin
+    Item.FPositionedZIndexesDirty := True;
+    Item := Item.FParent;
+  end;
 end;
 
 function TPixieRenderItem.ElementStaticOffset(

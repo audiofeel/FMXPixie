@@ -1212,8 +1212,11 @@ var
   StyleAttr: string;
   I: Integer;
   OldDisplay: TPixieDisplay;
+  OldZIndex: Integer;
+  Ri: TPixieRenderItem;
 begin
   OldDisplay := FCss.Display;
+  OldZIndex := FCss.ZIndex;
 
   StyleAttr := GetAttr('style');
   if StyleAttr <> '' then
@@ -1221,6 +1224,15 @@ begin
 
   FStyle.SubstVars(Self);
   FCss.Compute(Self, FDoc);
+
+  // Keep the cached stacking-context order coherent when a state-dependent
+  // rule changes z-index without rebuilding the render tree.
+  if FCss.ZIndex <> OldZIndex then
+  begin
+    Ri := TPixieRenderItem(GetRenderItem);
+    if Ri <> nil then
+      Ri.InvalidatePositionedZIndexes;
+  end;
 
   // A change in display (e.g. :hover toggling display:none/block) alters the
   // render-tree structure, so a repaint alone is not enough — flag the
