@@ -949,6 +949,49 @@ begin
     FOnChange(Self);
 end;
 
+procedure TPixieDocument.SetTickCountProvider(
+  const Provider: TPixieTickCountProvider);
+begin
+  FTickCountProvider := Provider;
+end;
+
+function TPixieDocument.GetTickCount: UInt64;
+begin
+  if Assigned(FTickCountProvider) then
+    Result := FTickCountProvider()
+  else
+    Result := 0;
+end;
+
+procedure TPixieDocument.MarkTransformTransitionActive(El: TPixieElement);
+begin
+  if (El <> nil) and (FActiveTransformTransitions.IndexOf(El) < 0) then
+    FActiveTransformTransitions.Add(El);
+  FHasActiveTransformTransitions := FActiveTransformTransitions.Count > 0;
+end;
+
+function TPixieDocument.AdvanceTransformTransitions(TickMs: UInt64): Boolean;
+var
+  I: Integer;
+  El: TPixieElement;
+begin
+  Result := False;
+  for I := FActiveTransformTransitions.Count - 1 downto 0 do
+  begin
+    El := FActiveTransformTransitions[I];
+    if (El = nil) or not El.HasTransformTransition then
+    begin
+      FActiveTransformTransitions.Delete(I);
+      Continue;
+    end;
+
+    Result := El.AdvanceTransformTransition(TickMs) or Result;
+    if not El.HasTransformTransition then
+      FActiveTransformTransitions.Delete(I);
+  end;
+  FHasActiveTransformTransitions := FActiveTransformTransitions.Count > 0;
+end;
+
 procedure TPixieDocument.RebuildRenderItems;
 var
   Ri: TPixieRenderItem;
@@ -1521,6 +1564,13 @@ begin
   if FSelAnchor = El then FSelAnchor := nil;
   if FSelFocus = El then FSelFocus := nil;
   if FWordSelAnchor = El then FWordSelAnchor := nil;
+
+  // Remove from animation tracking before the element can be freed.
+  if FActiveTransformTransitions <> nil then
+  begin
+    FActiveTransformTransitions.Remove(El);
+    FHasActiveTransformTransitions := FActiveTransformTransitions.Count > 0;
+  end;
 
   // Remove from FAllElements and free
   Idx := FAllElements.IndexOf(El);
