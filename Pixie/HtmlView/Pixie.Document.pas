@@ -306,7 +306,7 @@ begin
 
   FFontFaceRegistry.Free;
   FSelMap.Free;
-  FActiveOpacityTransitions.Free;
+  FreeAndNil(FActiveOpacityTransitions);
   FAllElements.Free;
   FTabularElements.Free;
   FFixedBoxes.Free;
