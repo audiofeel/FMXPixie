@@ -75,8 +75,8 @@ begin
     '.card-hint{position:absolute;left:17px;right:17px;bottom:16px;padding-top:10px;border-top:1px solid #3b4b65;color:#8fc8ff;font-size:10px;letter-spacing:.8px;}' +
     '#linear{transform:translate(0px,0px) scale(1);transition:transform 320ms linear;}' +
     '#linear:hover{transform:translate(26px,8px) scale(1.02);}' +
-    '#eased{background-color:red;transform:translate(0px,0px) scale(1);transition:transform 280ms ease-out, background-color 250ms ease;}' +
-    '#eased:hover{background-color:#ff2400;transform:translate(0px,-7px) scale(1.07);}' +
+    '#eased{background-color:#8b0000;transition:background-color 900ms linear;}' +
+    '#eased:hover{background-color:#ff2400;}' +
     '#delayed{transform:translate(0px,0px) scale(1);transition-property:transform;transition-duration:320ms;transition-timing-function:ease-out;transition-delay:80ms;}' +
     '#delayed:hover{transform:translate(-18px,8px) scale(0.94);}' +
     '.note{margin-top:22px;padding:13px 15px;border:1px solid #293d58;background:#101b2e;color:#a9b8cb;font-size:11px;line-height:1.55;}' +
@@ -92,15 +92,15 @@ begin
     '</div></div>' +
     '<div class="page">' +
     '<div class="eyebrow">ISOLATED REGRESSION TEST</div>' +
-    '<div class="headline">CSS transform + background-color transition</div>' +
-    '<div class="intro">Наведите курсор на карточку и уберите его. Здесь анимируется геометрия: одна карточка смещается, вторая увеличивается, третья перемещается и уменьшается. Края карточек помогают увидеть пропущенные кадры.</div>' +
+    '<div class="headline">CSS background-color transition</div>' +
+    '<div class="intro">Проверка перехода цвета отдельно от transform и GIF/WebP. Наведите курсор на красную карточку: её фон должен плавно пройти от тёмно-красного к алому примерно за 900 мс, затем вернуться обратно.</div>' +
     '<div class="grid">' +
     '<div id="linear" class="card"><div class="card-index">TEST 01 / TRANSLATE</div><div class="card-title">Linear move</div><div class="card-copy">Смещение на 26 × 8 px за 320 мс с постоянной скоростью.</div><div class="card-hint">HOVER → MOVE → RETURN</div></div>' +
-    '<div id="eased" class="card"><div class="card-index">TEST 02 / SCALE + COLOR</div><div class="card-title">Ease scale + color</div><div class="card-copy">Увеличение до 107% за 280 мс; фон меняется с красного на алый за 250 мс.</div><div class="card-hint">HOVER → GROW + COLOR</div></div>' +
+    '<div id="eased" class="card"><div class="card-index">TEST 02 / COLOR ONLY</div><div class="card-title">Background color</div><div class="card-copy">Тёмно-красный → алый за 900 мс, linear. Масштаб и положение не меняются.</div><div class="card-hint">HOVER → COLOR → RETURN</div></div>' +
     '<div id="delayed" class="card"><div class="card-index">TEST 03 / COMBINED</div><div class="card-title">Move + shrink</div><div class="card-copy">Задержка 80 мс, смещение и уменьшение до 94%.</div><div class="card-hint">HOVER → WAIT → MOVE</div></div>' +
     '</div>' +
     '<div class="note"><strong>Проверяйте именно плавность:</strong> повторно наведите курсор до завершения движения; быстро переводите его между карточками; отследите равномерность перемещения и изменение размера. Таймер GIF/WebP остаётся отдельным от CSS Display Link.</div>' +
-    '<div class="footer">FMXPIXIE · CSS TRANSFORM + BACKGROUND-COLOR · DISPLAY LINK · NO JAVASCRIPT</div>' +
+    '<div class="footer">FMXPIXIE · BACKGROUND-COLOR INTERPOLATION · DISPLAY LINK · NO JAVASCRIPT</div>' +
     '</div></body></html>';
 end;
 
