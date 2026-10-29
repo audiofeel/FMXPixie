@@ -1129,12 +1129,21 @@ end;
 function TPixieHtmlViewCore.ProcessCssTransitions: Boolean;
 var
   Changed: Boolean;
+  LayoutTransitionActive: Boolean;
 begin
   Result := False;
   if FDocument = nil then Exit;
+
+  // width/height transitions change box geometry rather than only paint.
+  // Remember this before advancing, since the final tick deactivates them.
+  LayoutTransitionActive := FDocument.HasActiveLayoutCssTransitions;
   Changed := FDocument.AdvanceCssTransitions(NowMs);
   if Changed then
+  begin
+    if LayoutTransitionActive then
+      FNeedsLayout := True;
     Invalidate;
+  end;
   Result := FDocument.HasActiveCssTransitions;
 end;
 
