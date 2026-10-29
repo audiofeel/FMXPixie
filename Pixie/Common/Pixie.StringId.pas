@@ -366,6 +366,7 @@ type
     psid_order,
 
     psid_opacity,
+    psid_transition,
     psid_overflow_wrap,
     psid_word_wrap,
 
