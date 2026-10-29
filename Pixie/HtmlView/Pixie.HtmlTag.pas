@@ -34,6 +34,14 @@ type
     FAttrs: TPixieStringMap;
     FPseudoClasses: TPixieIntVector;
 
+    // First CSS-transition prototype: opacity only.
+    FHasComputedCssStyle: Boolean;
+    FOpacityTransitionActive: Boolean;
+    FOpacityTransitionStartMs: UInt64;
+    FOpacityTransitionDurationMs: Cardinal;
+    FOpacityTransitionFrom: Single;
+    FOpacityTransitionTo: Single;
+
   public
     procedure SelectAll(const Selector: TPixieCssSelector;
       Res: TPixieElementList); override;
@@ -41,6 +49,10 @@ type
     constructor CreateAnonymous(AParent: TPixieElement;
       const AStyle: string = 'display: block'); overload;
     destructor Destroy; override;
+
+    // CSS transition prototype: only opacity is interpolated for now.
+    function AdvanceOpacityTransition(TickMs: UInt64): Boolean;
+    property HasOpacityTransition: Boolean read FOpacityTransitionActive;
 
     // get_property overloads
     function GetPropertyInt(Name: Integer; IsInherited: Boolean;
@@ -207,6 +219,59 @@ uses
 
 { Helpers }
 
+function ParseOpacityTransitionDuration(const Value: string;
+  out DurationMs: Cardinal): Boolean;
+var
+  S, Token, NumberText: string;
+  I, StartPos, TokenLen, P: Integer;
+  V, Multiplier: Double;
+  FS: TFormatSettings;
+begin
+  Result := False;
+  DurationMs := 0;
+  S := LowerCase(Trim(Value));
+
+  // First pass supports the common form: "transition: opacity 300ms linear".
+  // Other properties and complex timing-function lists are out of scope.
+  P := Pos('opacity', S);
+  if P = 0 then Exit;
+  S := Copy(S, P, Length(S) - P + 1);
+  P := Pos(',', S);
+  if P > 0 then S := Copy(S, 1, P - 1);
+
+  FS := TFormatSettings.Create;
+  FS.DecimalSeparator := '.';
+  I := 1;
+  while I <= Length(S) do
+  begin
+    while (I <= Length(S)) and (S[I] in [' ', #9, #10, #13]) do Inc(I);
+    if I > Length(S) then Break;
+    StartPos := I;
+    while (I <= Length(S)) and not (S[I] in [' ', #9, #10, #13]) do Inc(I);
+    Token := Copy(S, StartPos, I - StartPos);
+    TokenLen := Length(Token);
+    Multiplier := 0;
+    if (TokenLen > 2) and (Copy(Token, TokenLen - 1, 2) = 'ms') then
+    begin
+      Multiplier := 1;
+      NumberText := Copy(Token, 1, TokenLen - 2);
+    end
+    else if (TokenLen > 1) and (Token[TokenLen] = 's') then
+    begin
+      Multiplier := 1000;
+      NumberText := Copy(Token, 1, TokenLen - 1);
+    end;
+    if (Multiplier > 0) and TryStrToFloat(NumberText, V, FS) and (V > 0) then
+    begin
+      V := V * Multiplier;
+      if V > High(Cardinal) then DurationMs := High(Cardinal)
+      else DurationMs := Round(V);
+      Result := DurationMs > 0;
+      Exit;
+    end;
+  end;
+end;
+
 function ListContainsInt(List: TPixieIntVector;
   Val: Integer): Boolean;
 var
@@ -302,6 +367,12 @@ begin
   FStyle := TPixieStyle.Create;
   FAttrs := TPixieStringMap.Create;
   FPseudoClasses := TPixieIntVector.Create;
+  FHasComputedCssStyle := False;
+  FOpacityTransitionActive := False;
+  FOpacityTransitionStartMs := 0;
+  FOpacityTransitionDurationMs := 0;
+  FOpacityTransitionFrom := 1;
+  FOpacityTransitionTo := 1;
 end;
 
 constructor TPixieHtmlTag.CreateAnonymous(AParent: TPixieElement;
@@ -1212,8 +1283,16 @@ var
   StyleAttr: string;
   I: Integer;
   OldDisplay: TPixieDisplay;
+  OldOpacity, OldTargetOpacity, NewOpacity: Single;
+  TransitionValue: string;
+  DurationMs: Cardinal;
 begin
   OldDisplay := FCss.Display;
+  OldOpacity := FCss.Opacity;
+  if FOpacityTransitionActive then
+    OldTargetOpacity := FOpacityTransitionTo
+  else
+    OldTargetOpacity := OldOpacity;
 
   StyleAttr := GetAttr('style');
   if StyleAttr <> '' then
@@ -1221,6 +1300,37 @@ begin
 
   FStyle.SubstVars(Self);
   FCss.Compute(Self, FDoc);
+  NewOpacity := FCss.Opacity;
+
+  if FHasComputedCssStyle then
+  begin
+    if Abs(NewOpacity - OldTargetOpacity) > 0.0001 then
+    begin
+      TransitionValue := GetPropertyString(Ord(psid_transition), False, '', 0);
+      if ParseOpacityTransitionDuration(TransitionValue, DurationMs) then
+      begin
+        FOpacityTransitionActive := FDoc <> nil;
+        FOpacityTransitionFrom := OldOpacity;
+        FOpacityTransitionTo := NewOpacity;
+        FOpacityTransitionDurationMs := DurationMs;
+        if FOpacityTransitionActive then
+        begin
+          FOpacityTransitionStartMs := TPixieDocument(FDoc).GetTickCount;
+          TPixieDocument(FDoc).MarkOpacityTransitionActive;
+          FCss.Opacity := OldOpacity;
+        end;
+      end
+      else
+        FOpacityTransitionActive := False;
+    end
+    else if FOpacityTransitionActive then
+    begin
+      // An unrelated style refresh must not snap an in-flight opacity
+      // transition to its final computed value.
+      FCss.Opacity := OldOpacity;
+    end;
+  end;
+  FHasComputedCssStyle := True;
 
   // A change in display (e.g. :hover toggling display:none/block) alters the
   // render-tree structure, so a repaint alone is not enough — flag the
@@ -1231,6 +1341,31 @@ begin
   if Recursive then
     for I := 0 to FChildren.Count - 1 do
       FChildren[I].ComputeStyles;
+end;
+
+function TPixieHtmlTag.AdvanceOpacityTransition(TickMs: UInt64): Boolean;
+var
+  ElapsedMs: UInt64;
+  Progress: Single;
+begin
+  Result := FOpacityTransitionActive;
+  if not FOpacityTransitionActive then Exit;
+
+  if TickMs >= FOpacityTransitionStartMs then
+    ElapsedMs := TickMs - FOpacityTransitionStartMs
+  else
+    ElapsedMs := 0;
+
+  if ElapsedMs >= FOpacityTransitionDurationMs then
+  begin
+    FCss.Opacity := FOpacityTransitionTo;
+    FOpacityTransitionActive := False;
+    Exit;
+  end;
+
+  Progress := ElapsedMs / FOpacityTransitionDurationMs;
+  FCss.Opacity := FOpacityTransitionFrom +
+    (FOpacityTransitionTo - FOpacityTransitionFrom) * Progress;
 end;
 
 // Refresh styles
