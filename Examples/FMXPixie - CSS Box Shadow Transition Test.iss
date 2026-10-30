@@ -70,19 +70,19 @@ begin
     '.card-title{margin-top:15px;font-size:16px;font-weight:600;color:#172033;}' +
     '.card-copy{margin-top:7px;color:#526277;font-size:10px;line-height:1.45;}' +
     '.card-hint{position:absolute;left:13px;right:13px;bottom:11px;padding-top:7px;border-top:1px solid #d8e1eb;color:#17649b;font-size:8px;letter-spacing:.6px;}' +
-    '#shadow-static{box-shadow:0 10px 24px 4px rgba(15,23,42,.70);}' +
-    '#shadow-hover{box-shadow:0 2px 5px 0 rgba(0,0,0,.16);transition:box-shadow 340ms cubic-bezier(.2,.75,.25,1);}' +
-    '#shadow-hover:hover{box-shadow:0 12px 30px 4px rgba(0,150,255,.92);}' +
+    '#shadow-static{box-shadow:0 5px 24px 4px rgba(15,23,42,.70);}' +
+    '#shadow-hover{box-shadow:0 1px 5px 0 rgba(0,0,0,.16);transition:box-shadow 340ms cubic-bezier(.2,.75,.25,1);}' +
+    '#shadow-hover:hover{box-shadow:0 6px 30px 4px rgba(0,150,255,.92);}' +
     '#shadow-none{box-shadow:none;transition:box-shadow 380ms ease-out;}' +
-    '#shadow-none:hover{box-shadow:0 10px 28px 2px rgba(124,58,237,.94);}' +
-    '#shadow-delay{box-shadow:0 2px 5px 0 rgba(0,0,0,.16);transition-property:box-shadow;transition-duration:260ms;transition-timing-function:ease-out;transition-delay:320ms;}' +
-    '#shadow-delay:hover{box-shadow:0 9px 24px 3px rgba(249,115,22,.95);}' +
-    '#shadow-combo{background-color:#152238;box-shadow:0 2px 5px 0 rgba(0,0,0,.16);transition:background-color 220ms linear,box-shadow 360ms ease-out;}' +
-    '#shadow-combo:hover{background-color:#164e63;box-shadow:0 9px 26px 3px rgba(20,184,166,.95);}' +
+    '#shadow-none:hover{box-shadow:0 5px 28px 2px rgba(124,58,237,.94);}' +
+    '#shadow-delay{box-shadow:0 1px 5px 0 rgba(0,0,0,.16);transition-property:box-shadow;transition-duration:260ms;transition-timing-function:ease-out;transition-delay:320ms;}' +
+    '#shadow-delay:hover{box-shadow:0 5px 24px 3px rgba(249,115,22,.95);}' +
+    '#shadow-combo{background-color:#152238;box-shadow:0 1px 5px 0 rgba(0,0,0,.16);transition:background-color 220ms linear,box-shadow 360ms ease-out;}' +
+    '#shadow-combo:hover{background-color:#164e63;box-shadow:0 5px 26px 3px rgba(20,184,166,.95);}' +
     '#shadow-retarget{box-shadow:0 0 0 0 rgba(56,189,248,0);transition:box-shadow 560ms ease-in-out;}' +
-    '#shadow-retarget:hover{box-shadow:0 12px 32px 5px rgba(56,189,248,.96);}' +
-    '#shadow-spread{box-shadow:0 3px 8px -3px rgba(0,0,0,.3);transition:box-shadow 360ms ease-out;}' +
-    '#shadow-spread:hover{box-shadow:0 7px 20px 7px rgba(244,63,94,.94);}' +
+    '#shadow-retarget:hover{box-shadow:0 6px 32px 5px rgba(56,189,248,.96);}' +
+    '#shadow-spread{box-shadow:0 2px 8px -3px rgba(0,0,0,.3);transition:box-shadow 360ms ease-out;}' +
+    '#shadow-spread:hover{box-shadow:0 4px 20px 7px rgba(244,63,94,.94);}' +
     '.note{margin-top:14px;padding:11px 13px;border:1px solid #b8c7d8;background:#f8fafc;color:#526277;font-size:10px;line-height:1.55;}' +
     '.note strong{color:#172033;}' +
     '.footer{margin-top:12px;padding-top:8px;border-top:1px solid #c5d1df;color:#64748b;font-size:8px;letter-spacing:.8px;}' +
@@ -100,7 +100,7 @@ begin
     '<div class="intro">Сначала проверьте статическую серую тень слева. Она должна быть видна постоянно и иметь мягкий край. На остальных карточках наведите курсор и уберите его: меняются смещение, размытие, spread и цвет. Тень должна появляться и исчезать без скачка; у карточки 04 начало специально задержано.</div>' +
     '<div class="section-title">01 / STATIC SHADOW — БЕЗ АНИМАЦИИ</div>' +
     '<div class="row">' +
-    '<div id="shadow-static" class="card"><div class="card-index">TEST 01 / STATIC</div><div class="card-title">Обычная тень</div><div class="card-copy">Постоянная контрастная RGBA-тень с размытием. Это проверка разбора rgba(), blur и самого вызова отрисовки.</div><div class="card-hint">0 10px 24px 4px · RGBA + BLUR</div></div>' +
+    '<div id="shadow-static" class="card"><div class="card-index">TEST 01 / STATIC</div><div class="card-title">Обычная тень</div><div class="card-copy">Постоянная контрастная RGBA-тень с размытием. Это проверка разбора rgba(), blur и самого вызова отрисовки.</div><div class="card-hint">0 5px 24px 4px · RGBA + BLUR</div></div>' +
     '<div id="shadow-hover" class="card"><div class="card-index">TEST 02 / HOVER</div><div class="card-title">Изменение параметров</div><div class="card-copy">Смещение, blur, spread и цвет меняются вместе.</div><div class="card-hint">340 ms · CUBIC-BEZIER</div></div>' +
     '<div id="shadow-none" class="card"><div class="card-index">TEST 03 / NONE → SHADOW</div><div class="card-title">Появление тени</div><div class="card-copy">Переход из box-shadow:none и обратно.</div><div class="card-hint">380 ms · EASE-OUT</div></div>' +
     '<div id="shadow-delay" class="card"><div class="card-index">TEST 04 / DELAY</div><div class="card-title">Задержка старта</div><div class="card-copy">После наведения тень начинает меняться через 320 ms.</div><div class="card-hint">320 ms DELAY · 260 ms DURATION</div></div>' +
