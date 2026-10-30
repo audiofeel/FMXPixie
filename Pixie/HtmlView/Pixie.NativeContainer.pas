@@ -174,6 +174,9 @@ type
       const Gradient: TPixieConicGradientLayer); override;
     procedure DrawBorders(Hdc: PtrUInt; const Borders: TPixieBorders;
       const DrawPos: TPixiePosition; IsRoot: Boolean); override;
+    procedure DrawBoxShadow(Hdc: PtrUInt; const DrawPos: TPixiePosition;
+      const Radius: TPixieBorderRadiuses;
+      const Shadow: TPixieBoxShadow); override;
 
     // Document events
     procedure SetCaption(const ACaption: string); override;
@@ -1250,6 +1253,14 @@ procedure TPixieNativeContainer.DrawBorders(Hdc: PtrUInt;
   IsRoot: Boolean);
 begin
   FCanvas.DrawBorders(Borders, DrawPos, IsRoot);
+end;
+
+procedure TPixieNativeContainer.DrawBoxShadow(Hdc: PtrUInt;
+  const DrawPos: TPixiePosition; const Radius: TPixieBorderRadiuses;
+  const Shadow: TPixieBoxShadow);
+begin
+  FCanvas.DrawBoxShadow(DrawPos.X, DrawPos.Y, DrawPos.Width, DrawPos.Height,
+    Radius, Shadow);
 end;
 
 // ---------------------------------------------------------------------------
