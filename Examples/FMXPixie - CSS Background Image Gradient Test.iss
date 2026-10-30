@@ -8,7 +8,7 @@
 ; The SVG is a bundled test asset. Replace it with a game screenshot
 ; (PNG/JPG/WebP) in [Files] and in the url(...) below.
 ;
-; Build from the Examples directory beside Modules\\ and Files\\.
+; Build from the Examples directory beside Modules\ and Files\.
 ; ============================================================================
 
 #define DemoAppName "FMXPixie - CSS Background Image Gradient Test"
@@ -21,18 +21,18 @@ CreateAppDir=no
 Uninstallable=no
 OutputBaseFilename=FMXPixie - CSS Background Image Gradient Test
 //SetupArchitecture=x64
-SetupIconFile=Files\\setup.ico
+SetupIconFile=Files\setup.ico
 
 [Files]
 #if SetupSetting("SetupArchitecture") == "x64"
-Source: "Modules\\FMXPixie_x64.dll"; DestName: "FMXPixie.dll"; Flags: dontcopy
+Source: "Modules\FMXPixie_x64.dll"; DestName: "FMXPixie.dll"; Flags: dontcopy
 #else
-Source: "Modules\\FMXPixie_x86.dll"; DestName: "FMXPixie.dll"; Flags: dontcopy
+Source: "Modules\FMXPixie_x86.dll"; DestName: "FMXPixie.dll"; Flags: dontcopy
 #endif
-Source: "Files\\FMXPixie_SvgView_Demo.svg"; Flags: dontcopy
+Source: "Files\FMXPixie_SvgView_Demo.svg"; Flags: dontcopy
 
 [Code]
-#include "Modules\\FMXPixieHandle.iss"
+#include "Modules\FMXPixieHandle.iss"
 
 const
   TEST_FORM_WIDTH = 1100;
@@ -152,7 +152,7 @@ var
   TempDir: String;
 begin
   ExtractTemporaryFile('FMXPixie_SvgView_Demo.svg');
-  TempDir := ExpandConstant('{tmp}\\');
+  TempDir := ExpandConstant('{tmp}\');
 
   EmptyWizardForm(TEST_FORM_WIDTH, TEST_FORM_HEIGHT);
 
