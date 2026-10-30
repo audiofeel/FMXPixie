@@ -62,6 +62,8 @@ begin
     '.intro{margin-top:7px;max-width:980px;color:#526277;font-size:11px;line-height:1.5;}' +
     '.section-title{margin-top:17px;margin-bottom:10px;color:#17649b;font-size:9px;font-weight:bold;letter-spacing:1.3px;}' +
     '.row{display:flex;margin-top:8px;padding:30px 5px 36px;}' +
+    '.row-three .card{width:30%;margin-right:5%;}' +
+    '.row-three .card:last-child{margin-right:0;}' +
     '.card{position:relative;width:20%;height:142px;margin-right:6.66%;padding:13px;border:1px solid #b8c7d8;border-radius:12px;background:#ffffff;}' +
     '.card:last-child{margin-right:0;}' +
     '.card-index{font-size:9px;font-weight:bold;letter-spacing:1.1px;color:#64748b;}' +
@@ -87,7 +89,7 @@ begin
     '</style></head><body>' +
     '<div class="titlebar">' +
     '<span class="brand">FMXPIXIE / BOX-SHADOW LAB</span>' +
-    '<span class="subtitle">DisplayLink shadow test · hover each card</span>' +
+    '<span class="subtitle">DisplayLink shadow test · hover TEST 02–07</span>' +
     '<div class="window-controls">' +
     '<div id="title-minimize" class="window-button" title="Свернуть">−</div>' +
     '<div id="title-close" class="window-button window-close" title="Закрыть">×</div>' +
@@ -104,13 +106,12 @@ begin
     '<div id="shadow-delay" class="card"><div class="card-index">TEST 04 / DELAY</div><div class="card-title">Задержка старта</div><div class="card-copy">После наведения тень начинает меняться через 320 ms.</div><div class="card-hint">320 ms DELAY · 260 ms DURATION</div></div>' +
     '</div>' +
     '<div class="section-title">02 / COMBINED + RETARGET + SPREAD</div>' +
-    '<div class="row">' +
+    '<div class="row row-three">' +
     '<div id="shadow-combo" class="card"><div class="card-index">TEST 05 / COMBINED</div><div class="card-title">Два свойства</div><div class="card-copy">Цвет фона и тень анимируются одновременно.</div><div class="card-hint">BACKGROUND + BOX-SHADOW</div></div>' +
     '<div id="shadow-retarget" class="card"><div class="card-index">TEST 06 / RETARGET</div><div class="card-title">Быстрый реверс</div><div class="card-copy">Быстро входите и выходите до окончания анимации.</div><div class="card-hint">560 ms · EASE-IN-OUT</div></div>' +
     '<div id="shadow-spread" class="card"><div class="card-index">TEST 07 / SPREAD</div><div class="card-title">Распространение</div><div class="card-copy">Отрицательный spread переходит в положительный.</div><div class="card-hint">360 ms · EASE-OUT</div></div>' +
-    '<div class="card" style="background:#f1f5f9;border-style:dashed;"><div class="card-index">TEST NOTES</div><div class="card-title">Что смотреть</div><div class="card-copy">Край тени должен быть мягким, скругления совпадать с карточкой, а быстрый реверс — идти от текущего состояния.</div><div class="card-hint">NO EXTRA TIMER</div></div>' +
     '</div>' +
-    '<div class="note"><strong>Ограничения экспериментальной реализации:</strong> одна внешняя тень; поддерживаются 2–4 длины (offset-x, offset-y, blur, spread) и один цвет, включая rgba() и currentColor. Несколько теней через запятую и inset пока не поддерживаются. Размытие сейчас аппроксимируется несколькими полупрозрачными скруглёнными слоями, а не точным Gaussian blur. Поэтому особенно важны проверка качества края и производительности на нескольких одновременно анимируемых элементах.</div>' +
+    '<div class="note"><strong>Что проверять:</strong> TEST 01 показывает постоянную тень. TEST 02–07 должны реагировать на наведение и возвращаться к исходному состоянию после ухода курсора. Для TEST 06 быстро наведите и уберите курсор несколько раз до завершения перехода: тень должна менять направление от текущего состояния. У всех теней проверьте мягкость края и соответствие скруглениям карточки. <strong>Ограничения:</strong> одна внешняя тень; поддерживаются 2–4 длины (offset-x, offset-y, blur, spread) и один цвет, включая rgba() и currentColor. Несколько теней через запятую и inset пока не поддерживаются. Размытие аппроксимируется несколькими полупрозрачными скруглёнными слоями, а не точным Gaussian blur.</div>' +
     '<div class="footer">FMXPIXIE · BOX-SHADOW TRANSITIONS ON FMX DISPLAY LINK · NO NEW TIMER · EXPERIMENTAL BRANCH</div>' +
     '</div></body></html>';
 end;
