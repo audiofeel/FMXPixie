@@ -1928,7 +1928,8 @@ begin
      (Name = Ord(psid_transition_property)) or
      (Name = Ord(psid_transition_duration)) or
      (Name = Ord(psid_transition_timing_function)) or
-     (Name = Ord(psid_transition_delay)) then
+     (Name = Ord(psid_transition_delay)) or
+     (Name = Ord(psid_box_shadow)) then
   begin
     S := PixieCssGetRepr(Tokens, 0, -1, True);
     AddParsedProperty(Name, TPixiePropertyValue.FromString(S, Important));
