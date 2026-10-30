@@ -387,7 +387,7 @@ implementation
 uses
   Pixie.HtmlTag, Pixie.StringId, Pixie.Gradient,
   Pixie.Element, Pixie.Style, Pixie.Container,
-  Pixie.Document, Pixie.CssTokenizer;
+  Pixie.Document, Pixie.CssTokenizer, Pixie.CssParser;
 
 type
   // Context for CSS unit conversion within Compute
@@ -803,7 +803,9 @@ begin
   if SameText(Trim(S), 'none') or (Trim(S) = '') then
     Exit(True);
 
-  Tokens := PixieCssTokenize(S);
+  // PixieParseCssColor expects component values (not raw tokenizer tokens),
+  // so normalize and componentize functions such as rgba() before parsing.
+  Tokens := PixieCssNormalizeStr(S, cssCssNormComponentize);
   try
     LengthCount := 0;
     HasColor := False;
