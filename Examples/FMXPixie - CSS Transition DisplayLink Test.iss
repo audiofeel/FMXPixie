@@ -1,11 +1,12 @@
 ﻿; ============================================================================
 ; FMXPixie - CSS Transition DisplayLink Test
 ;
-; Regression coverage for opacity, background-color and transform
+; Regression coverage for opacity, background-color, transform and box-shadow
 ; transitions, including transition:all, longhand timing/delay and retargeting.
 ;
 ; Layout-aware width/height transitions are covered by the separate
-; "FMXPixie - CSS Size Layout Transition Test.iss" example.
+; "FMXPixie - CSS Size Layout Transition Test.iss" example. Detailed box-shadow
+; rendering and timing cases are covered by the dedicated shadow test.
 ;
 ; Build from the Examples directory beside Modules\ and Files\.
 ; ============================================================================
@@ -80,8 +81,8 @@ begin
     '#t-combo:hover{background-color:#0f766e;opacity:1;transform:translate(-2px,-2px) scale(1.04);}' +
     '#t-longhand{background-color:#3b2b59;transform:translate(0px,0px);transition-property:background-color, transform;transition-duration:150ms,180ms;transition-timing-function:linear,ease-out;transition-delay:0ms,60ms;}' +
     '#t-longhand:hover{background-color:#7c3aed;transform:translate(6px,-3px);}' +
-    '#t-all{background-color:#1e293b;opacity:0.62;transform:translate(0px,0px) scale(1);transition:all 170ms ease-out;}' +
-    '#t-all:hover{background-color:#2563eb;opacity:1;transform:translate(4px,-2px) scale(1.04);}' +
+    '#t-all{background-color:#1e293b;opacity:0.62;transform:translate(0px,0px) scale(1);box-shadow:0 1px 3px 0 rgba(0,0,0,.12);transition:all 170ms ease-out;}' +
+    '#t-all:hover{background-color:#2563eb;opacity:1;transform:translate(4px,-2px) scale(1.04);box-shadow:0 7px 18px 3px rgba(37,99,235,.5);}' +
     '#t-retarget{background-color:#44403c;transform:scale(1);transition:background-color 210ms ease-in-out, transform 210ms ease-out;}' +
     '#t-retarget:hover{background-color:#ea580c;transform:scale(1.05);}' +
     '.note{margin-top:12px;padding:10px 13px;border:1px solid #2a3b55;background:#101a2b;color:#a7b8ce;font-size:10px;line-height:1.5;}' +
@@ -108,10 +109,10 @@ begin
     '<div class="row">' +
     '<div id="t-combo" class="card"><div class="card-index">TEST 05 / COMBINED</div><div class="card-title">Три свойства</div><div class="card-copy">Цвет, opacity и transform идут одновременно.</div><div class="card-hint">160–180 ms</div></div>' +
     '<div id="t-longhand" class="card"><div class="card-index">TEST 06 / LONGHAND</div><div class="card-title">Задержка</div><div class="card-copy">Цвет меняется сразу, движение начинается позже.</div><div class="card-hint">60 ms DELAY ON TRANSFORM</div></div>' +
-    '<div id="t-all" class="card"><div class="card-index">TEST 07 / ALL</div><div class="card-title">transition: all</div><div class="card-copy">Проверка всех трёх поддерживаемых свойств вместе.</div><div class="card-hint">170 ms · EASE-OUT</div></div>' +
+    '<div id="t-all" class="card"><div class="card-index">TEST 07 / ALL</div><div class="card-title">transition: all</div><div class="card-copy">Цвет, opacity, transform и box-shadow идут вместе.</div><div class="card-hint">170 ms · EASE-OUT</div></div>' +
     '<div id="t-retarget" class="card"><div class="card-index">TEST 08 / RETARGET</div><div class="card-title">Быстрый реверс</div><div class="card-copy">Входите и выходите до окончания анимации.</div><div class="card-hint">210 ms · EASE-IN-OUT</div></div>' +
     '</div>' +
-    '<div class="note"><strong>Проверка соседних элементов:</strong> transform:scale() только визуально меняет размер и не двигает соседей — это ожидаемое поведение CSS. Для анимации width/height с перерасчётом layout используйте отдельный CSS Size Layout Transition Test. Этот набор проверяет opacity, background-color и совместимые transform translate/scale.</div>' +
+    '<div class="note"><strong>Проверка соседних элементов:</strong> transform:scale() только визуально меняет размер и не двигает соседей — это ожидаемое поведение CSS. Для анимации width/height с перерасчётом layout используйте отдельный CSS Size Layout Transition Test. Отдельный CSS Box Shadow Transition Test проверяет отрисовку и анимацию тени.</div>' +
     '<div class="footer">FMXPIXIE · CSS TRANSITIONS ON FMX DISPLAY LINK · GIF/WEBP AND SCROLLBAR TIMERS ARE UNCHANGED</div>' +
     '</div></body></html>';
 end;
