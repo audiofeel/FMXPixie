@@ -51,7 +51,6 @@ begin
     '<!doctype html><html><head><meta charset="utf-8"><style>' +
     '*{box-sizing:border-box;}' +
     'html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;}' +
-    'html{background-color:#07101d;}' +
     'body{background-color:#07101d;color:#f0f5fa;font-family:"Segoe UI",Arial,sans-serif;font-size:13px;' +
       'background-image:linear-gradient(180deg,rgba(4,10,22,.18) 0%,rgba(4,10,22,.42) 48%,rgba(4,10,22,.90) 100%),url("FMXPixie_SvgView_Demo.svg");' +
       'background-position:center center;background-size:cover;background-repeat:no-repeat;}' +
