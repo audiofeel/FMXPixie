@@ -408,27 +408,43 @@ var
   M: TMatrix;
 begin
   FCanvas := TCanvas(Pointer(DC));
+  if FCanvas = nil then
+    Exit;
+
   FOpacity := 1.0;
   FOpacityTop := 0;
   FStateTop := 0;
 
+  // Изолируем состояние каждого прохода отрисовки.
+  FBaseState := FCanvas.SaveState;
+
   if FScale <> 1.0 then
   begin
-    FBaseState := FCanvas.SaveState;
     M := TMatrix.CreateScaling(FScale, FScale);
     FCanvas.MultiplyMatrix(M);
-  end
-  else
-    FBaseState := nil;
+  end;
 end;
 
 procedure TPixieFmxCanvas.EndPaint;
 begin
+  if FCanvas = nil then
+    Exit;
+
+  // Восстанавливаем незакрытые внутренние состояния.
+  while FStateTop > 0 do
+    RestoreState;
+
+  // Сбрасываем внутреннюю прозрачность Pixie.
+  FOpacity := 1.0;
+  FOpacityTop := 0;
+
+  // Возвращаем исходное состояние FMX Canvas.
   if FBaseState <> nil then
   begin
     FCanvas.RestoreState(FBaseState);
     FBaseState := nil;
   end;
+
   FCanvas := nil;
 end;
 
