@@ -215,6 +215,13 @@ begin
   // no-op default
 end;
 
+procedure TPixieContainer.DrawBoxShadow(Hdc: PtrUInt;
+  const DrawPos: TPixiePosition; const Radius: TPixieBorderRadiuses;
+  const Shadow: TPixieBoxShadow);
+begin
+  // No-op default. Native drawing containers override this hook.
+end;
+
 function TPixieContainer.OnElementClick(El: TObject): Boolean;
 begin
   Result := False;
