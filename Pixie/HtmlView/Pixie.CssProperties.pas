@@ -122,6 +122,7 @@ type
     FColor: TPixieWebColor;
     FTextDecorationColor: TPixieWebColor;
     FTextEmphasisColor: TPixieWebColor;
+    FBoxShadow: TPixieBoxShadow;
 
     // Float/integer fields
     FOpacity: Single; // Computed target
@@ -145,6 +146,13 @@ type
     FHeightStartTimeMs: UInt64;
     FHeightDurationMs, FHeightDelayMs: Double;
     FHeightTimingFunction: string;
+    FBoxShadowAnimationActive: Boolean;
+    FAnimatedBoxShadow: TPixieBoxShadow;
+    FBoxShadowFrom: TPixieBoxShadow;
+    FBoxShadowTo: TPixieBoxShadow;
+    FBoxShadowStartTimeMs: UInt64;
+    FBoxShadowDurationMs, FBoxShadowDelayMs: Double;
+    FBoxShadowTimingFunction: string;
     FBgColorTarget: TPixieWebColor;
     FBgColorFrom: TPixieWebColor;
     FBgColorTo: TPixieWebColor;
@@ -211,6 +219,7 @@ type
     function GetOpacity: Single;
     function GetCssWidth: TPixieCssLength;
     function GetCssHeight: TPixieCssLength;
+    function GetBoxShadow: TPixieBoxShadow;
     function GetTransformOps: TPixieTransformOps;
     function GetCssTransitionActive: Boolean;
     function GetCssLayoutTransitionActive: Boolean;
@@ -218,6 +227,7 @@ type
     procedure CancelOpacityTransition;
     procedure CancelWidthTransition;
     procedure CancelHeightTransition;
+    procedure CancelBoxShadowTransition;
     procedure CancelBackgroundColorTransition;
     procedure CancelTransformTransition;
     function GetZIndex: Integer;
@@ -289,6 +299,7 @@ type
     // CSS length properties
     property CssWidth: TPixieCssLength read GetCssWidth write FCssWidth;
     property CssHeight: TPixieCssLength read GetCssHeight write FCssHeight;
+    property BoxShadow: TPixieBoxShadow read GetBoxShadow;
     property CssMinWidth: TPixieCssLength read FCssMinWidth write FCssMinWidth;
     property CssMinHeight: TPixieCssLength read FCssMinHeight write FCssMinHeight;
     property CssMaxWidth: TPixieCssLength read FCssMaxWidth write FCssMaxWidth;
@@ -376,7 +387,7 @@ implementation
 uses
   Pixie.HtmlTag, Pixie.StringId, Pixie.Gradient,
   Pixie.Element, Pixie.Style, Pixie.Container,
-  Pixie.Document;
+  Pixie.Document, Pixie.CssTokenizer;
 
 type
   // Context for CSS unit conversion within Compute
@@ -773,6 +784,109 @@ begin
 end;
 
 // Initialise compute context from element tree
+function PixieParseBoxShadowValue(const S: string;
+  const Metrics: TPixieFontMetrics; const Ctx: TComputeContext;
+  const CurrentColor: TPixieWebColor;
+  out Shadow: TPixieBoxShadow): Boolean;
+var
+  Tokens: TPixieCssTokenList;
+  Token: TPixieCssToken;
+  Len: TPixieCssLength;
+  Lengths: array[0..3] of TPixieCssLength;
+  LengthCount, I: Integer;
+  HasColor: Boolean;
+  ParsedColor: TPixieWebColor;
+begin
+  Shadow := Default(TPixieBoxShadow);
+  Shadow.Color := TPixieWebColor.Transparent;
+  Result := False;
+
+  if SameText(Trim(S), 'none') or (Trim(S) = '') then
+    Exit(True);
+
+  Tokens := PixieCssTokenize(S);
+  try
+    LengthCount := 0;
+    HasColor := False;
+
+    for I := 0 to Tokens.Count - 1 do
+    begin
+      Token := Tokens[I];
+      if (Token = nil) or (Token.TokenType = cssTokenWhitespace) then
+        Continue;
+
+      // This first implementation deliberately supports a single outer
+      // shadow. Multiple comma-separated shadows and inset are left discrete.
+      if (Token.TokenType = cssTokenComma) or
+         ((Token.TokenType = cssTokenIdent) and
+          SameText(Token.Ident, 'inset')) then
+        Exit(False);
+
+      if PixieParseCssColor(Token, ParsedColor) then
+      begin
+        if HasColor then Exit(False);
+        HasColor := True;
+        if ParsedColor.IsCurrentColor then
+          ParsedColor := CurrentColor;
+        Shadow.Color := ParsedColor;
+        Continue;
+      end;
+
+      if (LengthCount >= Length(Lengths)) or
+         not PixieParseCssLength(Token, Len, clfLength) then
+        Exit(False);
+      Lengths[LengthCount] := Len;
+      Inc(LengthCount);
+    end;
+
+    if (LengthCount < 2) or (LengthCount > 4) then
+      Exit(False);
+
+    for I := 0 to LengthCount - 1 do
+    begin
+      if Lengths[I].Units = cssUnitsPercentage then
+        Exit(False);
+      CtxCvtUnits(Lengths[I], Metrics, Ctx);
+    end;
+
+    Shadow.OffsetX := Lengths[0].Val;
+    Shadow.OffsetY := Lengths[1].Val;
+    Shadow.BlurRadius := 0;
+    Shadow.SpreadRadius := 0;
+    if LengthCount >= 3 then
+      Shadow.BlurRadius := Max(0, Lengths[2].Val);
+    if LengthCount >= 4 then
+      Shadow.SpreadRadius := Lengths[3].Val;
+
+    if not HasColor then
+      Shadow.Color := CurrentColor;
+    Result := True;
+  finally
+    Tokens.Free;
+  end;
+end;
+
+function PixieBoxShadowEqual(const A, B: TPixieBoxShadow): Boolean;
+begin
+  Result := (Abs(A.OffsetX - B.OffsetX) < 0.0001) and
+    (Abs(A.OffsetY - B.OffsetY) < 0.0001) and
+    (Abs(A.BlurRadius - B.BlurRadius) < 0.0001) and
+    (Abs(A.SpreadRadius - B.SpreadRadius) < 0.0001) and
+    (A.Color = B.Color);
+end;
+
+function PixieInterpolateBoxShadow(const A, B: TPixieBoxShadow;
+  Progress: Double): TPixieBoxShadow;
+begin
+  Result.OffsetX := A.OffsetX + (B.OffsetX - A.OffsetX) * Progress;
+  Result.OffsetY := A.OffsetY + (B.OffsetY - A.OffsetY) * Progress;
+  Result.BlurRadius := A.BlurRadius +
+    (B.BlurRadius - A.BlurRadius) * Progress;
+  Result.SpreadRadius := A.SpreadRadius +
+    (B.SpreadRadius - A.SpreadRadius) * Progress;
+  Result.Color := PixieColorBlend(A.Color, B.Color, Progress);
+end;
+
 procedure InitComputeContext(Tag: TPixieHtmlTag; out Ctx: TComputeContext);
 var
   El: TPixieElement;
@@ -1356,6 +1470,15 @@ begin
   FHeightDurationMs := 0;
   FHeightDelayMs := 0;
   FHeightTimingFunction := 'ease';
+  FBoxShadowAnimationActive := False;
+  FAnimatedBoxShadow := Default(TPixieBoxShadow);
+  FBoxShadowFrom := Default(TPixieBoxShadow);
+  FBoxShadowTo := Default(TPixieBoxShadow);
+  FBoxShadowStartTimeMs := 0;
+  FBoxShadowDurationMs := 0;
+  FBoxShadowDelayMs := 0;
+  FBoxShadowTimingFunction := 'ease';
+  FBoxShadow := Default(TPixieBoxShadow);
   FBgColorTarget := TPixieWebColor.Transparent;
   FBgColorFrom := TPixieWebColor.Transparent;
   FBgColorTo := TPixieWebColor.Transparent;
@@ -1396,6 +1519,7 @@ begin
   CancelOpacityTransition;
   CancelWidthTransition;
   CancelHeightTransition;
+  CancelBoxShadowTransition;
   CancelBackgroundColorTransition;
   CancelTransformTransition;
   FGridTemplateColumns.Free;
@@ -1428,6 +1552,14 @@ begin
     Result := FCssHeight;
 end;
 
+function TPixieCssProperties.GetBoxShadow: TPixieBoxShadow;
+begin
+  if FBoxShadowAnimationActive then
+    Result := FAnimatedBoxShadow
+  else
+    Result := FBoxShadow;
+end;
+
 function TPixieCssProperties.GetTransformOps: TPixieTransformOps;
 begin
   if FTransformAnimationActive then
@@ -1439,8 +1571,8 @@ end;
 function TPixieCssProperties.GetCssTransitionActive: Boolean;
 begin
   Result := FOpacityAnimationActive or FWidthAnimationActive or
-    FHeightAnimationActive or FBgColorAnimationActive or
-    FTransformAnimationActive;
+    FHeightAnimationActive or FBoxShadowAnimationActive or
+    FBgColorAnimationActive or FTransformAnimationActive;
 end;
 
 function TPixieCssProperties.GetCssLayoutTransitionActive: Boolean;
@@ -1472,6 +1604,12 @@ end;
 procedure TPixieCssProperties.CancelHeightTransition;
 begin
   FHeightAnimationActive := False;
+  UpdateTransitionRegistration;
+end;
+
+procedure TPixieCssProperties.CancelBoxShadowTransition;
+begin
+  FBoxShadowAnimationActive := False;
   UpdateTransitionRegistration;
 end;
 
@@ -1585,6 +1723,35 @@ begin
     FAnimatedCssHeight := TPixieCssLength.Create(NewValue, cssUnitsPx);
     if Abs(NewValue - OldValue) > 0.001 then
       Result := True;
+  end;
+
+  if FBoxShadowAnimationActive then
+  begin
+    ElapsedMs := Double(ATimeMs) - Double(FBoxShadowStartTimeMs);
+    if ElapsedMs < FBoxShadowDelayMs then
+      Progress := 0
+    else if FBoxShadowDurationMs <= 0 then
+    begin
+      Progress := 1;
+      FBoxShadowAnimationActive := False;
+    end
+    else
+    begin
+      Progress := (ElapsedMs - FBoxShadowDelayMs) / FBoxShadowDurationMs;
+      if Progress >= 1 then
+      begin
+        Progress := 1;
+        FBoxShadowAnimationActive := False;
+      end
+      else if Progress < 0 then
+        Progress := 0;
+    end;
+    Eased := PixieEaseProgress(Progress, FBoxShadowTimingFunction);
+    if not PixieBoxShadowEqual(FAnimatedBoxShadow,
+      PixieInterpolateBoxShadow(FBoxShadowFrom, FBoxShadowTo, Eased)) then
+      Result := True;
+    FAnimatedBoxShadow := PixieInterpolateBoxShadow(
+      FBoxShadowFrom, FBoxShadowTo, Eased);
   end;
 
   if FTransformAnimationActive then
@@ -2308,19 +2475,24 @@ var
   TransitionDurationMs, TransitionDelayMs: Double;
   TransformDurationMs, TransformDelayMs: Double;
   BgColorTransitionDurationMs, BgColorTransitionDelayMs: Double;
+  BoxShadowTransitionDurationMs, BoxShadowTransitionDelayMs: Double;
   TransitionTimingFunction, TransformTimingFunction: string;
   WidthTimingFunction, HeightTimingFunction: string;
   WidthDurationMs, WidthDelayMs: Double;
   HeightDurationMs, HeightDelayMs: Double;
+  BoxShadowTimingFunction: string;
   BgColorTimingFunction: string;
+  BoxShadowValue: string;
+  PreviousBoxShadow, PreviousBoxShadowTarget, NewBoxShadow: TPixieBoxShadow;
   PreviousWidth, PreviousWidthTarget: TPixieCssLength;
   PreviousHeight, PreviousHeightTarget: TPixieCssLength;
   PreviousTransform: string;
   PreviousTransformOps, PreparedTransformFrom, PreparedTransformTo: TPixieTransformOps;
   HasOpacityTransition, HasWidthTransition, HasHeightTransition,
-    HasTransformTransition, HasBackgroundColorTransition,
+    HasBoxShadowTransition, HasTransformTransition, HasBackgroundColorTransition,
     HadComputedStyles, WasOpacityAnimating, WasWidthAnimating,
-    WasHeightAnimating, WasTransformAnimating, WasBgColorAnimating: Boolean;
+    WasHeightAnimating, WasBoxShadowAnimating, WasTransformAnimating,
+    WasBgColorAnimating: Boolean;
 begin
   Assert(El is TPixieHtmlTag);
   PreviousOpacity := GetOpacity;
@@ -2329,6 +2501,8 @@ begin
   PreviousWidthTarget := FCssWidth;
   PreviousHeight := CssHeight;
   PreviousHeightTarget := FCssHeight;
+  PreviousBoxShadow := BoxShadow;
+  PreviousBoxShadowTarget := FBoxShadow;
   PreviousBgColor := FBg.Color;
   PreviousBgColorTarget := FBgColorTarget;
   PreviousTransform := FTransform;
@@ -2337,6 +2511,7 @@ begin
   WasOpacityAnimating := FOpacityAnimationActive;
   WasWidthAnimating := FWidthAnimationActive;
   WasHeightAnimating := FHeightAnimationActive;
+  WasBoxShadowAnimating := FBoxShadowAnimationActive;
   WasTransformAnimating := FTransformAnimationActive;
   WasBgColorAnimating := FBgColorAnimationActive;
   if (FTransitionDocument <> nil) and (FTransitionDocument <> Doc) then
@@ -2344,6 +2519,7 @@ begin
     CancelOpacityTransition;
     CancelWidthTransition;
     CancelHeightTransition;
+    CancelBoxShadowTransition;
     CancelBackgroundColorTransition;
     CancelTransformTransition;
     HadComputedStyles := False;
@@ -2770,6 +2946,22 @@ begin
     FTransition, FTransitionProperty, FTransitionDuration,
     FTransitionTimingFunction, FTransitionDelay, 'height',
     HeightDurationMs, HeightDelayMs, HeightTimingFunction);
+  HasBoxShadowTransition := PixieResolveCssTransition(
+    FTransition, FTransitionProperty, FTransitionDuration,
+    FTransitionTimingFunction, FTransitionDelay, 'box-shadow',
+    BoxShadowTransitionDurationMs, BoxShadowTransitionDelayMs,
+    BoxShadowTimingFunction);
+
+  BoxShadowValue := Tag.GetPropertyString(Ord(psid_box_shadow), False,
+    'none', 0);
+  if not PixieParseBoxShadowValue(BoxShadowValue, FFontMetrics, Ctx,
+    FColor, NewBoxShadow) then
+    NewBoxShadow := Default(TPixieBoxShadow);
+  if NewBoxShadow.Color.Alpha = 0 then
+  begin
+    // Preserve interpolable geometry for transparent shadows only when
+    // the declaration itself parsed successfully; alpha alone controls paint.
+  end;
 
   if not HadComputedStyles then
   begin
@@ -2863,7 +3055,39 @@ begin
   else if not WasHeightAnimating then
     FAnimatedCssHeight := FCssHeight;
 
-  // 18d. Transform target. Interpolate compatible transform operation lists so
+  // 18d. Box shadow interpolates all geometry and color components together.
+  // A transition to/from "none" is represented by a transparent zero shadow.
+  FBoxShadow := NewBoxShadow;
+  if not HadComputedStyles then
+  begin
+    CancelBoxShadowTransition;
+    FAnimatedBoxShadow := FBoxShadow;
+  end
+  else if not PixieBoxShadowEqual(FBoxShadow, PreviousBoxShadowTarget) then
+  begin
+    if HasBoxShadowTransition and (Doc is TPixieDocument) then
+    begin
+      FBoxShadowFrom := PreviousBoxShadow;
+      FBoxShadowTo := FBoxShadow;
+      FBoxShadowStartTimeMs := TPixieDocument(Doc).AnimationTimeMs;
+      FBoxShadowDurationMs := BoxShadowTransitionDurationMs;
+      FBoxShadowDelayMs := BoxShadowTransitionDelayMs;
+      FBoxShadowTimingFunction := BoxShadowTimingFunction;
+      FBoxShadowAnimationActive := True;
+      FAnimatedBoxShadow := PreviousBoxShadow;
+      FTransitionDocument := Doc;
+      TPixieDocument(Doc).RegisterCssTransition(Self);
+    end
+    else
+    begin
+      CancelBoxShadowTransition;
+      FAnimatedBoxShadow := FBoxShadow;
+    end;
+  end
+  else if not WasBoxShadowAnimating then
+    FAnimatedBoxShadow := FBoxShadow;
+
+  // 18e. Transform target. Interpolate compatible transform operation lists so
   // translate/scale transitions can be inspected visually on the Display Link.
   if not HadComputedStyles then
   begin
