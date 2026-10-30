@@ -799,7 +799,6 @@ var
 begin
   Shadow := Default(TPixieBoxShadow);
   Shadow.Color := TPixieWebColor.Transparent;
-  Result := False;
 
   if SameText(Trim(S), 'none') or (Trim(S) = '') then
     Exit(True);
