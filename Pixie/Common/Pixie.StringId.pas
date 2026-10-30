@@ -238,6 +238,7 @@ type
     psid_border_left_color,
 
     psid_border_radius,
+    psid_box_shadow,
     psid_border_radius_x,
     psid_border_radius_y,
 
