@@ -83,6 +83,72 @@ begin
     '#shadow-retarget:hover{box-shadow:0 6px 32px 5px rgba(56,189,248,.96);}' +
     '#shadow-spread{box-shadow:0 2px 8px -3px rgba(0,0,0,.3);transition:box-shadow 360ms ease-out;}' +
     '#shadow-spread:hover{box-shadow:0 4px 20px 7px rgba(244,63,94,.94);}' +
+    '.intensity-radio{display:none;}' +
+    '.intensity-panel{display:flex;align-items:center;gap:7px;margin-top:13px;margin-bottom:4px;padding:10px 12px;border:1px solid #b8c7d8;border-radius:9px;background:#f8fafc;}' +
+    '.intensity-label{margin-right:5px;color:#334155;font-size:10px;font-weight:bold;letter-spacing:.7px;}' +
+    '.intensity-choice{min-width:48px;padding:6px 9px;border:1px solid #b8c7d8;border-radius:6px;background:#fff;color:#334155;text-align:center;font-size:10px;font-weight:600;cursor:pointer;}' +
+    '.intensity-choice:hover{background:#eaf3fb;border-color:#8ba9c6;}' +
+    '.intensity-help{margin-left:auto;color:#64748b;font-size:9px;}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-static{box-shadow:0 5px 24px 4px rgba(15,23,42,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-hover{box-shadow:0 1px 5px 0 rgba(0,0,0,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-hover:hover{box-shadow:0 6px 30px 4px rgba(0,150,255,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-none:hover{box-shadow:0 5px 28px 2px rgba(124,58,237,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-delay{box-shadow:0 1px 5px 0 rgba(0,0,0,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-delay:hover{box-shadow:0 5px 24px 3px rgba(249,115,22,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-combo{box-shadow:0 1px 5px 0 rgba(0,0,0,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-combo:hover{box-shadow:0 5px 26px 3px rgba(20,184,166,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-retarget:hover{box-shadow:0 6px 32px 5px rgba(56,189,248,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-spread{box-shadow:0 2px 8px -3px rgba(0,0,0,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-spread:hover{box-shadow:0 4px 20px 7px rgba(244,63,94,.15);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-static{box-shadow:0 5px 24px 4px rgba(15,23,42,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-hover{box-shadow:0 1px 5px 0 rgba(0,0,0,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-hover:hover{box-shadow:0 6px 30px 4px rgba(0,150,255,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-none:hover{box-shadow:0 5px 28px 2px rgba(124,58,237,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-delay{box-shadow:0 1px 5px 0 rgba(0,0,0,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-delay:hover{box-shadow:0 5px 24px 3px rgba(249,115,22,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-combo{box-shadow:0 1px 5px 0 rgba(0,0,0,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-combo:hover{box-shadow:0 5px 26px 3px rgba(20,184,166,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-retarget:hover{box-shadow:0 6px 32px 5px rgba(56,189,248,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-spread{box-shadow:0 2px 8px -3px rgba(0,0,0,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-spread:hover{box-shadow:0 4px 20px 7px rgba(244,63,94,.30);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-static{box-shadow:0 5px 24px 4px rgba(15,23,42,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-hover{box-shadow:0 1px 5px 0 rgba(0,0,0,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-hover:hover{box-shadow:0 6px 30px 4px rgba(0,150,255,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-none:hover{box-shadow:0 5px 28px 2px rgba(124,58,237,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-delay{box-shadow:0 1px 5px 0 rgba(0,0,0,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-delay:hover{box-shadow:0 5px 24px 3px rgba(249,115,22,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-combo{box-shadow:0 1px 5px 0 rgba(0,0,0,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-combo:hover{box-shadow:0 5px 26px 3px rgba(20,184,166,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-retarget:hover{box-shadow:0 6px 32px 5px rgba(56,189,248,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-spread{box-shadow:0 2px 8px -3px rgba(0,0,0,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-spread:hover{box-shadow:0 4px 20px 7px rgba(244,63,94,.45);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-static{box-shadow:0 5px 24px 4px rgba(15,23,42,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-hover{box-shadow:0 1px 5px 0 rgba(0,0,0,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-hover:hover{box-shadow:0 6px 30px 4px rgba(0,150,255,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-none:hover{box-shadow:0 5px 28px 2px rgba(124,58,237,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-delay{box-shadow:0 1px 5px 0 rgba(0,0,0,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-delay:hover{box-shadow:0 5px 24px 3px rgba(249,115,22,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-combo{box-shadow:0 1px 5px 0 rgba(0,0,0,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-combo:hover{box-shadow:0 5px 26px 3px rgba(20,184,166,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-retarget:hover{box-shadow:0 6px 32px 5px rgba(56,189,248,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-spread{box-shadow:0 2px 8px -3px rgba(0,0,0,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-spread:hover{box-shadow:0 4px 20px 7px rgba(244,63,94,.60);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-static{box-shadow:0 5px 24px 4px rgba(15,23,42,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-hover{box-shadow:0 1px 5px 0 rgba(0,0,0,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-hover:hover{box-shadow:0 6px 30px 4px rgba(0,150,255,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-none:hover{box-shadow:0 5px 28px 2px rgba(124,58,237,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-delay{box-shadow:0 1px 5px 0 rgba(0,0,0,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-delay:hover{box-shadow:0 5px 24px 3px rgba(249,115,22,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-combo{box-shadow:0 1px 5px 0 rgba(0,0,0,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-combo:hover{box-shadow:0 5px 26px 3px rgba(20,184,166,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-retarget:hover{box-shadow:0 6px 32px 5px rgba(56,189,248,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-spread{box-shadow:0 2px 8px -3px rgba(0,0,0,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-spread:hover{box-shadow:0 4px 20px 7px rgba(244,63,94,.75);}' +
+    '#intensity-15:checked ~ .intensity-panel .choice-15{background:#17649b;border-color:#17649b;color:#fff;}' +
+    '#intensity-30:checked ~ .intensity-panel .choice-30{background:#17649b;border-color:#17649b;color:#fff;}' +
+    '#intensity-45:checked ~ .intensity-panel .choice-45{background:#17649b;border-color:#17649b;color:#fff;}' +
+    '#intensity-60:checked ~ .intensity-panel .choice-60{background:#17649b;border-color:#17649b;color:#fff;}' +
+    '#intensity-75:checked ~ .intensity-panel .choice-75{background:#17649b;border-color:#17649b;color:#fff;}' +
     '.note{margin-top:14px;padding:11px 13px;border:1px solid #b8c7d8;background:#f8fafc;color:#526277;font-size:10px;line-height:1.55;}' +
     '.note strong{color:#172033;}' +
     '.footer{margin-top:12px;padding-top:8px;border-top:1px solid #c5d1df;color:#64748b;font-size:8px;letter-spacing:.8px;}' +
@@ -98,6 +164,19 @@ begin
     '<div class="eyebrow">CSS BOX-SHADOW / STATIC + TRANSITION</div>' +
     '<div class="headline">Тень: отрисовка и плавное изменение</div>' +
     '<div class="intro">Сначала проверьте статическую серую тень слева. Она должна быть видна постоянно и иметь мягкий край. На остальных карточках наведите курсор и уберите его: меняются смещение, размытие, spread и цвет. Тень должна появляться и исчезать без скачка; у карточки 04 начало специально задержано.</div>' +
+    '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-15" />' +
+    '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-30" checked />' +
+    '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-45" />' +
+    '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-60" />' +
+    '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-75" />' +
+    '<div class="intensity-panel"><span class="intensity-label">ИНТЕНСИВНОСТЬ ТЕНИ</span>' +
+    '<label class="intensity-choice choice-15" for="intensity-15">15%</label>' +
+    '<label class="intensity-choice choice-30" for="intensity-30">30%</label>' +
+    '<label class="intensity-choice choice-45" for="intensity-45">45%</label>' +
+    '<label class="intensity-choice choice-60" for="intensity-60">60%</label>' +
+    '<label class="intensity-choice choice-75" for="intensity-75">75%</label>' +
+    '<span class="intensity-help">Общий уровень для всех тестов, включая HOVER</span></div>' +
+    '<div class="shadow-content">' +
     '<div class="section-title">01 / STATIC SHADOW — БЕЗ АНИМАЦИИ</div>' +
     '<div class="row">' +
     '<div id="shadow-static" class="card"><div class="card-index">TEST 01 / STATIC</div><div class="card-title">Обычная тень</div><div class="card-copy">Постоянная контрастная RGBA-тень с размытием. Это проверка разбора rgba(), blur и самого вызова отрисовки.</div><div class="card-hint">0 5px 24px 4px · RGBA + BLUR</div></div>' +
@@ -111,9 +190,9 @@ begin
     '<div id="shadow-retarget" class="card"><div class="card-index">TEST 06 / RETARGET</div><div class="card-title">Быстрый реверс</div><div class="card-copy">Быстро входите и выходите до окончания анимации.</div><div class="card-hint">560 ms · EASE-IN-OUT</div></div>' +
     '<div id="shadow-spread" class="card"><div class="card-index">TEST 07 / SPREAD</div><div class="card-title">Распространение</div><div class="card-copy">Отрицательный spread переходит в положительный.</div><div class="card-hint">360 ms · EASE-OUT</div></div>' +
     '</div>' +
-    '<div class="note"><strong>Что проверять:</strong> TEST 01 показывает постоянную тень. TEST 02–07 должны реагировать на наведение и возвращаться к исходному состоянию после ухода курсора. Для TEST 06 быстро наведите и уберите курсор несколько раз до завершения перехода: тень должна менять направление от текущего состояния. У всех теней проверьте мягкость края и соответствие скруглениям карточки. <strong>Ограничения:</strong> одна внешняя тень; поддерживаются 2–4 длины (offset-x, offset-y, blur, spread) и один цвет, включая rgba() и currentColor. Несколько теней через запятую и inset пока не поддерживаются. Размытие аппроксимируется несколькими полупрозрачными скруглёнными слоями, а не точным Gaussian blur.</div>' +
+    '<div class="note"><strong>Что проверять:</strong> Регулятор выше меняет интенсивность всех теней (включая состояния HOVER) без изменения геометрии. TEST 01 показывает постоянную тень. TEST 02–07 должны реагировать на наведение и возвращаться к исходному состоянию после ухода курсора. Для TEST 06 быстро наведите и уберите курсор несколько раз до завершения перехода: тень должна менять направление от текущего состояния. У всех теней проверьте мягкость края и соответствие скруглениям карточки. <strong>Ограничения:</strong> одна внешняя тень; поддерживаются 2–4 длины (offset-x, offset-y, blur, spread) и один цвет, включая rgba() и currentColor. Несколько теней через запятую и inset пока не поддерживаются. Размытие аппроксимируется несколькими полупрозрачными скруглёнными слоями, а не точным Gaussian blur.</div>' +
     '<div class="footer">FMXPIXIE · BOX-SHADOW TRANSITIONS ON FMX DISPLAY LINK · NO NEW TIMER · EXPERIMENTAL BRANCH</div>' +
-    '</div></body></html>';
+    '</div></div></body></html>';
 end;
 
 procedure CloseSetup;
