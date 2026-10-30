@@ -2957,11 +2957,6 @@ begin
   if not PixieParseBoxShadowValue(BoxShadowValue, FFontMetrics, Ctx,
     FColor, NewBoxShadow) then
     NewBoxShadow := Default(TPixieBoxShadow);
-  if NewBoxShadow.Color.Alpha = 0 then
-  begin
-    // Preserve interpolable geometry for transparent shadows only when
-    // the declaration itself parsed successfully; alpha alone controls paint.
-  end;
 
   if not HadComputedStyles then
   begin
