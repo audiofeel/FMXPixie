@@ -138,6 +138,12 @@ type
     procedure FillRoundedRect(X, Y, W, H, Radius: Single;
       Color: TPixieWebColor); overload;
 
+    // Draw an outer box shadow using layered rounded rectangles. This shared
+    // fallback keeps shadow rendering available on every canvas backend.
+    procedure DrawBoxShadow(X, Y, W, H: Single;
+      const Radius: TPixieBorderRadiuses;
+      const Shadow: TPixieBoxShadow); virtual;
+
     // Text at a position (no clip rect)
     procedure DrawSimpleText(const Text: string; Handle: TPixieFontHandle;
       Color: TPixieWebColor; X, Y: Single);
@@ -362,6 +368,75 @@ begin
   Rad.BottomRightX := Radius; Rad.BottomRightY := Radius;
   Rad.BottomLeftX := Radius;  Rad.BottomLeftY := Radius;
   FillRoundedRect(X, Y, W, H, Rad, Color);
+end;
+
+procedure TPixieCanvas.DrawBoxShadow(X, Y, W, H: Single;
+  const Radius: TPixieBorderRadiuses; const Shadow: TPixieBoxShadow);
+var
+  BaseX, BaseY, BaseW, BaseH: Single;
+  Expand, Progress, TargetOpacity, PreviousOpacity, LayerOpacity: Single;
+  LayerColor: TPixieWebColor;
+  LayerRadius: TPixieBorderRadiuses;
+  Steps, I: Integer;
+begin
+  if (W <= 0) or (H <= 0) or (Shadow.Color.Alpha = 0) then Exit;
+
+  BaseW := W + Shadow.SpreadRadius * 2;
+  BaseH := H + Shadow.SpreadRadius * 2;
+  if (BaseW <= 0) or (BaseH <= 0) then Exit;
+
+  BaseX := X + Shadow.OffsetX - Shadow.SpreadRadius;
+  BaseY := Y + Shadow.OffsetY - Shadow.SpreadRadius;
+
+  LayerRadius := Radius;
+  LayerRadius.TopLeftX := Max(0, LayerRadius.TopLeftX + Shadow.SpreadRadius);
+  LayerRadius.TopLeftY := Max(0, LayerRadius.TopLeftY + Shadow.SpreadRadius);
+  LayerRadius.TopRightX := Max(0, LayerRadius.TopRightX + Shadow.SpreadRadius);
+  LayerRadius.TopRightY := Max(0, LayerRadius.TopRightY + Shadow.SpreadRadius);
+  LayerRadius.BottomRightX := Max(0, LayerRadius.BottomRightX + Shadow.SpreadRadius);
+  LayerRadius.BottomRightY := Max(0, LayerRadius.BottomRightY + Shadow.SpreadRadius);
+  LayerRadius.BottomLeftX := Max(0, LayerRadius.BottomLeftX + Shadow.SpreadRadius);
+  LayerRadius.BottomLeftY := Max(0, LayerRadius.BottomLeftY + Shadow.SpreadRadius);
+  LayerRadius.FixValues(BaseW, BaseH);
+
+  if Shadow.BlurRadius <= 0.25 then
+  begin
+    FillRoundedRect(BaseX, BaseY, BaseW, BaseH, LayerRadius, Shadow.Color);
+    Exit;
+  end;
+
+  // Approximate a soft blur with a bounded number of nested translucent
+  // shapes. The outermost pass is faint; each inner pass raises opacity.
+  Steps := Min(16, Max(4, Ceil(Shadow.BlurRadius / 1.5)));
+  PreviousOpacity := 0;
+  for I := 0 to Steps - 1 do
+  begin
+    Progress := (I + 1) / Steps;
+    Expand := Shadow.BlurRadius * (1 - I / Steps);
+    TargetOpacity := (Shadow.Color.Alpha / 255) * Progress * Progress;
+    if TargetOpacity > PreviousOpacity then
+    begin
+      LayerOpacity := (TargetOpacity - PreviousOpacity) /
+        (1 - PreviousOpacity);
+      LayerColor := Shadow.Color;
+      LayerColor.Alpha := Round(LayerColor.Alpha * LayerOpacity);
+
+      LayerRadius := Radius;
+      LayerRadius.TopLeftX := Max(0, LayerRadius.TopLeftX + Shadow.SpreadRadius + Expand);
+      LayerRadius.TopLeftY := Max(0, LayerRadius.TopLeftY + Shadow.SpreadRadius + Expand);
+      LayerRadius.TopRightX := Max(0, LayerRadius.TopRightX + Shadow.SpreadRadius + Expand);
+      LayerRadius.TopRightY := Max(0, LayerRadius.TopRightY + Shadow.SpreadRadius + Expand);
+      LayerRadius.BottomRightX := Max(0, LayerRadius.BottomRightX + Shadow.SpreadRadius + Expand);
+      LayerRadius.BottomRightY := Max(0, LayerRadius.BottomRightY + Shadow.SpreadRadius + Expand);
+      LayerRadius.BottomLeftX := Max(0, LayerRadius.BottomLeftX + Shadow.SpreadRadius + Expand);
+      LayerRadius.BottomLeftY := Max(0, LayerRadius.BottomLeftY + Shadow.SpreadRadius + Expand);
+      LayerRadius.FixValues(BaseW + Expand * 2, BaseH + Expand * 2);
+
+      FillRoundedRect(BaseX - Expand, BaseY - Expand,
+        BaseW + Expand * 2, BaseH + Expand * 2, LayerRadius, LayerColor);
+      PreviousOpacity := TargetOpacity;
+    end;
+  end;
 end;
 
 procedure TPixieCanvas.DrawSimpleText(const Text: string;
