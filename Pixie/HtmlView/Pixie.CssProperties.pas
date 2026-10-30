@@ -2956,7 +2956,9 @@ begin
     'none', 0);
   if not PixieParseBoxShadowValue(BoxShadowValue, FFontMetrics, Ctx,
     FColor, NewBoxShadow) then
-    NewBoxShadow := Default(TPixieBoxShadow);
+    // Unsupported syntax is ignored instead of unexpectedly clearing an
+    // already computed shadow (the supported subset is intentionally small).
+    NewBoxShadow := FBoxShadow;
 
   if not HadComputedStyles then
   begin
