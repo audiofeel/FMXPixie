@@ -1,4 +1,4 @@
-; ============================================================================
+﻿; ============================================================================
 ; FMXPixie - CSS Box Shadow Transition Test
 ;
 ; Static and animated CSS box-shadow regression coverage:
