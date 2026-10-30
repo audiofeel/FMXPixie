@@ -68,7 +68,7 @@ begin
     '.card-title{margin-top:15px;font-size:16px;font-weight:600;color:#172033;}' +
     '.card-copy{margin-top:7px;color:#526277;font-size:10px;line-height:1.45;}' +
     '.card-hint{position:absolute;left:13px;right:13px;bottom:11px;padding-top:7px;border-top:1px solid #d8e1eb;color:#17649b;font-size:8px;letter-spacing:.6px;}' +
-    '#shadow-static{box-shadow:0 0 0 14px #ff006e;}' +
+    '#shadow-static{box-shadow:0 10px 24px 4px rgba(15,23,42,.70);}' +
     '#shadow-hover{box-shadow:0 2px 5px 0 rgba(0,0,0,.16);transition:box-shadow 340ms cubic-bezier(.2,.75,.25,1);}' +
     '#shadow-hover:hover{box-shadow:0 12px 30px 4px rgba(0,150,255,.92);}' +
     '#shadow-none{box-shadow:none;transition:box-shadow 380ms ease-out;}' +
@@ -95,10 +95,10 @@ begin
     '<div class="page">' +
     '<div class="eyebrow">CSS BOX-SHADOW / STATIC + TRANSITION</div>' +
     '<div class="headline">Тень: отрисовка и плавное изменение</div>' +
-    '<div class="intro">Сначала проверьте яркую розовую статическую тень слева. Она должна быть видна постоянно. На остальных карточках наведите курсор и уберите его: меняются смещение, размытие, spread и цвет. Тень должна появляться и исчезать без скачка; у карточки 04 начало специально задержано.</div>' +
+    '<div class="intro">Сначала проверьте статическую серую тень слева. Она должна быть видна постоянно и иметь мягкий край. На остальных карточках наведите курсор и уберите его: меняются смещение, размытие, spread и цвет. Тень должна появляться и исчезать без скачка; у карточки 04 начало специально задержано.</div>' +
     '<div class="section-title">01 / STATIC SHADOW — БЕЗ АНИМАЦИИ</div>' +
     '<div class="row">' +
-    '<div id="shadow-static" class="card"><div class="card-index">TEST 01 / STATIC</div><div class="card-title">Обычная тень</div><div class="card-copy">Постоянная контрастная тень без blur. Это контроль самого парсинга и вызова отрисовки.</div><div class="card-hint">0 0 0 14px · HEX / NO BLUR</div></div>' +
+    '<div id="shadow-static" class="card"><div class="card-index">TEST 01 / STATIC</div><div class="card-title">Обычная тень</div><div class="card-copy">Постоянная контрастная RGBA-тень с размытием. Это проверка разбора rgba(), blur и самого вызова отрисовки.</div><div class="card-hint">0 10px 24px 4px · RGBA + BLUR</div></div>' +
     '<div id="shadow-hover" class="card"><div class="card-index">TEST 02 / HOVER</div><div class="card-title">Изменение параметров</div><div class="card-copy">Смещение, blur, spread и цвет меняются вместе.</div><div class="card-hint">340 ms · CUBIC-BEZIER</div></div>' +
     '<div id="shadow-none" class="card"><div class="card-index">TEST 03 / NONE → SHADOW</div><div class="card-title">Появление тени</div><div class="card-copy">Переход из box-shadow:none и обратно.</div><div class="card-hint">380 ms · EASE-OUT</div></div>' +
     '<div id="shadow-delay" class="card"><div class="card-index">TEST 04 / DELAY</div><div class="card-title">Задержка старта</div><div class="card-copy">После наведения тень начинает меняться через 320 ms.</div><div class="card-hint">320 ms DELAY · 260 ms DURATION</div></div>' +
