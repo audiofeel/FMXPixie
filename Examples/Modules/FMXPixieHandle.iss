@@ -1,7 +1,7 @@
 
 // ########################################################################## \\
 // #    FMXPixie Handle - v2.0.0.0                                          # \\
-// #    Last Updated: 26.Oct.2026                                           # \\
+// #    Last Updated: 31.Oct.2026                                           # \\
 // #    RAD Studio 13.2 Build: 37.0.60952.8797 RTM Update 2                 # \\
 // ########################################################################## \\
 
@@ -294,6 +294,7 @@ type
     function GetAttr(const FName, FDefault: WideString): WideString;
     function GetTextContent: WideString;
     procedure SetTextContent(const FText: WideString);
+    procedure SetValue(const FValue: WideString);
   end;
 
 function InitPixieElement: FPixieElement;
@@ -620,6 +621,78 @@ type
 
 function InitPixieAudioPlayer: FPixieAudioPlayer;
   external 'InitPixieAudioPlayer@files:FMXPixie.dll stdcall delayload';
+
+// =============================================================================
+// FStorageInfo
+// =============================================================================
+type
+  TDriveType = (dtUnknown, dtNoRootDir, dtRemovable,
+    dtFixed, dtRemote, dtCDROM, dtRAMDisk);
+
+  FStorageInfo = interface(IUnknown)
+    '{B1DFE8C4-D827-4D2C-A363-309320AFDC3F}'
+    procedure Refresh;
+    function Count: Integer;
+    function Letter(const Index: Integer): WideString;
+    function LetterToIndex(const Letter: WideString): Integer;
+    function Name(const Index: Integer): WideString;
+    function IsRemovable(const Index: Integer): Boolean;
+    function MediaType(const Index: Integer): TDriveType;
+    function SpaceFree(const Index: Integer): Double;
+    function SpaceUsed(const Index: Integer): Double;
+    function SpaceTotal(const Index: Integer): Double;
+    function DiskLoad(const Index: Integer): Cardinal;
+  end;
+
+function InitStorageInfo: FStorageInfo;
+  external 'InitStorageInfo@files:FMXPixie.dll stdcall delayload';
+
+// =============================================================================
+// FSystemInfo
+// =============================================================================
+type
+  FSystemInfo = interface(IUnknown)
+    '{06F37AEC-7E76-4EB2-ACB2-648FDE4012FD}'
+    function OSCaption: WideString;
+    function OSVersion: WideString;
+    function OSBuildNumber: WideString;
+    function GPUName: WideString;
+    function GPUMemory: UInt64;
+    function GPUFeatureLevel: WideString;
+    function RamLoad: Cardinal;
+    function TotalRam: Double;
+    function FreeRam: Double;
+    function UsedRam: Double;
+    function CPUName: WideString;
+    function CPUCores: Cardinal;
+    function CPUThreads: Cardinal;
+    function CPUSpeed: Cardinal;
+    function CPULoad: Cardinal;
+    function UserName: WideString;
+    function UserDomain: WideString;
+    function UserProfilePath: WideString;
+    function UserType: TUserType;
+    function UserIsElevated: Boolean;
+  end;
+
+function InitSystemInfo: FSystemInfo;
+  external 'InitSystemInfo@files:FMXPixie.dll stdcall delayload';
+
+// =============================================================================
+// Utils
+// =============================================================================
+function MbOrTb(Float: Extended; Decimal: Integer;
+  const sMb, sGb, sTb: WideString): WideString;
+  external 'MbOrTb@files:FMXPixie.dll stdcall delayload';
+function MHzOrGHz(Float: Extended; Decimal: Integer): WideString;
+  external 'MHzOrGHz@files:FMXPixie.dll stdcall delayload';
+function ReadAllText(const FileName: WideString; out FText: WideString)
+  : Boolean;
+  external 'ReadAllText@files:FMXPixie.dll stdcall delayload';
+function WriteAllText(const FileName, FText: WideString): Boolean;
+  external 'WriteAllText@files:FMXPixie.dll stdcall delayload';
+function AppendAllText(const FileName, FText: WideString): Boolean;
+  external 'AppendAllText@files:FMXPixie.dll stdcall delayload';
 
 // =============================================================================
 // FMX ShutDown
