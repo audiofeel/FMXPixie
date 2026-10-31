@@ -263,6 +263,7 @@ type
     function GetAttr(const FName, FDefault: WideString): WideString; stdcall;
     function GetTextContent: WideString; stdcall;
     procedure SetTextContent(const FText: WideString); stdcall;
+    procedure SetValue(const FValue: WideString); stdcall;
   end;
 
   TFPixieElement = class(TInterfacedObject, FPixieElement)
@@ -284,6 +285,7 @@ type
     function GetAttr(const FName, FDefault: WideString): WideString; stdcall;
     function GetTextContent: WideString; stdcall;
     procedure SetTextContent(const FText: WideString); stdcall;
+    procedure SetValue(const FValue: WideString); stdcall;
   end;
 
 // =============================================================================
@@ -352,7 +354,7 @@ implementation
 
 uses
   System.SysUtils, System.IOUtils,
-  Pixie.PdfExport, Pixie.WebColor;
+  Pixie.PdfExport, Pixie.WebColor, Pixie.ElTextInput;
 
 function AlphaColorToPixieColor(AColor: TAlphaColor): TPixieWebColor;
 begin
@@ -1100,6 +1102,12 @@ procedure TFPixieElement.SetTextContent(const FText: WideString);
 begin
   if ControlElement <> nil then
     ControlElement.SetTextContent(string(FText));
+end;
+
+procedure TFPixieElement.SetValue(const FValue: WideString);
+begin
+  if ControlElement is TPixieElTextInput then
+    TPixieElTextInput(ControlElement).SetValue(string(FValue));
 end;
 
 // =============================================================================
