@@ -265,6 +265,7 @@ begin
 
   FMainForm.Transparency := ATransparency;
   FMainForm.Caption := WindowCaption(FHostHWND);
+  FMainForm.Quality := TCanvasQuality.HighQuality;
   FMainForm.OnMouseDown := FormDragMouseDown;
   FMainForm.OnClose := FormClose;
 
