@@ -106,6 +106,9 @@ type
       const Gradient: TPixieConicGradientLayer); virtual; abstract;
     procedure DrawBorders(Hdc: PtrUInt; const Borders: TPixieBorders;
       const DrawPos: TPixiePosition; IsRoot: Boolean); virtual; abstract;
+    procedure DrawBoxShadow(Hdc: PtrUInt; const DrawPos: TPixiePosition;
+      const Radius: TPixieBorderRadiuses;
+      const Shadow: TPixieBoxShadow); virtual;
 
     // Document events
     procedure SetCaption(const Caption: string); virtual; abstract;
@@ -210,6 +213,13 @@ end;
 procedure TPixieContainer.PopOpacity;
 begin
   // no-op default
+end;
+
+procedure TPixieContainer.DrawBoxShadow(Hdc: PtrUInt;
+  const DrawPos: TPixiePosition; const Radius: TPixieBorderRadiuses;
+  const Shadow: TPixieBoxShadow);
+begin
+  // No-op default. Native drawing containers override this hook.
 end;
 
 function TPixieContainer.OnElementClick(El: TObject): Boolean;

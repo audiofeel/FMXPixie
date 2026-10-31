@@ -1559,6 +1559,7 @@ var
   DecSegStart, BoxRight, BoxBottom: TPixiePixel;
   HasTextContent: Boolean;
   OutlineRadius: TPixieBorderRadiuses;
+  ShadowRadius: TPixieBorderRadiuses;
   OutlineGrow: TPixieMargins;
 
   procedure DrawDecSegment(SegX1, SegX2: TPixiePixel);
@@ -1668,6 +1669,12 @@ begin
       Pos.Height := Pos.Height - VOffset - BOffset;
       BorderBox.Y := BorderBox.Y + VOffset;
       BorderBox.Height := BorderBox.Height - VOffset - BOffset;
+
+      Bdr := FCss.CssBorders;
+      ShadowRadius := Bdr.Radius.CalcPercents(
+        BorderBox.Width, BorderBox.Height);
+      Doc.Container.DrawBoxShadow(Hdc, BorderBox, ShadowRadius,
+        FCss.BoxShadow);
 
       Bg := GetBackground;
       if Bg <> nil then
@@ -1812,6 +1819,11 @@ begin
             CssBdr.Left := FCss.CssBorders.Left;
           if J = Boxes.Count - 1 then
             CssBdr.Right := FCss.CssBorders.Right;
+
+          ShadowRadius := CssBdr.Radius.CalcPercents(
+            Box.Width, Box.Height);
+          Doc.Container.DrawBoxShadow(Hdc, Box, ShadowRadius,
+            FCss.BoxShadow);
 
           if Bg <> nil then
           begin

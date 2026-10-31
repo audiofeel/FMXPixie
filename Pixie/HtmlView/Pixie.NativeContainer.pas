@@ -174,6 +174,9 @@ type
       const Gradient: TPixieConicGradientLayer); override;
     procedure DrawBorders(Hdc: PtrUInt; const Borders: TPixieBorders;
       const DrawPos: TPixiePosition; IsRoot: Boolean); override;
+    procedure DrawBoxShadow(Hdc: PtrUInt; const DrawPos: TPixiePosition;
+      const Radius: TPixieBorderRadiuses;
+      const Shadow: TPixieBoxShadow); override;
 
     // Document events
     procedure SetCaption(const ACaption: string); override;
@@ -1096,88 +1099,40 @@ procedure TPixieNativeContainer.DrawImage(Hdc: PtrUInt;
   FrameOverride: TPixieImageHandle);
 var
   Handle: TPixieImageHandle;
-  R: TPixieBorderRadiuses;
   TileW, TileH: Single;
   RepeatX, RepeatY: Boolean;
-  FillX, FillY, FillW, FillH: Single;
-  CX, CY, CW, CH, K: Single;
 begin
   if FrameOverride <> 0 then
     Handle := FrameOverride
   else
     Handle := GetCachedImage(Url, ABaseUrl);
-  if Handle = 0 then Exit;
+
+  if Handle = 0 then
+    Exit;
 
   TileW := Layer.OriginBox.Width;
   TileH := Layer.OriginBox.Height;
-  if (TileW <= 0) or (TileH <= 0) then Exit;
+
+  if (TileW <= 0) or (TileH <= 0) then
+    Exit;
 
   RepeatX := Layer.Repeat_ in [brRepeat, brRepeatX];
   RepeatY := Layer.Repeat_ in [brRepeat, brRepeatY];
 
-  R := Layer.BorderRadius;
-  FCanvas.SaveState;
-  try
-    FCanvas.SetClipRect(Layer.ClipBox, R);
-    // SetClipRect ignores border radius on some backends (D2D, FMX).
-    // Add an explicit rounded-rect path clip when radius is present.
-    if R.HasRadius then
-    begin
-      CX := Layer.ClipBox.X;
-      CY := Layer.ClipBox.Y;
-      CW := Layer.ClipBox.Width;
-      CH := Layer.ClipBox.Height;
-      K := 0.5522847498; // bezier kappa for quarter-circle approximation
-      FCanvas.BeginPath;
-      FCanvas.MoveTo(CX + R.TopLeftX, CY);
-      FCanvas.LineTo(CX + CW - R.TopRightX, CY);
-      FCanvas.CurveTo(CX + CW - R.TopRightX * (1 - K), CY,
-        CX + CW, CY + R.TopRightY * (1 - K), CX + CW, CY + R.TopRightY);
-      FCanvas.LineTo(CX + CW, CY + CH - R.BottomRightY);
-      FCanvas.CurveTo(CX + CW, CY + CH - R.BottomRightY * (1 - K),
-        CX + CW - R.BottomRightX * (1 - K), CY + CH,
-        CX + CW - R.BottomRightX, CY + CH);
-      FCanvas.LineTo(CX + R.BottomLeftX, CY + CH);
-      FCanvas.CurveTo(CX + R.BottomLeftX * (1 - K), CY + CH,
-        CX, CY + CH - R.BottomLeftY * (1 - K),
-        CX, CY + CH - R.BottomLeftY);
-      FCanvas.LineTo(CX, CY + R.TopLeftY);
-      FCanvas.CurveTo(CX, CY + R.TopLeftY * (1 - K),
-        CX + R.TopLeftX * (1 - K), CY, CX + R.TopLeftX, CY);
-      FCanvas.ClosePath;
-      FCanvas.ClipPath;
-    end;
-
-    if not RepeatX and not RepeatY then
-    begin
-      // no-repeat: single tile
-      FCanvas.DrawImage(Handle,
-        Layer.OriginBox.X, Layer.OriginBox.Y, TileW, TileH);
-    end
-    else
-    begin
-      // Compute fill area — constrain non-repeating axis to one tile
-      FillX := Layer.ClipBox.X;
-      FillY := Layer.ClipBox.Y;
-      FillW := Layer.ClipBox.Width;
-      FillH := Layer.ClipBox.Height;
-      if not RepeatX then
-      begin
-        FillX := Layer.OriginBox.X;
-        FillW := TileW;
-      end;
-      if not RepeatY then
-      begin
-        FillY := Layer.OriginBox.Y;
-        FillH := TileH;
-      end;
-      FCanvas.FillTiledImage(Handle,
-        Layer.OriginBox.X, Layer.OriginBox.Y, TileW, TileH,
-        FillX, FillY, FillW, FillH);
-    end;
-  finally
-    FCanvas.RestoreState;
-  end;
+  FCanvas.DrawImageClipped(
+    Handle,
+    Layer.OriginBox.X,
+    Layer.OriginBox.Y,
+    TileW,
+    TileH,
+    Layer.ClipBox.X,
+    Layer.ClipBox.Y,
+    Layer.ClipBox.Width,
+    Layer.ClipBox.Height,
+    RepeatX,
+    RepeatY,
+    Layer.BorderRadius
+  );
 end;
 
 procedure TPixieNativeContainer.DrawSolidFill(Hdc: PtrUInt;
@@ -1250,6 +1205,14 @@ procedure TPixieNativeContainer.DrawBorders(Hdc: PtrUInt;
   IsRoot: Boolean);
 begin
   FCanvas.DrawBorders(Borders, DrawPos, IsRoot);
+end;
+
+procedure TPixieNativeContainer.DrawBoxShadow(Hdc: PtrUInt;
+  const DrawPos: TPixiePosition; const Radius: TPixieBorderRadiuses;
+  const Shadow: TPixieBoxShadow);
+begin
+  FCanvas.DrawBoxShadow(DrawPos.X, DrawPos.Y, DrawPos.Width, DrawPos.Height,
+    Radius, Shadow);
 end;
 
 // ---------------------------------------------------------------------------

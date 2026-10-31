@@ -1,4 +1,4 @@
-unit Pixie.ElTextInput;
+﻿unit Pixie.ElTextInput;
 
 // Owner-drawn <input type="text">, <input type="password"> and <textarea>
 // elements. All are replaced elements with editable text, caret, selection,
@@ -117,6 +117,7 @@ type
 
   TPixieElTextInput = class(TPixieElTextBase)
   public
+    procedure SetValue(const AValue: string);
     procedure ParseAttributes; override;
     procedure GetContentSize(var Sz: TPixieSize;
       MaxWidth: TPixiePixel); override;
@@ -1603,6 +1604,31 @@ begin
   else
     FMaxLength := -1;
   inherited ParseAttributes;
+end;
+
+procedure TPixieElTextInput.SetValue(const AValue: string);
+var
+  Doc: TPixieDocument;
+begin
+  if FValue = AValue then
+    Exit;
+
+  SetAttr('value', AValue);
+
+  FValue := AValue;
+  FCaretPos := Length(FValue);
+  ClearSelection;
+
+  FScrollX := 0;
+  FCaretMoved := True;
+  FUndoSaved := False;
+
+  if FDoc is TPixieDocument then
+  begin
+    Doc := TPixieDocument(FDoc);
+    if Assigned(Doc.OnChange) then
+      Doc.OnChange(Doc);
+  end;
 end;
 
 procedure TPixieElTextInput.GetContentSize(var Sz: TPixieSize;

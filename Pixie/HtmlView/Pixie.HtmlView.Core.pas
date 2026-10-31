@@ -142,6 +142,7 @@ type
     procedure DoFetchUrl(Sender: TObject; const Url: string;
       Stream: TStream; var Success: Boolean);
     procedure DoDocumentChange(Sender: TObject);
+    procedure DoCssTransitionActivityChanged(Sender: TObject);
     procedure UpdateCursorFromCss;
     procedure ResetCaret;
     procedure Invalidate;
@@ -182,6 +183,7 @@ type
     OnHostGetTickCount: TPixieHostGetTick;
     OnHostResetCaret: TPixieHostNotify;
     OnHostUpdateIME: TPixieHostNotify;
+    OnHostCssTransitionActivityChanged: TPixieHostNotify;
 
     constructor Create(ACanvas: TPixieCanvas);
     destructor Destroy; override;
@@ -220,6 +222,9 @@ type
     // doesn't burst-replay missed time.
     procedure PauseAnimations;
     procedure ResumeAnimations;
+    function HasActiveCssTransitions: Boolean;
+    // Advances active CSS transitions by elapsed time. True means ticks remain.
+    function ProcessCssTransitions: Boolean;
     procedure HandleMouseDown(IsLeft, IsDouble: Boolean; X, Y: Integer);
     procedure HandleMouseMove(X, Y: Integer);
     procedure HandleMouseUp(IsLeft: Boolean; X, Y: Integer);
@@ -908,6 +913,8 @@ begin
     FDocument := TPixieDocument.CreateFromString(HtmlStr, FContainer,
       PixieMasterCss, FUserCss);
     FDocument.OnChange := DoDocumentChange;
+    FDocument.OnCssTransitionActivityChanged := DoCssTransitionActivityChanged;
+    FDocument.OnGetTickCount := NowMs;
     if Assigned(FOnAfterParse) then
       FOnAfterParse(Owner);
   end;
@@ -1106,6 +1113,38 @@ procedure TPixieHtmlViewCore.DoDocumentChange(Sender: TObject);
 begin
   FNeedsLayout := True;
   Invalidate;
+end;
+
+procedure TPixieHtmlViewCore.DoCssTransitionActivityChanged(Sender: TObject);
+begin
+  if Assigned(OnHostCssTransitionActivityChanged) then
+    OnHostCssTransitionActivityChanged;
+end;
+
+function TPixieHtmlViewCore.HasActiveCssTransitions: Boolean;
+begin
+  Result := (FDocument <> nil) and FDocument.HasActiveCssTransitions;
+end;
+
+function TPixieHtmlViewCore.ProcessCssTransitions: Boolean;
+var
+  Changed: Boolean;
+  LayoutTransitionActive: Boolean;
+begin
+  Result := False;
+  if FDocument = nil then Exit;
+
+  // width/height transitions change box geometry rather than only paint.
+  // Remember this before advancing, since the final tick deactivates them.
+  LayoutTransitionActive := FDocument.HasActiveLayoutCssTransitions;
+  Changed := FDocument.AdvanceCssTransitions(NowMs);
+  if Changed then
+  begin
+    if LayoutTransitionActive then
+      FNeedsLayout := True;
+    Invalidate;
+  end;
+  Result := FDocument.HasActiveCssTransitions;
 end;
 
 // ---------------------------------------------------------------------------
