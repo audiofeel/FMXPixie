@@ -27,7 +27,8 @@ uses
   FMXPixie.MarkdownView in 'Pixie\FMXPixie.MarkdownView.pas',
   FMXPixie.TagBar in 'Pixie\FMXPixie.TagBar.pas',
   FMXPixie.PaintBox in 'Pixie\FMXPixie.PaintBox.pas',
-  FMXPixie.AudioPlayer in 'Custom\AudioPlayer\FMXPixie.AudioPlayer.pas';
+  FMXPixie.AudioPlayer in 'Custom\AudioPlayer\FMXPixie.AudioPlayer.pas',
+  FMXBridge.SystemInfo in 'Custom\FMXBridge.SystemInfo.pas';
 
 {$R *.res}
 begin
