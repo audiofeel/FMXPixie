@@ -623,6 +623,36 @@ function InitPixieAudioPlayer: FPixieAudioPlayer;
   external 'InitPixieAudioPlayer@files:FMXPixie.dll stdcall delayload';
 
 // =============================================================================
+// System
+// =============================================================================
+type
+  FTimer = interface(IUnknown)
+    '{B141008A-EFF0-43EC-A1D8-4AB88AF406AA}'
+    procedure FCreate(FParent: TFmxObject);
+    procedure Enabled(FEnabled: Boolean);
+    procedure Interval(Interval: Cardinal);
+    procedure OnTimer(Event: TNotifyEvent);
+  end;
+
+function InitTimer: FTimer;
+  external 'InitTimer@files:FMXPixie.dll stdcall delayload';
+
+type
+  FStopwatch = interface(IUnknown)
+    '{E38C1983-E8E5-4A37-9182-17EBA892D844}'
+    procedure FCreate;
+    procedure Reset;
+    procedure Start;
+    procedure StartNew;
+    procedure Stop;
+    function ElapsedMilliseconds: Double;
+    function IsRunning: Boolean;
+  end;
+
+function InitStopwatch: FStopwatch;
+  external 'InitStopwatch@files:FMXPixie.dll stdcall delayload';
+
+// =============================================================================
 // FStorageInfo
 // =============================================================================
 type
