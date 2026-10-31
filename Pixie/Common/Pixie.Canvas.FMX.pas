@@ -142,6 +142,11 @@ type
       out AspectRatio: Single): Boolean; override;
     procedure DrawImage(Handle: TPixieImageHandle;
       DstX, DstY, DstW, DstH: Single); override;
+    procedure DrawImageClipped(Handle: TPixieImageHandle;
+      TileX, TileY, TileW, TileH: Single;
+      ClipX, ClipY, ClipW, ClipH: Single;
+      RepeatX, RepeatY: Boolean;
+      const Radius: TPixieBorderRadiuses); override;
 
     // Simple shapes
     procedure FillEllipse(X, Y, W, H: Single;
@@ -1257,6 +1262,145 @@ begin
   SrcRect := TRectF.Create(0, 0, Info.ImgWidth, Info.ImgHeight);
   DstRect := TRectF.Create(DstX, DstY, DstX + DstW, DstY + DstH);
   FCanvas.DrawBitmap(Info.Bitmap, SrcRect, DstRect, FOpacity);
+end;
+
+procedure TPixieFmxCanvas.DrawImageClipped(Handle: TPixieImageHandle;
+  TileX, TileY, TileW, TileH: Single;
+  ClipX, ClipY, ClipW, ClipH: Single;
+  RepeatX, RepeatY: Boolean;
+  const Radius: TPixieBorderRadiuses);
+var
+  Info: TPixieFmxImage;
+  TempBitmap: TBitmap;
+  BitmapBrush: TBrush;
+  SrcRect, DstRect: TRectF;
+  Scale: Single;
+  BitmapW, BitmapH: Integer;
+  StartX, StartY: Single;
+  PosX, PosY: Single;
+  SceneStarted: Boolean;
+begin
+  if not Radius.HasRadius then
+  begin
+    inherited DrawImageClipped(Handle,
+      TileX, TileY, TileW, TileH,
+      ClipX, ClipY, ClipW, ClipH,
+      RepeatX, RepeatY, Radius);
+    Exit;
+  end;
+
+  if (FCanvas = nil) or (Handle = 0) or
+     (TileW <= 0) or (TileH <= 0) or
+     (ClipW <= 0) or (ClipH <= 0) then
+    Exit;
+
+  Info := TPixieFmxImage(Handle);
+
+  // SVG пока использует штатный путь отрисовки.
+  // Этот метод предназначен для растровых изображений.
+  if (Info.SvgRenderer <> nil) or (Info.Bitmap = nil) then
+  begin
+    inherited DrawImageClipped(Handle,
+      TileX, TileY, TileW, TileH,
+      ClipX, ClipY, ClipW, ClipH,
+      RepeatX, RepeatY, Radius);
+    Exit;
+  end;
+
+  Scale := FScale;
+  if Scale <= 0 then
+    Scale := 1;
+
+  BitmapW := Ceil(ClipW * Scale);
+  BitmapH := Ceil(ClipH * Scale);
+
+  if (BitmapW <= 0) or (BitmapH <= 0) then
+    Exit;
+
+  TempBitmap := TBitmap.Create(BitmapW, BitmapH);
+  BitmapBrush := nil;
+
+  try
+    // Прозрачная промежуточная поверхность размером с ClipBox.
+    TempBitmap.Clear(0);
+
+    SceneStarted := TempBitmap.Canvas.BeginScene;
+
+    if not SceneStarted then
+    begin
+      inherited DrawImageClipped(Handle,
+        TileX, TileY, TileW, TileH,
+        ClipX, ClipY, ClipW, ClipH,
+        RepeatX, RepeatY, Radius);
+      Exit;
+    end;
+
+    try
+      SrcRect := TRectF.Create(
+        0, 0, Info.ImgWidth, Info.ImgHeight);
+
+      // Начало повторяющегося изображения относительно ClipBox.
+      if RepeatX then
+        StartX := TileX +
+          Floor((ClipX - TileX) / TileW) * TileW
+      else
+        StartX := TileX;
+
+      if RepeatY then
+        StartY := TileY +
+          Floor((ClipY - TileY) / TileH) * TileH
+      else
+        StartY := TileY;
+
+      PosY := StartY;
+
+      while PosY < ClipY + ClipH do
+      begin
+        PosX := StartX;
+
+        while PosX < ClipX + ClipW do
+        begin
+          // Координаты промежуточного bitmap задаются
+          // в физических пикселях с учётом масштаба FMX.
+          DstRect := TRectF.Create(
+            (PosX - ClipX) * Scale,
+            (PosY - ClipY) * Scale,
+            (PosX - ClipX + TileW) * Scale,
+            (PosY - ClipY + TileH) * Scale
+          );
+
+          TempBitmap.Canvas.DrawBitmap(
+            Info.Bitmap, SrcRect, DstRect, 1.0);
+
+          if not RepeatX then
+            Break;
+
+          PosX := PosX + TileW;
+        end;
+
+        if not RepeatY then
+          Break;
+
+        PosY := PosY + TileH;
+      end;
+    finally
+      TempBitmap.Canvas.EndScene;
+    end;
+
+    // Bitmap Brush заполняет именно скруглённый контур.
+    BitmapBrush := TBrush.Create(TBrushKind.Bitmap, claWhite);
+    BitmapBrush.Bitmap.Bitmap := TempBitmap;
+    BitmapBrush.Bitmap.WrapMode := TWrapMode.TileStretch;
+
+    BuildRoundedRectPath(
+      FPath, ClipX, ClipY, ClipW, ClipH, Radius);
+
+    FCanvas.FillPath(FPath, FOpacity, BitmapBrush);
+
+  finally
+    BitmapBrush.Free;
+    TempBitmap.Free;
+  end;
 end;
 
 // ---------------------------------------------------------------------------

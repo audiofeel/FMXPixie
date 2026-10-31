@@ -44,6 +44,15 @@ type
     procedure SubMargins(const Mg: TPixieMargins);
   end;
 
+  { TPixieBoxShadow }
+  TPixieBoxShadow = record
+    OffsetX: TPixiePixel;
+    OffsetY: TPixiePixel;
+    BlurRadius: TPixiePixel;
+    SpreadRadius: TPixiePixel;
+    Color: TPixieWebColor;
+  end;
+
   { TPixieCssBorderRadius }
   TPixieCssBorderRadius = record
     TopLeftX: TPixieCssLength;
