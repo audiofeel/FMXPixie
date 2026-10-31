@@ -89,7 +89,7 @@
         <VerInfo_MajorVer>0</VerInfo_MajorVer>
         <VerInfo_MinorVer>3</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=audiofeel;FileDescription=$(MSBuildProjectName)_x86;FileVersion=0.3.0.0;InternalName=;LegalCopyright=Copyright © 2026 audiofeel;LegalTrademarks=;OriginalFilename=;ProgramID=;ProductName=$(MSBuildProjectName);ProductVersion=2026.10.28;Comments=Thank you for using $(MSBuildProjectName)!</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=audiofeel;FileDescription=$(MSBuildProjectName)_x86;FileVersion=0.3.0.0;InternalName=;LegalCopyright=Copyright © 2026 audiofeel;LegalTrademarks=;OriginalFilename=;ProgramID=;ProductName=$(MSBuildProjectName);ProductVersion=2026.10.31;Comments=Thank you for using $(MSBuildProjectName)!</VerInfo_Keys>
         <Manifest_File>(None)</Manifest_File>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
@@ -100,7 +100,7 @@
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <VerInfo_MajorVer>0</VerInfo_MajorVer>
         <VerInfo_MinorVer>3</VerInfo_MinorVer>
-        <VerInfo_Keys>CompanyName=audiofeel;FileDescription=$(MSBuildProjectName)_x64;FileVersion=0.3.0.0;InternalName=;LegalCopyright=Copyright © 2026 audiofeel;LegalTrademarks=;OriginalFilename=;ProgramID=;ProductName=$(MSBuildProjectName);ProductVersion=2026.10.28;Comments=Thank you for using $(MSBuildProjectName)!</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=audiofeel;FileDescription=$(MSBuildProjectName)_x64;FileVersion=0.3.0.0;InternalName=;LegalCopyright=Copyright © 2026 audiofeel;LegalTrademarks=;OriginalFilename=;ProgramID=;ProductName=$(MSBuildProjectName);ProductVersion=2026.10.31;Comments=Thank you for using $(MSBuildProjectName)!</VerInfo_Keys>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
