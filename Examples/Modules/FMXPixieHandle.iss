@@ -651,6 +651,8 @@ function InitStorageInfo: FStorageInfo;
 // FSystemInfo
 // =============================================================================
 type
+  TUserType = (utUnknown, utUser, utAdmin, utGuest, utSystem);
+
   FSystemInfo = interface(IUnknown)
     '{06F37AEC-7E76-4EB2-ACB2-648FDE4012FD}'
     function OSCaption: WideString;
