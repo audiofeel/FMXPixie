@@ -115,7 +115,8 @@
         <DCCReference Include="Pixie\FMXPixie.TagBar.pas"/>
         <DCCReference Include="Pixie\FMXPixie.PaintBox.pas"/>
         <DCCReference Include="Custom\AudioPlayer\FMXPixie.AudioPlayer.pas"/>
-        <DCCReference Include="Custom\FMXBridge.SystemInfo.pas"/>
+        <DCCReference Include="Custom\FMXPixie.SystemInfo.pas"/>
+        <DCCReference Include="FMX\FMXPixie.System.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

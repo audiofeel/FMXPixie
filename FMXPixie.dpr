@@ -28,7 +28,8 @@ uses
   FMXPixie.TagBar in 'Pixie\FMXPixie.TagBar.pas',
   FMXPixie.PaintBox in 'Pixie\FMXPixie.PaintBox.pas',
   FMXPixie.AudioPlayer in 'Custom\AudioPlayer\FMXPixie.AudioPlayer.pas',
-  FMXBridge.SystemInfo in 'Custom\FMXBridge.SystemInfo.pas';
+  FMXPixie.SystemInfo in 'Custom\FMXPixie.SystemInfo.pas',
+  FMXPixie.System in 'FMX\FMXPixie.System.pas';
 
 {$R *.res}
 begin
