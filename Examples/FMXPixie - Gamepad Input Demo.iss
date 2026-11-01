@@ -266,7 +266,7 @@ begin
 
     '<div class="panel actions">' +
     '<div class="panel-head"><span>2. ASSIGN ACTIONS</span><span class="panel-caption">3. Press to test</span></div>' +
-    '<div class="action-help">Click Assign, then press the key, mouse button, or controller control you want to use. The indicator changes when that action is pressed.</div>' +
+    '<div class="action-help">Click Assign, then press a key, mouse button, or controller control. Press it again to see PRESSED / RELEASED. This demo only reports input; the actions do not navigate pages.</div>' +
 
     '<div class="action-card"><div class="action-head"><span class="action-name">NEXT</span>' +
     '<span id="state-next" class="action-state">RELEASED</span></div>' +
@@ -722,8 +722,10 @@ begin
     Doc.Changed;
   end
   else
+  begin
     SetInputStatus('Could not start assignment: ' + Input.LastError);
     SetTextById('capture-status', 'Assignment could not be started: ' + Input.LastError);
+  end;
 end;
 
 procedure HandleCapturedInput;
@@ -891,7 +893,7 @@ begin
     SetBindingText(ACTION_NEXT, 'Assigned (restored from profile)');
     SetBindingText(ACTION_BACK, 'Assigned (restored from profile)');
     SetBindingText(ACTION_CANCEL, 'Assigned (restored from profile)');
-    SetInputStatus('Profile loaded. Saved bindings are active.');
+    SetInputStatus('Profile loaded. Saved assignments are active.');
     SetTextById('capture-status', 'Profile loaded. The saved assignments are active; press a bound control to test them.');
     UpdateActionState;
     AddEventLog('Input profile loaded.');
