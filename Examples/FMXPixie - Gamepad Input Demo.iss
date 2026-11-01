@@ -55,7 +55,6 @@ const
   ACTION_BACK = 102;
   ACTION_CANCEL = 103;
 
-  INPUT_BM_CLICK = $00F5;
 
 var
   FMXForm: FForm;
@@ -339,10 +338,12 @@ end;
 procedure SetInputStatus(const S: String);
 begin
   SetTextById('input-status', S);
-  if InputAvailable then
-    SetTextById('input-state', 'INPUT: READY')
+  if not InputAvailable then
+    SetTextById('input-state', 'INPUT: OFFLINE')
+  else if (Input <> nil) and Input.IsEnabled then
+    SetTextById('input-state', 'INPUT: ON')
   else
-    SetTextById('input-state', 'INPUT: OFFLINE');
+    SetTextById('input-state', 'INPUT: PAUSED');
 end;
 
 procedure AddEventLog(const S: String);
@@ -455,44 +456,45 @@ begin
       SetTextById('element-total', '0 controls');
       SetTextById('element-summary', 'Select a device.');
       SetClassById('rumble', 'btn small is-hidden');
-      Exit;
-    end;
-
-    SetTextById('selected-device-name', Input.DeviceName(DeviceIndex));
-    SetTextById('selected-device-id', SelectedDeviceID);
-
-    if Input.DeviceAvailable(DeviceIndex) then
-      DeviceNote := InputDeviceKindName(Input.DeviceKind(DeviceIndex)) + ' / available'
+    end
     else
-      DeviceNote := InputDeviceKindName(Input.DeviceKind(DeviceIndex)) +
-        ' / unavailable: ' + Input.DeviceError(DeviceIndex);
-    SetTextById('selected-device-note', DeviceNote);
-
-    if Input.DeviceRumbleSupported(DeviceIndex) then
-      SetClassById('rumble', 'btn small')
-    else
-      SetClassById('rumble', 'btn small is-hidden');
-
-    Count := Input.ElementCount(DeviceIndex);
-    SetTextById('element-total', IntToStr(Count) + ' controls');
-    if Count > MAX_INPUT_ELEMENTS then
-      SetTextById('element-summary', 'Showing first ' +
-        IntToStr(MAX_INPUT_ELEMENTS) + ' of ' + IntToStr(Count) + ' controls.')
-    else
-      SetTextById('element-summary', 'Controls exposed by the selected input device.');
-
-    VisibleCount := Count;
-    if VisibleCount > MAX_INPUT_ELEMENTS then
-      VisibleCount := MAX_INPUT_ELEMENTS;
-
-    for I := 0 to VisibleCount - 1 do
     begin
-      Kind := Input.ElementKind(DeviceIndex, I);
-      Code := Input.ElementCode(DeviceIndex, I);
-      Line := InputElementKindName(Kind) + '  |  ' +
-        Input.ElementName(DeviceIndex, I) + '  |  code ' + IntToStr(Code);
-      SetTextById('element-' + IntToStr(I), Line);
-      SetClassById('element-' + IntToStr(I), 'element-row');
+      SetTextById('selected-device-name', Input.DeviceName(DeviceIndex));
+      SetTextById('selected-device-id', SelectedDeviceID);
+
+      if Input.DeviceAvailable(DeviceIndex) then
+        DeviceNote := InputDeviceKindName(Input.DeviceKind(DeviceIndex)) + ' / available'
+      else
+        DeviceNote := InputDeviceKindName(Input.DeviceKind(DeviceIndex)) +
+          ' / unavailable: ' + Input.DeviceError(DeviceIndex);
+      SetTextById('selected-device-note', DeviceNote);
+
+      if Input.DeviceRumbleSupported(DeviceIndex) then
+        SetClassById('rumble', 'btn small')
+      else
+        SetClassById('rumble', 'btn small is-hidden');
+
+      Count := Input.ElementCount(DeviceIndex);
+      SetTextById('element-total', IntToStr(Count) + ' controls');
+      if Count > MAX_INPUT_ELEMENTS then
+        SetTextById('element-summary', 'Showing first ' +
+          IntToStr(MAX_INPUT_ELEMENTS) + ' of ' + IntToStr(Count) + ' controls.')
+      else
+        SetTextById('element-summary', 'Controls exposed by the selected input device.');
+
+      VisibleCount := Count;
+      if VisibleCount > MAX_INPUT_ELEMENTS then
+        VisibleCount := MAX_INPUT_ELEMENTS;
+
+      for I := 0 to VisibleCount - 1 do
+      begin
+        Kind := Input.ElementKind(DeviceIndex, I);
+        Code := Input.ElementCode(DeviceIndex, I);
+        Line := InputElementKindName(Kind) + '  |  ' +
+          Input.ElementName(DeviceIndex, I) + '  |  code ' + IntToStr(Code);
+        SetTextById('element-' + IntToStr(I), Line);
+        SetClassById('element-' + IntToStr(I), 'element-row');
+      end;
     end;
   finally
     Doc.EndUpdate;
@@ -627,9 +629,18 @@ end;
 // Capture and bindings
 // ---------------------------------------------------------------------------
 procedure StartCapture(Action: Integer);
+var
+  DeviceIndex: Integer;
 begin
   if (Input = nil) or not InputAvailable then
     Exit;
+
+  DeviceIndex := FindSelectedDeviceIndex;
+  if DeviceIndex < 0 then
+  begin
+    SetInputStatus('Select an input device first.');
+    Exit;
+  end;
 
   if not Input.IsEnabled then
   begin
@@ -651,7 +662,7 @@ begin
     CaptureAction := Action;
     SetTextById('capture-status',
       'Waiting for a physical control for ' + InputActionName(Action) + '...');
-    SetInputStatus('Capture active on ' + Input.DeviceName(FindSelectedDeviceIndex) + '.');
+    SetInputStatus('Capture active on ' + Input.DeviceName(DeviceIndex) + '.');
     AddEventLog('Started capture for ' + InputActionName(Action) + '.');
     Doc.Changed;
   end
@@ -987,8 +998,10 @@ begin
   try
     if not Input.Poll then
     begin
+      InputAvailable := False;
       SetInputStatus('Input polling stopped: ' + Input.LastError);
       AddEventLog('POLL ERROR: ' + Input.LastError);
+      Doc.Changed;
       KillTimer(0, InputTimerID);
       InputTimerID := 0;
       Exit;
@@ -1006,8 +1019,10 @@ begin
     UpdateActionState;
   except
     ErrorText := GetExceptionMessage;
+    InputAvailable := False;
     SetInputStatus('INPUT ERROR: ' + ErrorText);
     AddEventLog('Input timer stopped: ' + ErrorText);
+    Doc.Changed;
     KillTimer(0, InputTimerID);
     InputTimerID := 0;
   end;
@@ -1074,6 +1089,7 @@ begin
   View.Width(DEMO_FORM_WIDTH);
   View.Height(DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT);
   View.ColorScheme(pcsDark);
+  View.OnElementClick(@ElementClick);
   View.LoadFromString(BuildInputHtml);
 
   Doc.FCreate(View.GetDocument);
@@ -1130,8 +1146,6 @@ begin
   begin
     if Input.Capturing then
       Input.CancelCapture;
-    if SelectedDeviceID <> '' then
-      Input.StopRumble(SelectedDeviceID);
     Input.Shutdown;
     Input := nil;
   end;
