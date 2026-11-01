@@ -82,26 +82,30 @@ function KillTimer(hWnd: HWND; uIDEvent: UINT_PTR): BOOL;
 
 function InputElementKindName(Kind: Integer): String;
 begin
-  case Kind of
-    Ord(Key): Result := 'Key';
-    Ord(Button): Result := 'Button';
-    Ord(Axis): Result := 'Axis';
-    Ord(Hat): Result := 'Hat / D-Pad';
-    Ord(RelativeAxis): Result := 'Relative axis';
+  if Kind = Ord(Key) then
+    Result := 'Key'
+  else if Kind = Ord(Button) then
+    Result := 'Button'
+  else if Kind = Ord(Axis) then
+    Result := 'Axis'
+  else if Kind = Ord(Hat) then
+    Result := 'Hat / D-Pad'
+  else if Kind = Ord(RelativeAxis) then
+    Result := 'Relative axis'
   else
     Result := 'Unknown';
-  end;
 end;
 
 function InputDeviceKindName(Kind: Integer): String;
 begin
-  case Kind of
-    Ord(Keyboard): Result := 'Keyboard';
-    Ord(Controller): Result := 'Controller';
-    Ord(Mouse): Result := 'Mouse';
+  if Kind = Ord(Keyboard) then
+    Result := 'Keyboard'
+  else if Kind = Ord(Controller) then
+    Result := 'Controller'
+  else if Kind = Ord(Mouse) then
+    Result := 'Mouse'
   else
     Result := 'Unknown';
-  end;
 end;
 
 function InputActionName(Action: Integer): String;
