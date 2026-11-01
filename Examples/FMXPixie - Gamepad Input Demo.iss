@@ -210,7 +210,7 @@ begin
       DeviceStatusLabel.Caption := DeviceStatusLabel.Caption +
         '  |  unavailable: ' + Input.DeviceError(DeviceIndex);
       RumbleButton.Enabled := False;
-      CaptureButton.Enabled := False;
+      CaptureButton.Enabled := Input.Capturing;
     end
     else
     begin
@@ -439,7 +439,6 @@ begin
   else
     CaptureStatusLabel.Caption := 'Binding failed: ' + Input.LastError;
 
-  DeviceCombo.Enabled := True;
   ActionCombo.Enabled := True;
   CaptureButton.Caption := 'Capture';
   CaptureButton.Enabled := InputAvailable and (DeviceCombo.ItemIndex >= 0) and
