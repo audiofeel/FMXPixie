@@ -4,6 +4,7 @@ interface
 
 uses
   System.Classes,
+  System.SysUtils,
   System.Generics.Collections,
   FMX.Types,
   FMXInput;
@@ -156,9 +157,6 @@ type
 function InitInput: FInput; stdcall;
 
 implementation
-
-uses
-  System.SysUtils;
 
 constructor TFInputService.Create;
 begin
