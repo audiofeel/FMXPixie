@@ -215,7 +215,6 @@ begin
     '.action-help{font-size:9px;line-height:13px;color:#8292a8;margin:6px 0 8px 0;}' +
     '.action-card{padding:8px 9px;margin-top:6px;background:#142136;border:1px solid #2a3c56;border-radius:5px;}' +
     '.action-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}' +
-    '.action-description{font-size:9px;color:#8292a8;margin-bottom:5px;}' +
     '.action-name{font-size:11px;font-weight:700;color:#dbeafe;}' +
     '.action-state{padding:2px 7px;border-radius:3px;background:#263449;color:#91a2b9;' +
     'font-size:9px;font-weight:700;letter-spacing:.4px;}' +
@@ -266,23 +265,20 @@ begin
 
     '<div class="panel actions">' +
     '<div class="panel-head"><span>2. ASSIGN ACTIONS</span><span class="panel-caption">3. Press to test</span></div>' +
-    '<div class="action-help">Click Assign, then press a key, mouse button, or controller control. Press it again to see PRESSED / RELEASED. This demo only reports input; the actions do not navigate pages.</div>' +
+    '<div class="action-help">Assign a control, then press it to test. NEXT = continue, BACK = previous, CANCEL = cancel. This demo only shows input state.</div>' +
 
     '<div class="action-card"><div class="action-head"><span class="action-name">NEXT</span>' +
     '<span id="state-next" class="action-state">RELEASED</span></div>' +
-    '<div class="action-description">Continue or confirm.</div>' +
     '<div id="binding-next" class="binding">Not assigned</div>' +
     '<button id="capture-next" class="btn primary small">Assign NEXT</button></div>' +
 
     '<div class="action-card"><div class="action-head"><span class="action-name">BACK</span>' +
     '<span id="state-back" class="action-state">RELEASED</span></div>' +
-    '<div class="action-description">Return to the previous step.</div>' +
     '<div id="binding-back" class="binding">Not assigned</div>' +
     '<button id="capture-back" class="btn primary small">Assign BACK</button></div>' +
 
     '<div class="action-card"><div class="action-head"><span class="action-name">CANCEL</span>' +
     '<span id="state-cancel" class="action-state">RELEASED</span></div>' +
-    '<div class="action-description">Cancel the current operation.</div>' +
     '<div id="binding-cancel" class="binding">Not assigned</div>' +
     '<button id="capture-cancel" class="btn primary small">Assign CANCEL</button></div>' +
 
