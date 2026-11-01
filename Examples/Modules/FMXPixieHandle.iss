@@ -701,18 +701,13 @@ function InitStorageInfo: FStorageInfo;
 // =============================================================================
 // Input / Gamepad
 // =============================================================================
-const
-  FInputDeviceKeyboard = 0;
-  FInputDeviceController = 1;
-  FInputDeviceMouse = 2;
-
-  FInputElementKey = 0;
-  FInputElementButton = 1;
-  FInputElementAxis = 2;
-  FInputElementHat = 3;
-  FInputElementRelativeAxis = 4;
-
 type
+  // Pascal Script enum members are unscoped. Ord() is used in the demo
+  // because the DLL wrapper deliberately exposes these values as Integer.
+  TInputDeviceKind = (Keyboard, Controller, Mouse);
+  TInputElementKind = (Key, Button, Axis, Hat, RelativeAxis);
+  TInputDeviceListMode = (Gaming, AllInterfaces);
+
   FInput = interface(IUnknown)
     '{3FAF5B3C-4B97-4F2A-9C3D-BA0AD938A7C1}'
     function StartPolling(Interval: Cardinal; Event: TNotifyEvent): Boolean;

@@ -48,16 +48,6 @@ const
 
   INPUT_POLL_INTERVAL = 16;
 
-  // Ordinal values from FMXInput's scoped enums.
-  INPUT_DEVICE_KEYBOARD = 0;
-  INPUT_DEVICE_CONTROLLER = 1;
-  INPUT_DEVICE_MOUSE = 2;
-
-  INPUT_KIND_KEY = 0;
-  INPUT_KIND_BUTTON = 1;
-  INPUT_KIND_AXIS = 2;
-  INPUT_KIND_HAT = 3;
-  INPUT_KIND_RELATIVE_AXIS = 4;
 
 var
   Input: FInput;
@@ -93,11 +83,11 @@ function KillTimer(hWnd: HWND; uIDEvent: UINT_PTR): BOOL;
 function InputElementKindName(Kind: Integer): String;
 begin
   case Kind of
-    INPUT_KIND_KEY: Result := 'Key';
-    INPUT_KIND_BUTTON: Result := 'Button';
-    INPUT_KIND_AXIS: Result := 'Axis';
-    INPUT_KIND_HAT: Result := 'Hat / D-Pad';
-    INPUT_KIND_RELATIVE_AXIS: Result := 'Relative axis';
+    Ord(Key): Result := 'Key';
+    Ord(Button): Result := 'Button';
+    Ord(Axis): Result := 'Axis';
+    Ord(Hat): Result := 'Hat / D-Pad';
+    Ord(RelativeAxis): Result := 'Relative axis';
   else
     Result := 'Unknown';
   end;
@@ -106,9 +96,9 @@ end;
 function InputDeviceKindName(Kind: Integer): String;
 begin
   case Kind of
-    INPUT_DEVICE_KEYBOARD: Result := 'Keyboard';
-    INPUT_DEVICE_CONTROLLER: Result := 'Controller';
-    INPUT_DEVICE_MOUSE: Result := 'Mouse';
+    Ord(Keyboard): Result := 'Keyboard';
+    Ord(Controller): Result := 'Controller';
+    Ord(Mouse): Result := 'Mouse';
   else
     Result := 'Unknown';
   end;
@@ -139,21 +129,21 @@ end;
 function DirectionName(Kind, Direction: Integer): String;
 begin
   Result := '';
-  if Kind = INPUT_KIND_AXIS then
+  if Kind = Ord(Axis) then
   begin
     if Direction < 0 then
       Result := ' (negative direction)'
     else
       Result := ' (positive direction)';
   end
-  else if Kind = INPUT_KIND_RELATIVE_AXIS then
+  else if Kind = Ord(RelativeAxis) then
   begin
     if Direction < 0 then
       Result := ' (negative direction)'
     else
       Result := ' (positive direction)';
   end
-  else if Kind = INPUT_KIND_HAT then
+  else if Kind = Ord(Hat) then
   begin
     case Direction of
       0: Result := ' (Up)';
@@ -280,7 +270,7 @@ begin
       FirstAvailable := I;
 
     if Input.DeviceAvailable(I) and
-       (Kind = INPUT_DEVICE_CONTROLLER) and (SelectedIndex < 0) then
+       (Kind = Ord(Controller)) and (SelectedIndex < 0) then
       SelectedIndex := I;
   end;
 
