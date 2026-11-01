@@ -606,8 +606,9 @@ begin
   if (Index < 0) or (Index >= DeviceIDs.Count) then
     Exit;
 
-  if (Input <> nil) and Input.Capturing then
-    CancelCurrentCapture;
+  if Input <> nil then
+    if Input.Capturing then
+      CancelCurrentCapture;
 
   SelectedDeviceID := DeviceIDs[Index];
   Doc.BeginUpdate;
@@ -696,11 +697,12 @@ end;
 
 procedure CancelCurrentCapture;
 begin
-  if (Input <> nil) and Input.Capturing then
-  begin
-    Input.CancelCapture;
-    AddEventLog('Capture cancelled.');
-  end;
+  if Input <> nil then
+    if Input.Capturing then
+    begin
+      Input.CancelCapture;
+      AddEventLog('Capture cancelled.');
+    end;
   CaptureAction := 0;
   SetTextById('capture-status', 'Capture is not active.');
   Doc.Changed;
@@ -715,7 +717,9 @@ var
   DeviceName: String;
   BindingText: String;
 begin
-  if (Input = nil) or not Input.HasCaptured then
+  if Input = nil then
+    Exit;
+  if not Input.HasCaptured then
     Exit;
 
   Action := CaptureAction;
@@ -888,7 +892,13 @@ begin
     Exit;
 
   DeviceIndex := FindSelectedDeviceIndex;
-  if (DeviceIndex < 0) or not Input.DeviceRumbleSupported(DeviceIndex) then
+  if DeviceIndex < 0 then
+  begin
+    SetInputStatus('Select an input device first.');
+    Exit;
+  end;
+
+  if not Input.DeviceRumbleSupported(DeviceIndex) then
   begin
     SetInputStatus('Rumble is not supported by the selected device.');
     Exit;
