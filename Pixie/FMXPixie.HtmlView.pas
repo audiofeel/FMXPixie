@@ -1,11 +1,3 @@
-{*******************************************************}
-{                                                       }
-{                   FMXPixie.HtmlView                   }
-{                                                       }
-{              Copyright(c) 2026 Audiofeel              }
-{                  All rights reserved                  }
-{                                                       }
-{*******************************************************}
 
 unit FMXPixie.HtmlView;
 
@@ -51,6 +43,8 @@ type
     procedure ScrollY(FValue: Single); stdcall;
     procedure SaveAsPdf(const FileName: WideString); stdcall;
     procedure SaveAsPng(const FileName: WideString;
+      FWidth, FHeight: Integer); stdcall;
+    procedure SaveAsBmp(const FileName: WideString;
       FWidth, FHeight: Integer); stdcall;
     function RegisterImageFromFile(
       const FName, FFileName: WideString): Boolean; stdcall;
@@ -153,6 +147,8 @@ type
     procedure ScrollY(FValue: Single); stdcall;
     procedure SaveAsPdf(const FileName: WideString); stdcall;
     procedure SaveAsPng(const FileName: WideString;
+      FWidth, FHeight: Integer); stdcall;
+    procedure SaveAsBmp(const FileName: WideString;
       FWidth, FHeight: Integer); stdcall;
     function RegisterImageFromFile(
       const FName, FFileName: WideString): Boolean; stdcall;
@@ -543,6 +539,12 @@ procedure TFPixieHtmlView.SaveAsPng(
   const FileName: WideString; FWidth, FHeight: Integer);
 begin
   ControlPixieHtmlView.SaveAsPng(string(FileName), FWidth, FHeight);
+end;
+
+procedure TFPixieHtmlView.SaveAsBmp(
+  const FileName: WideString; FWidth, FHeight: Integer);
+begin
+  ControlPixieHtmlView.SaveAsBmp(string(FileName), FWidth, FHeight);
 end;
 
 function TFPixieHtmlView.RegisterImageFromFile(

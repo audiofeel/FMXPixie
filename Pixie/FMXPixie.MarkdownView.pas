@@ -1,11 +1,3 @@
-{*******************************************************}
-{                                                       }
-{                 FMXPixie.MarkdownView                 }
-{                                                       }
-{              Copyright(c) 2026 Audiofeel              }
-{                  All rights reserved                  }
-{                                                       }
-{*******************************************************}
 
 unit FMXPixie.MarkdownView;
 
@@ -45,6 +37,8 @@ type
     procedure UserCss(const FCss: WideString); stdcall;
     procedure Zoom(FValue: Double); stdcall;
     procedure SetUseDefaultStyles(FValue: Boolean); stdcall;
+    procedure SaveAsBmp(const FileName: WideString;
+      FWidth, FHeight: Integer); stdcall;
     procedure Opacity(FOpacity: Single); stdcall;
     procedure Enabled(FEnabled: Boolean); stdcall;
     procedure Visible(FVisible: Boolean); stdcall;
@@ -102,6 +96,8 @@ type
     procedure UserCss(const FCss: WideString); stdcall;
     procedure Zoom(FValue: Double); stdcall;
     procedure SetUseDefaultStyles(FValue: Boolean); stdcall;
+    procedure SaveAsBmp(const FileName: WideString;
+      FWidth, FHeight: Integer); stdcall;
     procedure Opacity(FOpacity: Single); stdcall;
     procedure Enabled(FEnabled: Boolean); stdcall;
     procedure Visible(FVisible: Boolean); stdcall;
@@ -167,10 +163,6 @@ begin
   if ControlMarkdownView = nil then
     Exit;
 
-  { LoadMarkdownFromString updates the component's private base URL. The
-    Markdown.Assign that follows also populates its internal Markdown list.
-    This matters because the upstream UseDefaultStyles setter rebuilds HTML
-    from that list, while LoadMarkdownFromString alone does not populate it. }
   ControlMarkdownView.LoadMarkdownFromString(FMarkdownText.Text, FBaseUrl);
   ControlMarkdownView.Markdown.Assign(FMarkdownText);
   ControlMarkdownView.UseDefaultStyles := FUseDefaultStyles;
@@ -312,11 +304,15 @@ begin
 
   if ControlMarkdownView <> nil then
   begin
-    { Ensure the component's private Markdown list has the current content
-      before its setter rebuilds HTML. }
     ControlMarkdownView.Markdown.Assign(FMarkdownText);
     ControlMarkdownView.UseDefaultStyles := FValue;
   end;
+end;
+
+procedure TFPixieMarkdownView.SaveAsBmp(
+  const FileName: WideString; FWidth, FHeight: Integer);
+begin
+  ControlMarkdownView.SaveAsBmp(string(FileName), FWidth, FHeight);
 end;
 
 procedure TFPixieMarkdownView.Opacity(FOpacity: Single);

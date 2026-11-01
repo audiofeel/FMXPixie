@@ -1,11 +1,3 @@
-{*******************************************************}
-{                                                       }
-{                    FMXPixie.TagBar                    }
-{                                                       }
-{              Copyright(c) 2026 Audiofeel              }
-{                  All rights reserved                  }
-{                                                       }
-{*******************************************************}
 
 unit FMXPixie.TagBar;
 

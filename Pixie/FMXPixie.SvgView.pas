@@ -1,11 +1,3 @@
-{*******************************************************}
-{                                                       }
-{                    FMXPixie.SvgView                   }
-{                                                       }
-{              Copyright(c) 2026 Audiofeel              }
-{                  All rights reserved                  }
-{                                                       }
-{*******************************************************}
 
 unit FMXPixie.SvgView;
 
@@ -47,6 +39,8 @@ type
     procedure ColorCheckers(FColor: TAlphaColor); stdcall;
     procedure CheckersSize(FValue: Integer); stdcall;
     procedure SaveAsPng(const FileName: WideString;
+      FWidth, FHeight: Integer); stdcall;
+    procedure SaveAsBmp(const FileName: WideString;
       FWidth, FHeight: Integer); stdcall;
     procedure Opacity(FOpacity: Single); stdcall;
     procedure Enabled(FEnabled: Boolean); stdcall;
@@ -103,6 +97,8 @@ type
     procedure ColorCheckers(FColor: TAlphaColor); stdcall;
     procedure CheckersSize(FValue: Integer); stdcall;
     procedure SaveAsPng(const FileName: WideString;
+      FWidth, FHeight: Integer); stdcall;
+    procedure SaveAsBmp(const FileName: WideString;
       FWidth, FHeight: Integer); stdcall;
     procedure Opacity(FOpacity: Single); stdcall;
     procedure Enabled(FEnabled: Boolean); stdcall;
@@ -214,12 +210,12 @@ end;
 
 procedure TFPixieSvgView.SetClipParent(FValue: Boolean);
 begin
-  ControlSvgView.ClipChildren := FValue;
+  ControlSvgView.ClipParent := FValue;
 end;
 
 procedure TFPixieSvgView.SetClipChildren(FValue: Boolean);
 begin
-  ControlSvgView.ClipParent := FValue;
+  ControlSvgView.ClipChildren := FValue;
 end;
 
 procedure TFPixieSvgView.BringToFront;
@@ -281,6 +277,12 @@ procedure TFPixieSvgView.SaveAsPng(
   const FileName: WideString; FWidth, FHeight: Integer);
 begin
   ControlSvgView.SaveAsPng(string(FileName), FWidth, FHeight);
+end;
+
+procedure TFPixieSvgView.SaveAsBmp(
+  const FileName: WideString; FWidth, FHeight: Integer);
+begin
+  ControlSvgView.SaveAsBmp(string(FileName), FWidth, FHeight);
 end;
 
 procedure TFPixieSvgView.Opacity(FOpacity: Single);
