@@ -476,6 +476,8 @@ end;
 
 procedure InputTimerProc(hWnd: HWND; uMsg: UINT; idEvent: UINT_PTR;
   dwTime: DWORD);
+var
+  ErrorText: String;
 begin
   if Closing or (Input = nil) or not InputAvailable then
     Exit;
@@ -522,13 +524,11 @@ begin
       Exit;
     end;
   except
-    on E: Exception do
-    begin
-      CaptureStatusLabel.Caption := E.ClassName + ': ' + E.Message;
-      AddEventLog('INPUT ERROR: ' + E.ClassName + ': ' + E.Message);
-      KillTimer(0, InputTimerID);
-      InputTimerID := 0;
-    end;
+    ErrorText := GetExceptionMessage;
+    CaptureStatusLabel.Caption := ErrorText;
+    AddEventLog('INPUT ERROR: ' + ErrorText);
+    KillTimer(0, InputTimerID);
+    InputTimerID := 0;
   end;
 end;
 
