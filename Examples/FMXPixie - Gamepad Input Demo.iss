@@ -48,9 +48,6 @@ const
   INPUT_POLL_INTERVAL = 16;
   INPUT_DEVICE_CHECK_INTERVAL = 1000;
 
-  MAX_INPUT_DEVICES = 12;
-  MAX_INPUT_ELEMENTS = 28;
-
   ACTION_NEXT = 101;
   ACTION_BACK = 102;
   ACTION_CANCEL = 103;
@@ -169,8 +166,6 @@ begin
 end;
 
 function BuildInputHtml: String;
-var
-  I: Integer;
 begin
   Result :=
     '<!doctype html><html><head><meta charset="utf-8"><style>' +
@@ -252,13 +247,9 @@ begin
 
     '<div class="panel devices">' +
     '<div class="panel-head"><span>DEVICES</span><span id="device-count" class="panel-caption">0 detected</span></div>' +
-    '<div id="device-list" class="device-list">';
-  for I := 0 to MAX_INPUT_DEVICES - 1 do
-    Result := Result +
-      '<button id="device-' + IntToStr(I) + '" class="device-row is-hidden">No device</button>';
-  Result := Result +
-    '</div><div id="device-overflow" class="device-note"></div>' +
-    '<div class="selected-info"><div id="selected-device-name" class="selected-name">No device selected</div>' +
+    '<div id="device-list" class="device-list"></div>' +
+    '<div class="selected-info">';
+    '<div id="selected-device-name" class="selected-name">No device selected</div>' +
     '<div id="selected-device-id" class="selected-id"></div>' +
     '<div id="selected-device-note" class="device-note">Select a device to inspect its controls.</div></div>' +
     '</div>' +
@@ -266,12 +257,8 @@ begin
     '<div class="panel elements">' +
     '<div class="panel-head"><span>DEVICE ELEMENTS</span><span id="element-total" class="panel-caption">0 controls</span></div>' +
     '<div id="element-summary" class="element-summary">Select a device.</div>' +
-    '<div id="element-list" class="element-list">';
-  for I := 0 to MAX_INPUT_ELEMENTS - 1 do
-    Result := Result +
-      '<div id="element-' + IntToStr(I) + '" class="element-row is-hidden"></div>';
-  Result := Result +
-    '</div></div>' +
+    '<div id="element-list" class="element-list"></div>' +
+    '</div>' +
 
     '<div class="panel actions">' +
     '<div class="panel-head"><span>ACTION BINDINGS</span><span class="panel-caption">Rising-edge events</span></div>' +
@@ -315,6 +302,21 @@ end;
 // ---------------------------------------------------------------------------
 // DOM helpers
 // ---------------------------------------------------------------------------
+function HtmlEscapeText(const S: String): String;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 1 to Length(S) do
+    case S[I] of
+      '&': Result := Result + '&amp;';
+      '<': Result := Result + '&lt;';
+      '>': Result := Result + '&gt;';
+    else
+      Result := Result + S[I];
+    end;
+end;
+
 procedure SetTextById(const Id, S: String);
 var
   H: NativeInt;
@@ -437,18 +439,20 @@ var
   DeviceIndex: Integer;
   I: Integer;
   Count: Integer;
-  VisibleCount: Integer;
   Kind: Integer;
   Code: Integer;
   Line: String;
   DeviceNote: String;
+  ElementsHtml: String;
+  ElementListHandle: NativeInt;
 begin
   DeviceIndex := FindSelectedDeviceIndex;
+  ElementListHandle := Doc.GetElementById('element-list');
 
   Doc.BeginUpdate;
   try
-    for I := 0 to MAX_INPUT_ELEMENTS - 1 do
-      SetClassById('element-' + IntToStr(I), 'element-row is-hidden');
+    if ElementListHandle <> 0 then
+      Doc.SetInnerHtml(ElementListHandle, '');
 
     if DeviceIndex < 0 then
     begin
@@ -478,25 +482,23 @@ begin
 
       Count := Input.ElementCount(DeviceIndex);
       SetTextById('element-total', IntToStr(Count) + ' controls');
-      if Count > MAX_INPUT_ELEMENTS then
-        SetTextById('element-summary', 'Showing first ' +
-          IntToStr(MAX_INPUT_ELEMENTS) + ' of ' + IntToStr(Count) + ' controls.')
-      else
-        SetTextById('element-summary', 'Controls exposed by the selected input device.');
+      SetTextById('element-summary',
+        'Controls exposed by the selected input device.');
 
-      VisibleCount := Count;
-      if VisibleCount > MAX_INPUT_ELEMENTS then
-        VisibleCount := MAX_INPUT_ELEMENTS;
-
-      for I := 0 to VisibleCount - 1 do
+      ElementsHtml := '';
+      for I := 0 to Count - 1 do
       begin
         Kind := Input.ElementKind(DeviceIndex, I);
         Code := Input.ElementCode(DeviceIndex, I);
         Line := InputElementKindName(Kind) + '  |  ' +
           Input.ElementName(DeviceIndex, I) + '  |  code ' + IntToStr(Code);
-        SetTextById('element-' + IntToStr(I), Line);
-        SetClassById('element-' + IntToStr(I), 'element-row');
+        ElementsHtml := ElementsHtml +
+          '<div id="element-' + IntToStr(I) + '" class="element-row">' +
+          HtmlEscapeText(Line) + '</div>';
       end;
+
+      if ElementListHandle <> 0 then
+        Doc.SetInnerHtml(ElementListHandle, ElementsHtml);
     end;
   finally
     Doc.EndUpdate;
@@ -512,6 +514,8 @@ var
   PreviousID: String;
   NameText: String;
   RowClass: String;
+  DevicesHtml: String;
+  DeviceListHandle: NativeInt;
 begin
   if Input = nil then
     Exit;
@@ -524,14 +528,11 @@ begin
     DeviceIDs.Add(Input.DeviceID(I));
 
   SelectedIndex := DeviceIDs.IndexOf(PreviousID);
-  if SelectedIndex >= MAX_INPUT_DEVICES then
-    SelectedIndex := -1;
-
   if SelectedIndex < 0 then
   begin
     SelectedIndex := -1;
     for I := 0 to DeviceIDs.Count - 1 do
-      if (I < MAX_INPUT_DEVICES) and Input.DeviceAvailable(I) then
+      if Input.DeviceAvailable(I) then
       begin
         SelectedIndex := I;
         Break;
@@ -545,37 +546,33 @@ begin
   else
     SelectedDeviceID := '';
 
+  DeviceListHandle := Doc.GetElementById('device-list');
+  DevicesHtml := '';
+
   Doc.BeginUpdate;
   try
     SetTextById('device-count', IntToStr(DeviceIDs.Count) + ' detected');
 
-    for I := 0 to MAX_INPUT_DEVICES - 1 do
+    for I := 0 to DeviceIDs.Count - 1 do
     begin
-      if I < DeviceIDs.Count then
-      begin
-        NameText := InputDeviceKindName(Input.DeviceKind(I)) + '  |  ' +
-          Input.DeviceName(I);
-        if not Input.DeviceAvailable(I) then
-          NameText := NameText + '  [unavailable]';
+      NameText := InputDeviceKindName(Input.DeviceKind(I)) + '  |  ' +
+        Input.DeviceName(I);
+      if not Input.DeviceAvailable(I) then
+        NameText := NameText + '  [unavailable]';
 
-        RowClass := 'device-row';
-        if not Input.DeviceAvailable(I) then
-          RowClass := RowClass + ' is-unavailable';
-        if DeviceIDs[I] = SelectedDeviceID then
-          RowClass := 'device-row is-selected';
+      RowClass := 'device-row';
+      if not Input.DeviceAvailable(I) then
+        RowClass := RowClass + ' is-unavailable';
+      if DeviceIDs[I] = SelectedDeviceID then
+        RowClass := RowClass + ' is-selected';
 
-        SetTextById('device-' + IntToStr(I), NameText);
-        SetClassById('device-' + IntToStr(I), RowClass);
-      end
-      else
-        SetClassById('device-' + IntToStr(I), 'device-row is-hidden');
+      DevicesHtml := DevicesHtml +
+        '<button id="device-' + IntToStr(I) + '" class="' + RowClass +
+        '" type="button">' + HtmlEscapeText(NameText) + '</button>';
     end;
 
-    if DeviceIDs.Count > MAX_INPUT_DEVICES then
-      SetTextById('device-overflow', IntToStr(DeviceIDs.Count - MAX_INPUT_DEVICES) +
-        ' additional devices not shown.')
-    else
-      SetTextById('device-overflow', '');
+    if DeviceListHandle <> 0 then
+      Doc.SetInnerHtml(DeviceListHandle, DevicesHtml);
 
     if DeviceIDs.Count = 0 then
       SetInputStatus('No input devices detected. Connect a keyboard, mouse or controller.')
@@ -592,6 +589,8 @@ end;
 procedure SelectDevice(Index: Integer);
 var
   I: Integer;
+  H: NativeInt;
+  RowClass: String;
 begin
   if (Index < 0) or (Index >= DeviceIDs.Count) then
     Exit;
@@ -600,20 +599,19 @@ begin
   Doc.BeginUpdate;
   try
     for I := 0 to DeviceIDs.Count - 1 do
-      if I < MAX_INPUT_DEVICES then
+    begin
+      H := Doc.GetElementById('device-' + IntToStr(I));
+      if H <> 0 then
       begin
+        RowClass := 'device-row';
+        if not Input.DeviceAvailable(I) then
+          RowClass := RowClass + ' is-unavailable';
         if I = Index then
-        begin
-          if Input.DeviceAvailable(I) then
-            SetClassById('device-' + IntToStr(I), 'device-row is-selected')
-          else
-            SetClassById('device-' + IntToStr(I), 'device-row is-selected is-unavailable');
-        end
-        else if Input.DeviceAvailable(I) then
-          SetClassById('device-' + IntToStr(I), 'device-row')
-        else
-          SetClassById('device-' + IntToStr(I), 'device-row is-unavailable');
+          RowClass := RowClass + ' is-selected';
+        Elem.FCreate(H);
+        Elem.SetAttr('class', RowClass);
       end;
+    end;
   finally
     Doc.EndUpdate;
   end;
