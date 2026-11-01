@@ -194,9 +194,7 @@ begin
     Exit;
 
   DeviceIndex := DeviceCombo.ItemIndex;
-  ElementsMemo.Lines.BeginUpdate;
-  try
-    ElementsMemo.Clear;
+  ElementsMemo.Clear;
 
     if (DeviceIndex < 0) or (DeviceIndex >= DeviceIDs.Count) then
     begin
@@ -232,11 +230,8 @@ begin
       ElementsMemo.Lines.Add(Line);
     end;
 
-    if ElementsMemo.Lines.Count = 0 then
-      ElementsMemo.Lines.Add('This device exposes no controls.');
-  finally
-    ElementsMemo.Lines.EndUpdate;
-  end;
+  if ElementsMemo.Lines.Count = 0 then
+    ElementsMemo.Lines.Add('This device exposes no controls.');
 end;
 
 procedure PopulateDevices;
