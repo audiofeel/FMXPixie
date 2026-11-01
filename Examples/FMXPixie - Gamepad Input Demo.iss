@@ -722,7 +722,8 @@ begin
     Doc.Changed;
   end
   else
-    SetInputStatus('Capture failed: ' + Input.LastError);
+    SetInputStatus('Could not start assignment: ' + Input.LastError);
+    SetTextById('capture-status', 'Assignment could not be started: ' + Input.LastError);
 end;
 
 procedure HandleCapturedInput;
@@ -777,9 +778,9 @@ begin
   Input.ClearBindings;
   CaptureAction := 0;
 
-  SetBindingText(ACTION_NEXT, 'Not bound');
-  SetBindingText(ACTION_BACK, 'Not bound');
-  SetBindingText(ACTION_CANCEL, 'Not bound');
+  SetBindingText(ACTION_NEXT, 'Not assigned');
+  SetBindingText(ACTION_BACK, 'Not assigned');
+  SetBindingText(ACTION_CANCEL, 'Not assigned');
 
   ActionNextDown := False;
   ActionBackDown := False;
@@ -790,7 +791,7 @@ begin
 
   SetTextById('capture-status', 'All assignments cleared. Assign a control to NEXT, BACK, or CANCEL to begin again.');
   SetInputStatus('All action assignments cleared.');
-  AddEventLog('All bindings cleared.');
+  AddEventLog('All assignments cleared.');
   Doc.Changed;
 end;
 
@@ -818,7 +819,7 @@ begin
     if Input.WasPressed(ACTION_NEXT) then
     begin
       AddEventLog('NEXT action pressed.');
-      SetInputStatus('NEXT action received from the bound input.');
+      SetInputStatus('NEXT action received from its assigned control.');
       Changed := True;
     end;
 
@@ -832,7 +833,7 @@ begin
     if Input.WasPressed(ACTION_BACK) then
     begin
       AddEventLog('BACK action pressed.');
-      SetInputStatus('BACK action received from the bound input.');
+      SetInputStatus('BACK action received from its assigned control.');
       Changed := True;
     end;
 
@@ -846,7 +847,7 @@ begin
     if Input.WasPressed(ACTION_CANCEL) then
     begin
       AddEventLog('CANCEL action pressed.');
-      SetInputStatus('CANCEL action received from the bound input.');
+      SetInputStatus('CANCEL action received from its assigned control.');
       Changed := True;
     end;
   finally
@@ -922,11 +923,11 @@ begin
 
   if Input.SetRumble(SelectedDeviceID, 30000, 52000, 350) then
   begin
-    SetInputStatus('Rumble command sent (350 ms).');
-    AddEventLog('Rumble test sent to selected controller.');
+    SetInputStatus('Vibration test sent (350 ms).');
+    AddEventLog('Vibration test sent to the selected controller.');
   end
   else
-    SetInputStatus('Rumble failed: ' + Input.LastError);
+    SetInputStatus('Vibration test failed: ' + Input.LastError);
 end;
 
 // ---------------------------------------------------------------------------
@@ -1113,9 +1114,9 @@ begin
   ActionBackDown := False;
   ActionCancelDown := False;
 
-  BindingTextNext := 'Not bound';
-  BindingTextBack := 'Not bound';
-  BindingTextCancel := 'Not bound';
+  BindingTextNext := 'Not assigned';
+  BindingTextBack := 'Not assigned';
+  BindingTextCancel := 'Not assigned';
 
   SelectedDeviceID := '';
   DeviceIDs := TStringList.Create;
