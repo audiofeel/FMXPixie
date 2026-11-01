@@ -65,7 +65,6 @@ var
 
   DeviceIDs: TStringList;
   InputTimerID: UINT_PTR;
-  LastDeviceCount: Integer;
   Closing: Boolean;
   InputAvailable: Boolean;
 
@@ -278,7 +277,6 @@ begin
     SelectedIndex := FirstAvailable;
 
   DeviceCombo.ItemIndex := SelectedIndex;
-  LastDeviceCount := Input.DeviceCount;
   UpdateElements;
 
   if DeviceIDs.Count = 0 then
@@ -358,6 +356,7 @@ begin
   if Input.Capturing then
   begin
     Input.CancelCapture;
+    DeviceCombo.Enabled := True;
     ActionCombo.Enabled := True;
     CaptureButton.Caption := 'Capture';
     CaptureButton.Enabled := Input.DeviceAvailable(DeviceCombo.ItemIndex);
@@ -368,6 +367,7 @@ begin
 
   if Input.BeginCapture(Action, DeviceID, False) then
   begin
+    DeviceCombo.Enabled := False;
     ActionCombo.Enabled := False;
     CaptureStatusLabel.Caption := 'Press a button, move an axis or press the D-Pad...';
     AddEventLog('Capture started for "' + InputActionName(Action) +
@@ -386,6 +386,7 @@ begin
 
   Input.CancelCapture;
   Input.ClearBindings;
+  DeviceCombo.Enabled := True;
   ActionCombo.Enabled := True;
   CaptureButton.Caption := 'Capture';
   CaptureButton.Enabled := InputAvailable and (DeviceCombo.ItemIndex >= 0) and
@@ -438,6 +439,7 @@ begin
   else
     CaptureStatusLabel.Caption := 'Binding failed: ' + Input.LastError;
 
+  DeviceCombo.Enabled := True;
   ActionCombo.Enabled := True;
   CaptureButton.Caption := 'Capture';
   CaptureButton.Enabled := InputAvailable and (DeviceCombo.ItemIndex >= 0) and
@@ -674,13 +676,14 @@ procedure InitializeWizard;
 begin
   Closing := False;
   InputTimerID := 0;
-  LastDeviceCount := -1;
   InputAvailable := False;
   DeviceIDs := TStringList.Create;
 
   WizardForm.ClientWidth := ScaleX(640);
   WizardForm.ClientHeight := ScaleY(560);
   WizardForm.Position := poScreenCenter;
+
+  CreateInputPage;
 
   // This is the same DLL extraction scheme used by the other FMXPixie demos.
   ExtractTemporaryFile('FMXPixie.dll');
@@ -694,8 +697,6 @@ begin
     on E: Exception do
       AddEventLog('FMXInput initialization failed: ' + E.ClassName + ': ' + E.Message);
   end;
-
-  CreateInputPage;
 
   if InputAvailable then
   begin
