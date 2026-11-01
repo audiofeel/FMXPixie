@@ -340,7 +340,9 @@ begin
   SetTextById('input-status', S);
   if not InputAvailable then
     SetTextById('input-state', 'INPUT: OFFLINE')
-  else if (Input <> nil) and Input.IsEnabled then
+  else if Input = nil then
+    SetTextById('input-state', 'INPUT: OFFLINE')
+  else if Input.IsEnabled then
     SetTextById('input-state', 'INPUT: ON')
   else
     SetTextById('input-state', 'INPUT: PAUSED');
@@ -522,11 +524,14 @@ begin
     DeviceIDs.Add(Input.DeviceID(I));
 
   SelectedIndex := DeviceIDs.IndexOf(PreviousID);
+  if SelectedIndex >= MAX_INPUT_DEVICES then
+    SelectedIndex := -1;
+
   if SelectedIndex < 0 then
   begin
     SelectedIndex := -1;
     for I := 0 to DeviceIDs.Count - 1 do
-      if Input.DeviceAvailable(I) then
+      if (I < MAX_INPUT_DEVICES) and Input.DeviceAvailable(I) then
       begin
         SelectedIndex := I;
         Break;
@@ -598,9 +603,16 @@ begin
       if I < MAX_INPUT_DEVICES then
       begin
         if I = Index then
-          SetClassById('device-' + IntToStr(I), 'device-row is-selected')
+        begin
+          if Input.DeviceAvailable(I) then
+            SetClassById('device-' + IntToStr(I), 'device-row is-selected')
+          else
+            SetClassById('device-' + IntToStr(I), 'device-row is-selected is-unavailable');
+        end
+        else if Input.DeviceAvailable(I) then
+          SetClassById('device-' + IntToStr(I), 'device-row')
         else
-          SetClassById('device-' + IntToStr(I), 'device-row');
+          SetClassById('device-' + IntToStr(I), 'device-row is-unavailable');
       end;
   finally
     Doc.EndUpdate;
@@ -843,6 +855,9 @@ begin
 
   if Input.LoadProfile(ProfileFileName) then
   begin
+    SetBindingText(ACTION_NEXT, 'Restored from profile (details not exposed)');
+    SetBindingText(ACTION_BACK, 'Restored from profile (details not exposed)');
+    SetBindingText(ACTION_CANCEL, 'Restored from profile (details not exposed)');
     SetInputStatus('Profile loaded. Saved bindings are active.');
     SetTextById('capture-status', 'Loaded profile: ' + ProfileFileName);
     AddEventLog('Input profile loaded.');
@@ -1119,7 +1134,10 @@ begin
     InputTimerID := SetTimer(0, 0, INPUT_POLL_INTERVAL,
       CreateCallback(@InputTimerProc));
     if InputTimerID = 0 then
+    begin
+      InputAvailable := False;
       SetInputStatus('Unable to create the input polling timer.');
+    end;
   end
   else
     SetInputStatus('FMXInput is unavailable. Check the DLL and initialization error.');
