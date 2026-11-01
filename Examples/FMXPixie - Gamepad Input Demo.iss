@@ -754,8 +754,87 @@ begin
   else
   begin
     SetTextById('capture-status', 'Не удалось начать назначение: ' + Input.LastError);
-    SetInputStatus('Assignment failed: ' + Input.LastError);
+    SetInputStatus('Не удалось начать назначение: ' + Input.LastError);
   end;
+end;
+
+function CapturedInputText: String;
+var
+  I: Integer;
+  J: Integer;
+  Kind: Integer;
+  Code: Integer;
+  DeviceID: String;
+  DeviceName: String;
+  ElementName: String;
+begin
+  Result := '';
+  if Input = nil then
+    Exit;
+
+  DeviceID := Input.CapturedDeviceID;
+  DeviceName := Input.CapturedDeviceName;
+  Kind := Input.CapturedKind;
+  Code := Input.CapturedCode;
+  ElementName := '';
+
+  if Copy(DeviceID, 1, Length(XINPUT_DEVICE_ID_PREFIX)) =
+     XINPUT_DEVICE_ID_PREFIX then
+  begin
+    if Kind = Ord(Button) then
+      case Code of
+        0: ElementName := 'D-pad Up';
+        1: ElementName := 'D-pad Down';
+        2: ElementName := 'D-pad Left';
+        3: ElementName := 'D-pad Right';
+        4: ElementName := 'START';
+        5: ElementName := 'BACK';
+        6: ElementName := 'Left Stick';
+        7: ElementName := 'Right Stick';
+        8: ElementName := 'LB';
+        9: ElementName := 'RB';
+        12: ElementName := 'A';
+        13: ElementName := 'B';
+        14: ElementName := 'X';
+        15: ElementName := 'Y';
+      end
+    else if Kind = Ord(Axis) then
+      case Code of
+        0: ElementName := 'Left Stick X';
+        1: ElementName := 'Left Stick Y';
+        2: ElementName := 'Right Stick X';
+        3: ElementName := 'Right Stick Y';
+        4: ElementName := 'Left Trigger';
+        5: ElementName := 'Right Trigger';
+      end;
+  end
+  else
+  begin
+    for I := 0 to Input.DeviceCount - 1 do
+      if Input.DeviceID(I) = DeviceID then
+      begin
+        for J := 0 to Input.ElementCount(I) - 1 do
+          if (Input.ElementKind(I, J) = Kind) and
+             (Input.ElementCode(I, J) = Code) then
+          begin
+            ElementName := Input.ElementName(I, J);
+            Break;
+          end;
+        Break;
+      end;
+  end;
+
+  if DeviceName = 'Keyboard' then
+    DeviceName := 'Клавиатура'
+  else if DeviceName = 'Mouse' then
+    DeviceName := 'Мышь'
+  else if DeviceName = '' then
+    DeviceName := 'Устройство';
+
+  if ElementName = '' then
+    ElementName := InputElementKindName(Kind) + ' ' + IntToStr(Code);
+
+  Result := DeviceName + ' / ' + ElementName;
 end;
 
 procedure HandleCapturedInput;
@@ -778,24 +857,28 @@ begin
   Direction := Input.CapturedDirection;
   DeviceName := Input.CapturedDeviceName;
 
-  BindingText := DeviceName + ' — ' + InputElementKindName(Kind) +
-    ' ' + IntToStr(Code);
+  BindingText := CapturedInputText;
   if (Kind = Ord(Axis)) or (Kind = Ord(RelativeAxis)) or
      (Kind = Ord(Hat)) then
-    BindingText := BindingText + ', direction ' + IntToStr(Direction);
+  begin
+    if Direction < 0 then
+      BindingText := BindingText + ' (−)'
+    else
+      BindingText := BindingText + ' (+)';
+  end;
 
   if Input.AcceptCaptured then
   begin
     SetBindingText(Action, BindingText);
     SetTextById('capture-status', 'Готово: ' + InputActionName(Action) +
-      ' назначено. Кнопка добавлена как дополнительный вариант к раскладке Xbox.');
+      ' — ' + BindingText + '. Нажми назначенную кнопку, чтобы проверить.');
     SetInputStatus(InputActionName(Action) + ' assigned successfully.');
     AddEventLog('Assigned ' + InputActionName(Action) + '.');
   end
   else
   begin
     SetTextById('capture-status', 'Не удалось назначить кнопку: ' + Input.LastError);
-    SetInputStatus('Unable to assign input: ' + Input.LastError);
+    SetInputStatus('Не удалось назначить ввод: ' + Input.LastError);
   end;
 
   CaptureAction := 0;
@@ -810,22 +893,40 @@ begin
   Input.CancelCapture;
   Input.ClearBindings;
   CaptureAction := 0;
+  DefaultXboxBindingsApplied := False;
 
-  SetBindingText(ACTION_NEXT, 'Not assigned');
-  SetBindingText(ACTION_BACK, 'Not assigned');
-  SetBindingText(ACTION_CANCEL, 'Not assigned');
-
+  CustomNextAssigned := False;
+  CustomBackAssigned := False;
+  CustomCancelAssigned := False;
   ActionNextDown := False;
   ActionBackDown := False;
   ActionCancelDown := False;
-  SetActionStateVisual(ACTION_NEXT, False);
-  SetActionStateVisual(ACTION_BACK, False);
-  SetActionStateVisual(ACTION_CANCEL, False);
+  XboxNextDown := False;
+  XboxBackDown := False;
+  XboxCancelDown := False;
 
-  SetTextById('capture-status', 'Все назначения очищены. Стандартные кнопки A / B / X также удалены.');
-  SetTextById('gamepad-map-info', 'Назначения очищены. Добавь ввод вручную или перезапусти демо для автоматической схемы Xbox.');
-  SetInputStatus('All action assignments cleared.');
-  AddEventLog('All assignments cleared.');
+  SetTextById('custom-binding-next', 'Не назначено');
+  SetTextById('custom-binding-back', 'Не назначено');
+  SetTextById('custom-binding-cancel', 'Не назначено');
+  SetTextById('custom-state-next', 'NOT SET');
+  SetTextById('custom-state-back', 'NOT SET');
+  SetTextById('custom-state-cancel', 'NOT SET');
+
+  SetClassById('custom-state-next', 'custom-state');
+  SetClassById('custom-state-back', 'custom-state');
+  SetClassById('custom-state-cancel', 'custom-state');
+  SetClassById('custom-row-next', 'custom-row');
+  SetClassById('custom-row-back', 'custom-row');
+  SetClassById('custom-row-cancel', 'custom-row');
+
+  SetActionStateVisual(ACTION_XBOX_NEXT, False);
+  SetActionStateVisual(ACTION_XBOX_BACK, False);
+  SetActionStateVisual(ACTION_XBOX_CANCEL, False);
+
+  SetTextById('xbox-status',
+    'Xbox-назначения очищены. Перезапусти демо или обнови подключение контроллера.');
+  SetTextById('capture-status', 'Все назначения очищены.');
+  SetInputStatus('Все назначения очищены.');
   Doc.Changed;
 end;
 
@@ -892,7 +993,7 @@ begin
     end;
     if Input.WasPressed(ACTION_NEXT) then
     begin
-      SetInputStatus('Своя кнопка — Далее');
+      SetInputStatus('Своё назначение — Далее');
       Changed := True;
     end;
 
@@ -906,7 +1007,7 @@ begin
     end;
     if Input.WasPressed(ACTION_BACK) then
     begin
-      SetInputStatus('Своя кнопка — Назад');
+      SetInputStatus('Своё назначение — Назад');
       Changed := True;
     end;
 
@@ -920,7 +1021,7 @@ begin
     end;
     if Input.WasPressed(ACTION_CANCEL) then
     begin
-      SetInputStatus('Своя кнопка — Отмена');
+      SetInputStatus('Своё назначение — Отмена');
       Changed := True;
     end;
   finally
