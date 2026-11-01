@@ -247,16 +247,16 @@ begin
     '<div class="panel-note">Готовая схема Xbox. При подключении XInput-контроллера A / B / X назначатся автоматически.</div>' +
 
     '<button id="xbox-row-next" class="xbox-row" type="button">' +
-    '<div class="xbox-copy"><span class="xbox-title">Далее</span><span class="xbox-hint">Продолжить / подтвердить</span></div>' +
-    '<div class="xbox-right"><span id="xbox-state-next" class="xbox-state">NO PAD</span><span class="xbox-key xbox-a">A</span></div></button>' +
+    '<span class="xbox-copy"><span class="xbox-title">Далее</span><span class="xbox-hint">Продолжить / подтвердить</span></span>' +
+    '<span class="xbox-right"><span id="xbox-state-next" class="xbox-state">NO PAD</span><span class="xbox-key xbox-a">A</span></span></button>' +
 
     '<button id="xbox-row-back" class="xbox-row" type="button">' +
-    '<div class="xbox-copy"><span class="xbox-title">Назад</span><span class="xbox-hint">Вернуться к предыдущему шагу</span></div>' +
-    '<div class="xbox-right"><span id="xbox-state-back" class="xbox-state">NO PAD</span><span class="xbox-key xbox-b">B</span></div></button>' +
+    '<span class="xbox-copy"><span class="xbox-title">Назад</span><span class="xbox-hint">Вернуться к предыдущему шагу</span></span>' +
+    '<span class="xbox-right"><span id="xbox-state-back" class="xbox-state">NO PAD</span><span class="xbox-key xbox-b">B</span></span></button>' +
 
     '<button id="xbox-row-cancel" class="xbox-row" type="button">' +
-    '<div class="xbox-copy"><span class="xbox-title">Отмена</span><span class="xbox-hint">Закрыть / отменить действие</span></div>' +
-    '<div class="xbox-right"><span id="xbox-state-cancel" class="xbox-state">NO PAD</span><span class="xbox-key xbox-x">X</span></div></button>' +
+    '<span class="xbox-copy"><span class="xbox-title">Отмена</span><span class="xbox-hint">Закрыть / отменить действие</span></span>' +
+    '<span class="xbox-right"><span id="xbox-state-cancel" class="xbox-state">NO PAD</span><span class="xbox-key xbox-x">X</span></span></button>' +
 
     '<div id="xbox-status" class="xbox-status">Ожидание Xbox-контроллера. Раскладка: A — Далее, B — Назад, X — Отмена.</div>' +
     '</div>' +
