@@ -257,13 +257,16 @@ type
     function RemoveChild(FChild: NativeInt): Boolean; stdcall;
     function GetId: Integer; stdcall;
     function GetTag: Integer; stdcall;
-    function GetTagName: WideString; stdcall;
     procedure SetTagName(const FTagName: WideString); stdcall;
+    function GetTagName: WideString; stdcall;
     procedure SetAttr(const FName, FValue: WideString); stdcall;
     function GetAttr(const FName, FDefault: WideString): WideString; stdcall;
-    function GetTextContent: WideString; stdcall;
     procedure SetTextContent(const FText: WideString); stdcall;
+    function GetTextContent: WideString; stdcall;
     procedure SetValue(const FValue: WideString); stdcall;
+    function GetValue: WideString; stdcall;
+    procedure SetChecked(FValue: Boolean); stdcall;
+    function GetChecked: Boolean; stdcall;
   end;
 
   TFPixieElement = class(TInterfacedObject, FPixieElement)
@@ -279,13 +282,16 @@ type
     function RemoveChild(FChild: NativeInt): Boolean; stdcall;
     function GetId: Integer; stdcall;
     function GetTag: Integer; stdcall;
-    function GetTagName: WideString; stdcall;
     procedure SetTagName(const FTagName: WideString); stdcall;
+    function GetTagName: WideString; stdcall;
     procedure SetAttr(const FName, FValue: WideString); stdcall;
     function GetAttr(const FName, FDefault: WideString): WideString; stdcall;
-    function GetTextContent: WideString; stdcall;
     procedure SetTextContent(const FText: WideString); stdcall;
+    function GetTextContent: WideString; stdcall;
     procedure SetValue(const FValue: WideString); stdcall;
+    function GetValue: WideString; stdcall;
+    procedure SetChecked(FValue: Boolean); stdcall;
+    function GetChecked: Boolean; stdcall;
   end;
 
 // =============================================================================
@@ -354,7 +360,7 @@ implementation
 
 uses
   System.SysUtils, System.IOUtils,
-  Pixie.PdfExport, Pixie.WebColor, Pixie.ElTextInput;
+  Pixie.PdfExport, Pixie.WebColor, Pixie.ElTextInput, Pixie.ElInput;
 
 function AlphaColorToPixieColor(AColor: TAlphaColor): TPixieWebColor;
 begin
@@ -1108,6 +1114,34 @@ procedure TFPixieElement.SetValue(const FValue: WideString);
 begin
   if ControlElement is TPixieElTextInput then
     TPixieElTextInput(ControlElement).SetValue(string(FValue));
+end;
+
+function TFPixieElement.GetChecked: Boolean;
+begin
+  Result := False;
+
+  if ControlElement is TPixieElCheckbox then
+    Result := TPixieElCheckbox(ControlElement).Checked
+  else
+  if ControlElement is TPixieElRadio then
+    Result := TPixieElRadio(ControlElement).Checked;
+end;
+
+procedure TFPixieElement.SetChecked(FValue: Boolean);
+begin
+  if ControlElement is TPixieElCheckbox then
+    TPixieElCheckbox(ControlElement).SetChecked(FValue)
+  else
+  if ControlElement is TPixieElRadio then
+    TPixieElRadio(ControlElement).SetChecked(FValue);
+end;
+
+function TFPixieElement.GetValue: WideString;
+begin
+  Result := '';
+
+  if ControlElement is TPixieElTextBase then
+    Result := TPixieElTextBase(ControlElement).Value;
 end;
 
 // =============================================================================
