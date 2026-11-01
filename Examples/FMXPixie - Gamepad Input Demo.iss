@@ -1,19 +1,19 @@
-; ============================================================================
+﻿; ============================================================================
 ; FMXPixie - Gamepad Input Demo
 ;
-; Exercises the FMXInput wrapper from Inno Setup:
-;   - enumerates keyboard, mouse and game controllers;
-;   - lists the elements exposed by the selected device;
-;   - captures a physical control and binds it to an installer action;
-;   - drives the real Inno Setup Next / Back / Cancel buttons;
-;   - optionally tests XInput vibration.
+; FMXPixie is the UI host:
+;   - Inno Setup only hosts the DLL and provides the process lifetime.
+;   - The window, title bar, device list and input monitor are FMXPixie /
+;     TPixieHtmlView.
+;   - HTML clicks are routed to Pascal Script through OnElementClick.
+;   - FMXInput is polled on the Setup UI thread using a WinAPI timer.
 ;
-; Required files:
+; Required:
 ;   Modules\FMXPixieHandle.iss
 ;   Modules\FMXPixie_x86.dll
 ;   Modules\FMXPixie_x64.dll
 ;
-; The demo does not install an application.
+; This demo does not install an application.
 ; ============================================================================
 
 #define DemoAppName "FMXPixie - Gamepad Input Demo"
@@ -22,12 +22,10 @@
 [Setup]
 AppName={#DemoAppName}
 AppVersion={#DemoAppVersion}
-AppCopyright=audiofeel
 CreateAppDir=no
 Uninstallable=no
 DisableProgramGroupPage=yes
 OutputBaseFilename=FMXPixie - Gamepad Input Demo
-; SetupArchitecture=x64
 SetupIconFile=Files\setup.ico
 PrivilegesRequired=lowest
 
@@ -42,37 +40,54 @@ Source: "Modules\FMXPixie_x86.dll"; DestName: "FMXPixie.dll"; Flags: dontcopy
 #include "Modules\FMXPixieHandle.iss"
 
 const
+  DEMO_FORM_WIDTH = 1020;
+  DEMO_FORM_HEIGHT = 720;
+  TITLEBAR_HEIGHT = 32;
+  TITLEBAR_BUTTONS_WIDTH = 92;
+
+  INPUT_POLL_INTERVAL = 16;
+  INPUT_DEVICE_CHECK_INTERVAL = 1000;
+
+  MAX_INPUT_DEVICES = 12;
+  MAX_INPUT_ELEMENTS = 28;
+
   ACTION_NEXT = 101;
   ACTION_BACK = 102;
   ACTION_CANCEL = 103;
 
-  INPUT_POLL_INTERVAL = 16;
   INPUT_BM_CLICK = $00F5;
 
-
 var
+  FMXForm: FForm;
+  TitleView: FPixieHtmlView;
+  View: FPixieHtmlView;
+  Doc: FPixieDocument;
+  Elem: FPixieElement;
   Input: FInput;
-  InputPage: TWizardPage;
-  DeviceCombo: TNewComboBox;
-  ActionCombo: TNewComboBox;
-  RefreshButton: TNewButton;
-  CaptureButton: TNewButton;
-  ClearButton: TNewButton;
-  RumbleButton: TNewButton;
-  ElementsMemo: TNewMemo;
-  EventsMemo: TNewMemo;
-  DeviceStatusLabel: TNewStaticText;
-  CaptureStatusLabel: TNewStaticText;
-  ActionStateLabel: TNewStaticText;
 
   DeviceIDs: TStringList;
+  SelectedDeviceID: String;
+  ProfileFileName: String;
+
   InputTimerID: UINT_PTR;
-  Closing: Boolean;
+  NextDeviceCheck: Int64;
+  CaptureAction: Integer;
+  EventCount: Integer;
+
   InputAvailable: Boolean;
+  Closing: Boolean;
+
+  ActionNextDown: Boolean;
+  ActionBackDown: Boolean;
+  ActionCancelDown: Boolean;
+
+  BindingTextNext: String;
+  BindingTextBack: String;
+  BindingTextCancel: String;
 
 // ---------------------------------------------------------------------------
-// WinAPI timer. SetTimer callback runs on the Setup UI thread; this is
-// important because TInputManager enforces creation-thread polling.
+// WinAPI timer. The callback runs on the Setup UI thread. This is required
+// because TInputManager verifies the thread that created the manager.
 // ---------------------------------------------------------------------------
 function SetTimer(hWnd: HWND; nIDEvent: UINT_PTR; uElapse: UINT;
   lpTimerFunc: NativeInt): UINT_PTR;
@@ -80,6 +95,25 @@ function SetTimer(hWnd: HWND; nIDEvent: UINT_PTR; uElapse: UINT;
 
 function KillTimer(hWnd: HWND; uIDEvent: UINT_PTR): BOOL;
   external 'KillTimer@user32.dll stdcall';
+
+function GetTickCount64External: Int64;
+  external 'GetTickCount64@kernel32.dll stdcall';
+
+// ---------------------------------------------------------------------------
+// Enum names. Values are the ordinal values of the shared types declared in
+// FMXPixieHandle.iss and the corresponding FMXInput enums.
+// ---------------------------------------------------------------------------
+function InputDeviceKindName(Kind: Integer): String;
+begin
+  if Kind = Ord(Keyboard) then
+    Result := 'Keyboard'
+  else if Kind = Ord(Controller) then
+    Result := 'Controller'
+  else if Kind = Ord(Mouse) then
+    Result := 'Mouse'
+  else
+    Result := 'Unknown';
+end;
 
 function InputElementKindName(Kind: Integer): String;
 begin
@@ -97,198 +131,277 @@ begin
     Result := 'Unknown';
 end;
 
-function InputDeviceKindName(Kind: Integer): String;
+function InputActionName(Action: Integer): String;
 begin
-  if Kind = Ord(Keyboard) then
-    Result := 'Keyboard'
-  else if Kind = Ord(Controller) then
-    Result := 'Controller'
-  else if Kind = Ord(Mouse) then
-    Result := 'Mouse'
+  if Action = ACTION_NEXT then
+    Result := 'Next'
+  else if Action = ACTION_BACK then
+    Result := 'Back'
+  else if Action = ACTION_CANCEL then
+    Result := 'Cancel'
   else
     Result := 'Unknown';
 end;
 
-function InputActionName(Action: Integer): String;
+// ---------------------------------------------------------------------------
+// HTML
+// ---------------------------------------------------------------------------
+function BuildTitleBarHtml: String;
 begin
-  case Action of
-    ACTION_NEXT: Result := 'Next / Install / Finish';
-    ACTION_BACK: Result := 'Back';
-    ACTION_CANCEL: Result := 'Cancel';
-  else
-    Result := 'Unknown action';
-  end;
+  Result :=
+    '<!doctype html><html><head><meta charset="utf-8"><style>' +
+    'html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;}' +
+    'body{background:#111827;color:#e5e7eb;font:12px "Segoe UI",Arial,sans-serif;}' +
+    '.bar{position:relative;height:31px;line-height:31px;border-bottom:1px solid #263247;}' +
+    '.caption{margin-left:12px;color:#93c5fd;font-weight:700;letter-spacing:.4px;}' +
+    '.note{margin-left:9px;color:#77869b;font-size:10px;}' +
+    '.controls{position:absolute;right:0;top:0;width:92px;height:31px;font-size:0;}' +
+    '.win{display:inline-block;width:46px;height:31px;line-height:30px;text-align:center;' +
+    'color:#cbd5e1;font-size:20px;cursor:pointer;}' +
+    '.win:hover{background:#29374c;color:#fff;}' +
+    '.close:hover{background:#c42b1c;color:#fff;}' +
+    '</style></head><body><div class="bar">' +
+    '<span class="caption">FMXPIXIE / INPUT LAB</span>' +
+    '<span class="note">FMXInput device and binding monitor</span>' +
+    '<div class="controls">' +
+    '<div id="title-minimize" class="win">−</div>' +
+    '<div id="title-close" class="win close">×</div>' +
+    '</div></div></body></html>';
 end;
 
-function InputActionFromIndex(Index: Integer): Integer;
-begin
-  case Index of
-    0: Result := ACTION_NEXT;
-    1: Result := ACTION_BACK;
-    2: Result := ACTION_CANCEL;
-  else
-    Result := -1;
-  end;
-end;
-
-function DirectionName(Kind, Direction: Integer): String;
-begin
-  Result := '';
-  if Kind = Ord(Axis) then
-  begin
-    if Direction < 0 then
-      Result := ' (negative direction)'
-    else
-      Result := ' (positive direction)';
-  end
-  else if Kind = Ord(RelativeAxis) then
-  begin
-    if Direction < 0 then
-      Result := ' (negative direction)'
-    else
-      Result := ' (positive direction)';
-  end
-  else if Kind = Ord(Hat) then
-  begin
-    case Direction of
-      0: Result := ' (Up)';
-      1: Result := ' (Up-right)';
-      2: Result := ' (Right)';
-      3: Result := ' (Down-right)';
-      4: Result := ' (Down)';
-      5: Result := ' (Down-left)';
-      6: Result := ' (Left)';
-      7: Result := ' (Up-left)';
-    end;
-  end;
-end;
-
-procedure AddEventLog(const Text: String);
-begin
-  if EventsMemo = nil then
-    Exit;
-
-  EventsMemo.Lines.Add(GetDateTimeString('hh:nn:ss', #0, ':') + '  ' + Text);
-  while EventsMemo.Lines.Count > 100 do
-    EventsMemo.Lines.Delete(0);
-  EventsMemo.SelStart := Length(EventsMemo.Text);
-  EventsMemo.SelLength := 0;
-end;
-
-function GetSelectedDeviceID: String;
-begin
-  Result := '';
-  if (DeviceCombo <> nil) and (DeviceCombo.ItemIndex >= 0) and
-     (DeviceCombo.ItemIndex < DeviceIDs.Count) then
-    Result := DeviceIDs[DeviceCombo.ItemIndex];
-end;
-
-procedure UpdateElements;
-var
-  DeviceIndex: Integer;
-  I: Integer;
-  Kind: Integer;
-  Code: Integer;
-  Line: String;
-begin
-  if (Input = nil) or (ElementsMemo = nil) then
-    Exit;
-
-  DeviceIndex := DeviceCombo.ItemIndex;
-  ElementsMemo.Clear;
-
-    if (DeviceIndex < 0) or (DeviceIndex >= DeviceIDs.Count) then
-    begin
-      ElementsMemo.Lines.Add('No input device selected.');
-      DeviceStatusLabel.Caption := 'Select an available input device.';
-      RumbleButton.Enabled := False;
-      CaptureButton.Enabled := False;
-      Exit;
-    end;
-
-    DeviceStatusLabel.Caption :=
-      Input.DeviceName(DeviceIndex) + '  [' + GetSelectedDeviceID + ']';
-
-    if not Input.DeviceAvailable(DeviceIndex) then
-    begin
-      DeviceStatusLabel.Caption := DeviceStatusLabel.Caption +
-        '  |  unavailable: ' + Input.DeviceError(DeviceIndex);
-      RumbleButton.Enabled := False;
-      CaptureButton.Enabled := Input.Capturing;
-    end
-    else
-    begin
-      RumbleButton.Enabled := Input.DeviceRumbleSupported(DeviceIndex);
-      CaptureButton.Enabled := Input.Capturing or Input.IsEnabled;
-    end;
-
-    for I := 0 to Input.ElementCount(DeviceIndex) - 1 do
-    begin
-      Kind := Input.ElementKind(DeviceIndex, I);
-      Code := Input.ElementCode(DeviceIndex, I);
-      Line := InputElementKindName(Kind) + '  ' +
-        Input.ElementName(DeviceIndex, I) + '  [code ' + IntToStr(Code) + ']';
-      ElementsMemo.Lines.Add(Line);
-    end;
-
-  if ElementsMemo.Lines.Count = 0 then
-    ElementsMemo.Lines.Add('This device exposes no controls.');
-end;
-
-procedure PopulateDevices;
+function BuildInputHtml: String;
 var
   I: Integer;
-  Kind: Integer;
-  SelectedIndex: Integer;
-  FirstAvailable: Integer;
-  NameText: String;
-  CaptionText: String;
-  ID: String;
 begin
-  if (Input = nil) or (DeviceCombo = nil) then
+  Result :=
+    '<!doctype html><html><head><meta charset="utf-8"><style>' +
+    '*{box-sizing:border-box;}' +
+    'html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;}' +
+    'body{background:#0b1220;color:#e5e7eb;font:12px "Segoe UI",Arial,sans-serif;}' +
+    '.app{width:100%;height:100%;padding:15px 17px 12px 17px;}' +
+    '.header{height:38px;display:flex;align-items:center;justify-content:space-between;}' +
+    '.brand{font-size:17px;font-weight:700;color:#f1f5f9;letter-spacing:.2px;}' +
+    '.sub{font-size:10px;color:#8492a8;margin-top:3px;}' +
+    '.status{height:30px;line-height:29px;padding:0 10px;margin:8px 0 12px 0;' +
+    'background:#111d30;border:1px solid #25364f;border-radius:5px;color:#a9bdd7;}' +
+    '.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;' +
+    'background:#64748b;margin-right:8px;}' +
+    '.status-dot.on{background:#34d399;}' +
+    '.workspace{display:flex;width:100%;height:calc(100% - 111px);}' +
+    '.panel{min-width:0;background:#101a2a;border:1px solid #26364d;border-radius:7px;' +
+    'padding:12px;margin-right:10px;overflow:hidden;}' +
+    '.panel:last-child{margin-right:0;}' +
+    '.devices{width:29%;}' +
+    '.elements{width:35%;}' +
+    '.actions{flex:1;}' +
+    '.panel-head{height:26px;display:flex;align-items:center;justify-content:space-between;' +
+    'color:#dce7f5;font-size:12px;font-weight:700;}' +
+    '.panel-caption{font-size:10px;color:#7f90a8;font-weight:400;}' +
+    '.device-list{height:calc(100% - 112px);overflow-y:auto;margin-top:7px;}' +
+    '.device-row{display:block;width:100%;height:32px;margin:0 0 5px 0;padding:0 8px;' +
+    'text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
+    'background:#162338;border:1px solid #293b55;border-radius:4px;color:#aebed2;' +
+    'font:10px "Segoe UI",Arial,sans-serif;cursor:pointer;}' +
+    '.device-row:hover{background:#1b2d47;border-color:#5274a4;color:#fff;}' +
+    '.device-row.is-selected{background:#1b3553;border-color:#4e83bd;color:#e6f2ff;}' +
+    '.device-row.is-unavailable{color:#78869a;border-color:#303947;}' +
+    '.selected-info{margin-top:8px;padding-top:8px;border-top:1px solid #26364d;}' +
+    '.selected-name{font-size:11px;font-weight:700;color:#dbeafe;}' +
+    '.selected-id{margin-top:3px;font-size:9px;color:#6f829c;white-space:nowrap;' +
+    'overflow:hidden;text-overflow:ellipsis;}' +
+    '.device-note{margin-top:5px;font-size:9px;color:#8190a5;}' +
+    '.element-summary{font-size:10px;color:#8292a8;margin:5px 0 8px 0;}' +
+    '.element-list{height:calc(100% - 62px);overflow-y:auto;}' +
+    '.element-row{height:26px;line-height:25px;padding:0 7px;margin-bottom:3px;' +
+    'background:#142136;border:1px solid #24364e;border-radius:3px;' +
+    'font-size:10px;color:#b7c7dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+    '.element-row:nth-child(even){background:#111e31;}' +
+    '.empty{color:#687b95;font-style:italic;}' +
+    '.action-card{padding:9px;margin-top:7px;background:#142136;border:1px solid #2a3c56;border-radius:5px;}' +
+    '.action-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}' +
+    '.action-name{font-size:11px;font-weight:700;color:#dbeafe;}' +
+    '.action-state{padding:2px 7px;border-radius:3px;background:#263449;color:#91a2b9;' +
+    'font-size:9px;font-weight:700;letter-spacing:.4px;}' +
+    '.action-state.is-down{background:#14553f;color:#9af0c8;}' +
+    '.binding{font-size:9px;color:#91a3ba;min-height:14px;margin-bottom:7px;}' +
+    'button{font:10px "Segoe UI",Arial,sans-serif;cursor:pointer;}' +
+    '.btn{height:26px;padding:0 9px;margin:0 4px 4px 0;border:1px solid #3a5272;' +
+    'border-radius:4px;background:#20344f;color:#dceaff;}' +
+    '.btn:hover{background:#2a486c;border-color:#6593c7;color:#fff;}' +
+    '.btn.primary{background:#1d4d78;border-color:#3976ad;}' +
+    '.btn.danger{background:#472b35;border-color:#74404b;color:#ffd8df;}' +
+    '.btn.small{height:23px;padding:0 7px;font-size:9px;}' +
+    '.toolbar{margin-top:10px;padding-top:8px;border-top:1px solid #293a51;}' +
+    '.toolbar-title{font-size:9px;color:#7e91aa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}' +
+    '.capture-status{min-height:27px;margin-top:7px;padding:6px 7px;background:#111e30;' +
+    'border:1px solid #26364d;border-radius:4px;font-size:9px;color:#9fb2cb;}' +
+    '.footer{height:21px;line-height:20px;margin-top:8px;padding:0 3px;color:#71839b;font-size:9px;}' +
+    '.footer-event{display:inline-block;max-width:80%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+    '.footer-count{float:right;color:#8ba2bf;}' +
+    '.is-hidden{display:none;}' +
+    '</style></head><body><div class="app">' +
+
+    '<div class="header"><div><div class="brand">Input device monitor</div>' +
+    '<div class="sub">Raw Input / XInput / DirectInput through FMXInput</div></div>' +
+    '<div><button id="refresh-devices" class="btn small">Refresh devices</button></div></div>' +
+
+    '<div class="status"><span id="status-dot" class="status-dot"></span>' +
+    '<span id="input-status">Initializing FMXInput...</span>' +
+    '<span style="float:right" id="input-state">INPUT: --</span></div>' +
+
+    '<div class="workspace">' +
+
+    '<div class="panel devices">' +
+    '<div class="panel-head"><span>DEVICES</span><span id="device-count" class="panel-caption">0 detected</span></div>' +
+    '<div id="device-list" class="device-list">';
+  for I := 0 to MAX_INPUT_DEVICES - 1 do
+    Result := Result +
+      '<button id="device-' + IntToStr(I) + '" class="device-row is-hidden">No device</button>';
+  Result := Result +
+    '</div><div id="device-overflow" class="device-note"></div>' +
+    '<div class="selected-info"><div id="selected-device-name" class="selected-name">No device selected</div>' +
+    '<div id="selected-device-id" class="selected-id"></div>' +
+    '<div id="selected-device-note" class="device-note">Select a device to inspect its controls.</div></div>' +
+    '</div>' +
+
+    '<div class="panel elements">' +
+    '<div class="panel-head"><span>DEVICE ELEMENTS</span><span id="element-total" class="panel-caption">0 controls</span></div>' +
+    '<div id="element-summary" class="element-summary">Select a device.</div>' +
+    '<div id="element-list" class="element-list">';
+  for I := 0 to MAX_INPUT_ELEMENTS - 1 do
+    Result := Result +
+      '<div id="element-' + IntToStr(I) + '" class="element-row is-hidden"></div>';
+  Result := Result +
+    '</div></div>' +
+
+    '<div class="panel actions">' +
+    '<div class="panel-head"><span>ACTION BINDINGS</span><span class="panel-caption">Rising-edge events</span></div>' +
+
+    '<div class="action-card"><div class="action-head"><span class="action-name">NEXT</span>' +
+    '<span id="state-next" class="action-state">RELEASED</span></div>' +
+    '<div id="binding-next" class="binding">Not bound</div>' +
+    '<button id="capture-next" class="btn primary small">Capture Next</button></div>' +
+
+    '<div class="action-card"><div class="action-head"><span class="action-name">BACK</span>' +
+    '<span id="state-back" class="action-state">RELEASED</span></div>' +
+    '<div id="binding-back" class="binding">Not bound</div>' +
+    '<button id="capture-back" class="btn primary small">Capture Back</button></div>' +
+
+    '<div class="action-card"><div class="action-head"><span class="action-name">CANCEL</span>' +
+    '<span id="state-cancel" class="action-state">RELEASED</span></div>' +
+    '<div id="binding-cancel" class="binding">Not bound</div>' +
+    '<button id="capture-cancel" class="btn primary small">Capture Cancel</button></div>' +
+
+    '<div id="capture-status" class="capture-status">Choose a device, then capture a control.</div>' +
+
+    '<div class="toolbar"><div class="toolbar-title">INPUT SERVICE</div>' +
+    '<button id="toggle-input" class="btn small">Disable input</button>' +
+    '<button id="cancel-capture" class="btn small">Cancel capture</button>' +
+    '<button id="clear-bindings" class="btn danger small">Clear bindings</button>' +
+    '</div>' +
+
+    '<div class="toolbar"><div class="toolbar-title">PROFILE / CONTROLLER</div>' +
+    '<button id="save-profile" class="btn small">Save profile</button>' +
+    '<button id="load-profile" class="btn small">Load profile</button>' +
+    '<button id="rumble" class="btn small is-hidden">Test rumble</button>' +
+    '</div>' +
+    '</div>' +
+
+    '</div>' +
+    '<div class="footer"><span id="last-event" class="footer-event">No input events yet.</span>' +
+    '<span id="event-count" class="footer-count">0 events</span></div>' +
+    '</div></body></html>';
+end;
+
+// ---------------------------------------------------------------------------
+// DOM helpers
+// ---------------------------------------------------------------------------
+procedure SetTextById(const Id, S: String);
+var
+  H: NativeInt;
+begin
+  H := Doc.GetElementById(Id);
+  if H <> 0 then
+    Doc.SetElementText(H, S);
+end;
+
+procedure SetClassById(const Id, ClassName: String);
+var
+  H: NativeInt;
+begin
+  H := Doc.GetElementById(Id);
+  if H = 0 then
     Exit;
+  Elem.FCreate(H);
+  Elem.SetAttr('class', ClassName);
+end;
 
-  DeviceIDs.Clear;
-  DeviceCombo.Items.Clear;
-  SelectedIndex := -1;
-  FirstAvailable := -1;
+procedure SetInputStatus(const S: String);
+begin
+  SetTextById('input-status', S);
+  SetTextById('input-state', 'INPUT: ' + IfThen(Input <> nil, 'READY', 'OFFLINE'));
+end;
 
-  for I := 0 to Input.DeviceCount - 1 do
+procedure AddEventLog(const S: String);
+begin
+  Inc(EventCount);
+  SetTextById('last-event',
+    GetDateTimeString('hh:nn:ss', #0, ':') + '  ' + S);
+  SetTextById('event-count', IntToStr(EventCount) + ' events');
+end;
+
+procedure SetBindingText(Action: Integer; const S: String);
+begin
+  if Action = ACTION_NEXT then
   begin
-    ID := Input.DeviceID(I);
-    NameText := Input.DeviceName(I);
-    Kind := Input.DeviceKind(I);
-    CaptionText := InputDeviceKindName(Kind) + '  |  ' + NameText;
-
-    if not Input.DeviceAvailable(I) then
-      CaptionText := CaptionText + '  |  unavailable';
-
-    DeviceIDs.Add(ID);
-    DeviceCombo.Items.Add(CaptionText);
-
-    if Input.DeviceAvailable(I) and (FirstAvailable < 0) then
-      FirstAvailable := I;
-
-    if Input.DeviceAvailable(I) and
-       (Kind = Ord(Controller)) and (SelectedIndex < 0) then
-      SelectedIndex := I;
+    BindingTextNext := S;
+    SetTextById('binding-next', S);
+  end
+  else if Action = ACTION_BACK then
+  begin
+    BindingTextBack := S;
+    SetTextById('binding-back', S);
+  end
+  else if Action = ACTION_CANCEL then
+  begin
+    BindingTextCancel := S;
+    SetTextById('binding-cancel', S);
   end;
+end;
 
-  if SelectedIndex < 0 then
-    SelectedIndex := FirstAvailable;
+procedure SetActionStateVisual(Action: Integer; Down: Boolean);
+var
+  Id, TextValue: String;
+begin
+  if Action = ACTION_NEXT then
+    Id := 'state-next'
+  else if Action = ACTION_BACK then
+    Id := 'state-back'
+  else
+    Id := 'state-cancel';
 
-  DeviceCombo.ItemIndex := SelectedIndex;
-  UpdateElements;
-
-  if DeviceIDs.Count = 0 then
+  if Down then
   begin
-    DeviceStatusLabel.Caption := 'No input devices were enumerated.';
-    ElementsMemo.Lines.Text := 'Connect a controller and click Refresh.';
-    CaptureButton.Enabled := False;
-    RumbleButton.Enabled := False;
+    SetClassById(Id, 'action-state is-down');
+    TextValue := 'PRESSED';
   end
   else
-    CaptureButton.Enabled := Input.IsEnabled;
+  begin
+    SetClassById(Id, 'action-state');
+    TextValue := 'RELEASED';
+  end;
+  SetTextById(Id, TextValue);
+end;
+
+// ---------------------------------------------------------------------------
+// Device enumeration and element list
+// ---------------------------------------------------------------------------
+function FindSelectedDeviceIndex: Integer;
+begin
+  Result := -1;
+  if (Input = nil) or (SelectedDeviceID = '') then
+    Exit;
+  Result := DeviceIDs.IndexOf(SelectedDeviceID);
 end;
 
 function DeviceListChanged: Boolean;
@@ -313,171 +426,557 @@ begin
     end;
 end;
 
-procedure RefreshButtonClick(Sender: TObject);
+procedure UpdateSelectedDevice;
+var
+  DeviceIndex: Integer;
+  I: Integer;
+  Count: Integer;
+  VisibleCount: Integer;
+  Kind: Integer;
+  Code: Integer;
+  Line: String;
+  DeviceNote: String;
+begin
+  DeviceIndex := FindSelectedDeviceIndex;
+
+  Doc.BeginUpdate;
+  try
+    for I := 0 to MAX_INPUT_ELEMENTS - 1 do
+      SetClassById('element-' + IntToStr(I), 'element-row is-hidden');
+
+    if DeviceIndex < 0 then
+    begin
+      SetTextById('selected-device-name', 'No device selected');
+      SetTextById('selected-device-id', '');
+      SetTextById('selected-device-note', 'Select a device to inspect its controls.');
+      SetTextById('element-total', '0 controls');
+      SetTextById('element-summary', 'Select a device.');
+      SetClassById('rumble', 'btn small is-hidden');
+      Exit;
+    end;
+
+    SetTextById('selected-device-name', Input.DeviceName(DeviceIndex));
+    SetTextById('selected-device-id', SelectedDeviceID);
+
+    if Input.DeviceAvailable(DeviceIndex) then
+      DeviceNote := InputDeviceKindName(Input.DeviceKind(DeviceIndex)) + ' / available'
+    else
+      DeviceNote := InputDeviceKindName(Input.DeviceKind(DeviceIndex)) +
+        ' / unavailable: ' + Input.DeviceError(DeviceIndex);
+    SetTextById('selected-device-note', DeviceNote);
+
+    if Input.DeviceRumbleSupported(DeviceIndex) then
+      SetClassById('rumble', 'btn small')
+    else
+      SetClassById('rumble', 'btn small is-hidden');
+
+    Count := Input.ElementCount(DeviceIndex);
+    SetTextById('element-total', IntToStr(Count) + ' controls');
+    if Count > MAX_INPUT_ELEMENTS then
+      SetTextById('element-summary', 'Showing first ' +
+        IntToStr(MAX_INPUT_ELEMENTS) + ' of ' + IntToStr(Count) + ' controls.')
+    else
+      SetTextById('element-summary', 'Controls exposed by the selected input device.');
+
+    VisibleCount := Count;
+    if VisibleCount > MAX_INPUT_ELEMENTS then
+      VisibleCount := MAX_INPUT_ELEMENTS;
+
+    for I := 0 to VisibleCount - 1 do
+    begin
+      Kind := Input.ElementKind(DeviceIndex, I);
+      Code := Input.ElementCode(DeviceIndex, I);
+      Line := InputElementKindName(Kind) + '  |  ' +
+        Input.ElementName(DeviceIndex, I) + '  |  code ' + IntToStr(Code);
+      SetTextById('element-' + IntToStr(I), Line);
+      SetClassById('element-' + IntToStr(I), 'element-row');
+    end;
+  finally
+    Doc.EndUpdate;
+  end;
+  Doc.Changed;
+end;
+
+procedure PopulateDevices;
+var
+  I: Integer;
+  Count: Integer;
+  SelectedIndex: Integer;
+  PreviousID: String;
+  NameText: String;
+  RowClass: String;
 begin
   if Input = nil then
+    Exit;
+
+  PreviousID := SelectedDeviceID;
+  DeviceIDs.Clear;
+  Count := Input.DeviceCount;
+
+  for I := 0 to Count - 1 do
+    DeviceIDs.Add(Input.DeviceID(I));
+
+  SelectedIndex := DeviceIDs.IndexOf(PreviousID);
+  if SelectedIndex < 0 then
+  begin
+    SelectedIndex := -1;
+    for I := 0 to DeviceIDs.Count - 1 do
+      if Input.DeviceAvailable(I) then
+      begin
+        SelectedIndex := I;
+        Break;
+      end;
+    if (SelectedIndex < 0) and (DeviceIDs.Count > 0) then
+      SelectedIndex := 0;
+  end;
+
+  if SelectedIndex >= 0 then
+    SelectedDeviceID := DeviceIDs[SelectedIndex]
+  else
+    SelectedDeviceID := '';
+
+  Doc.BeginUpdate;
+  try
+    SetTextById('device-count', IntToStr(DeviceIDs.Count) + ' detected');
+
+    for I := 0 to MAX_INPUT_DEVICES - 1 do
+    begin
+      if I < DeviceIDs.Count then
+      begin
+        NameText := InputDeviceKindName(Input.DeviceKind(I)) + '  |  ' +
+          Input.DeviceName(I);
+        if not Input.DeviceAvailable(I) then
+          NameText := NameText + '  [unavailable]';
+
+        RowClass := 'device-row';
+        if not Input.DeviceAvailable(I) then
+          RowClass := RowClass + ' is-unavailable';
+        if DeviceIDs[I] = SelectedDeviceID then
+          RowClass := 'device-row is-selected';
+
+        SetTextById('device-' + IntToStr(I), NameText);
+        SetClassById('device-' + IntToStr(I), RowClass);
+      end
+      else
+        SetClassById('device-' + IntToStr(I), 'device-row is-hidden');
+    end;
+
+    if DeviceIDs.Count > MAX_INPUT_DEVICES then
+      SetTextById('device-overflow', IntToStr(DeviceIDs.Count - MAX_INPUT_DEVICES) +
+        ' additional devices not shown.')
+    else
+      SetTextById('device-overflow', '');
+
+    if DeviceIDs.Count = 0 then
+      SetInputStatus('No input devices detected. Connect a keyboard, mouse or controller.')
+    else
+      SetInputStatus('Enumerated ' + IntToStr(DeviceIDs.Count) + ' input devices.');
+  finally
+    Doc.EndUpdate;
+  end;
+  Doc.Changed;
+
+  UpdateSelectedDevice;
+end;
+
+procedure SelectDevice(Index: Integer);
+var
+  I: Integer;
+begin
+  if (Index < 0) or (Index >= DeviceIDs.Count) then
+    Exit;
+
+  SelectedDeviceID := DeviceIDs[Index];
+  Doc.BeginUpdate;
+  try
+    for I := 0 to DeviceIDs.Count - 1 do
+      if I < MAX_INPUT_DEVICES then
+      begin
+        if I = Index then
+          SetClassById('device-' + IntToStr(I), 'device-row is-selected')
+        else
+          SetClassById('device-' + IntToStr(I), 'device-row');
+      end;
+  finally
+    Doc.EndUpdate;
+  end;
+  Doc.Changed;
+  UpdateSelectedDevice;
+end;
+
+procedure RefreshInputDevices;
+begin
+  if (Input = nil) or not InputAvailable then
     Exit;
 
   if Input.Refresh then
   begin
     PopulateDevices;
+    NextDeviceCheck := GetTickCount64External +
+      INPUT_DEVICE_CHECK_INTERVAL;
     AddEventLog('Device enumeration refreshed.');
   end
   else
-    AddEventLog('Refresh failed: ' + Input.LastError);
+    SetInputStatus('Refresh failed: ' + Input.LastError);
 end;
 
-procedure DeviceComboChange(Sender: TObject);
-begin
-  UpdateElements;
-end;
-
-procedure CaptureButtonClick(Sender: TObject);
-var
-  Action: Integer;
-  DeviceID: String;
+// ---------------------------------------------------------------------------
+// Capture and bindings
+// ---------------------------------------------------------------------------
+procedure StartCapture(Action: Integer);
 begin
   if (Input = nil) or not InputAvailable then
     Exit;
 
-  if ActionCombo.ItemIndex < 0 then
+  if not Input.IsEnabled then
   begin
-    CaptureStatusLabel.Caption := 'Select an installer action first.';
+    SetInputStatus('Input is disabled. Enable the service before capturing.');
     Exit;
   end;
 
-  DeviceID := GetSelectedDeviceID;
-  if DeviceID = '' then
+  if SelectedDeviceID = '' then
   begin
-    CaptureStatusLabel.Caption := 'Select an input device first.';
+    SetInputStatus('Select an input device first.');
     Exit;
   end;
 
   if Input.Capturing then
-  begin
     Input.CancelCapture;
-    ActionCombo.Enabled := True;
-    CaptureButton.Caption := 'Capture';
-    CaptureButton.Enabled := (DeviceCombo.ItemIndex >= 0) and
-      Input.DeviceAvailable(DeviceCombo.ItemIndex);
-    CaptureStatusLabel.Caption := 'Capture cancelled.';
-    AddEventLog('Capture cancelled.');
-    Exit;
-  end;
 
-  if not Input.DeviceAvailable(DeviceCombo.ItemIndex) then
+  if Input.BeginCapture(Action, SelectedDeviceID, True) then
   begin
-    CaptureStatusLabel.Caption := 'The selected device is unavailable.';
-    Exit;
-  end;
-
-  Action := InputActionFromIndex(ActionCombo.ItemIndex);
-
-  if Input.BeginCapture(Action, DeviceID, False) then
-  begin
-    ActionCombo.Enabled := False;
-    CaptureStatusLabel.Caption := 'Press a button, move an axis or press the D-Pad...';
-    AddEventLog('Capture started for "' + InputActionName(Action) +
-      '" on ' + Input.DeviceName(DeviceCombo.ItemIndex) + '.');
-    CaptureButton.Caption := 'Cancel capture';
-    CaptureButton.Enabled := True;
+    CaptureAction := Action;
+    SetTextById('capture-status',
+      'Waiting for a physical control for ' + InputActionName(Action) + '...');
+    SetInputStatus('Capture active on ' + Input.DeviceName(FindSelectedDeviceIndex) + '.');
+    AddEventLog('Started capture for ' + InputActionName(Action) + '.');
+    Doc.Changed;
   end
   else
-    CaptureStatusLabel.Caption := 'Capture failed: ' + Input.LastError;
+    SetInputStatus('Capture failed: ' + Input.LastError);
 end;
 
-procedure ClearButtonClick(Sender: TObject);
+procedure CancelCurrentCapture;
+begin
+  if (Input <> nil) and Input.Capturing then
+  begin
+    Input.CancelCapture;
+    AddEventLog('Capture cancelled.');
+  end;
+  CaptureAction := 0;
+  SetTextById('capture-status', 'Capture is not active.');
+  Doc.Changed;
+end;
+
+procedure HandleCapturedInput;
+var
+  Action: Integer;
+  Kind: Integer;
+  Code: Integer;
+  Direction: Integer;
+  DeviceName: String;
+  BindingText: String;
+begin
+  if (Input = nil) or not Input.HasCaptured then
+    Exit;
+
+  Action := CaptureAction;
+  Kind := Input.CapturedKind;
+  Code := Input.CapturedCode;
+  Direction := Input.CapturedDirection;
+  DeviceName := Input.CapturedDeviceName;
+
+  BindingText := DeviceName + ' / ' + InputElementKindName(Kind) +
+    ' / code ' + IntToStr(Code);
+  if (Kind = Ord(Axis)) or (Kind = Ord(RelativeAxis)) or
+     (Kind = Ord(Hat)) then
+    BindingText := BindingText + ' / direction ' + IntToStr(Direction);
+
+  if Input.AcceptCaptured then
+  begin
+    SetBindingText(Action, BindingText);
+    SetTextById('capture-status', 'Bound ' + InputActionName(Action) +
+      ' to ' + BindingText);
+    SetInputStatus('Binding accepted.');
+    AddEventLog('Captured and bound ' + InputActionName(Action) + '.');
+  end
+  else
+  begin
+    SetTextById('capture-status', 'Binding failed: ' + Input.LastError);
+    SetInputStatus('Unable to accept captured input: ' + Input.LastError);
+  end;
+
+  CaptureAction := 0;
+  Doc.Changed;
+end;
+
+procedure ClearAllBindings;
 begin
   if Input = nil then
     Exit;
 
   Input.CancelCapture;
   Input.ClearBindings;
-  ActionCombo.Enabled := True;
-  CaptureButton.Caption := 'Capture';
-  CaptureButton.Enabled := InputAvailable and
-    ((Input.Capturing) or ((DeviceCombo.ItemIndex >= 0) and
-    Input.DeviceAvailable(DeviceCombo.ItemIndex)));
-  CaptureStatusLabel.Caption := 'All bindings cleared.';
-  ActionStateLabel.Caption := 'NEXT: up   BACK: up   CANCEL: up';
-  AddEventLog('All action bindings cleared.');
+  CaptureAction := 0;
+
+  SetBindingText(ACTION_NEXT, 'Not bound');
+  SetBindingText(ACTION_BACK, 'Not bound');
+  SetBindingText(ACTION_CANCEL, 'Not bound');
+
+  ActionNextDown := False;
+  ActionBackDown := False;
+  ActionCancelDown := False;
+  SetActionStateVisual(ACTION_NEXT, False);
+  SetActionStateVisual(ACTION_BACK, False);
+  SetActionStateVisual(ACTION_CANCEL, False);
+
+  SetTextById('capture-status', 'All action bindings cleared.');
+  SetInputStatus('Bindings cleared.');
+  AddEventLog('All bindings cleared.');
+  Doc.Changed;
 end;
 
-procedure RumbleButtonClick(Sender: TObject);
-var
-  DeviceID: String;
-begin
-  if (Input = nil) or (DeviceCombo.ItemIndex < 0) then
-    Exit;
-
-  DeviceID := GetSelectedDeviceID;
-  if Input.SetRumble(DeviceID, 30000, 52000, 350) then
-    AddEventLog('XInput vibration pulse sent to ' + Input.DeviceName(DeviceCombo.ItemIndex) + '.')
-  else
-    AddEventLog('Vibration unavailable: ' + Input.LastError);
-end;
-
-procedure HandleCapturedInput;
-var
-  Action: Integer;
-  DeviceName: String;
-  Kind: Integer;
-  Code: Integer;
-  Direction: Integer;
-  BindingText: String;
-begin
-  if not Input.HasCaptured then
-    Exit;
-
-  Action := InputActionFromIndex(ActionCombo.ItemIndex);
-  DeviceName := Input.CapturedDeviceName;
-  Kind := Input.CapturedKind;
-  Code := Input.CapturedCode;
-  Direction := Input.CapturedDirection;
-
-  BindingText := DeviceName + ': ' + InputElementKindName(Kind) +
-    ' code ' + IntToStr(Code) + DirectionName(Kind, Direction);
-
-  if Input.AcceptCaptured then
-  begin
-    CaptureStatusLabel.Caption := InputActionName(Action) + ' assigned to ' + BindingText;
-    AddEventLog('BOUND  ' + InputActionName(Action) + '  <-  ' + BindingText);
-  end
-  else
-    CaptureStatusLabel.Caption := 'Binding failed: ' + Input.LastError;
-
-  ActionCombo.Enabled := True;
-  CaptureButton.Caption := 'Capture';
-  CaptureButton.Enabled := InputAvailable and (DeviceCombo.ItemIndex >= 0) and
-    Input.DeviceAvailable(DeviceCombo.ItemIndex);
-end;
-
+// ---------------------------------------------------------------------------
+// Input action state
+// ---------------------------------------------------------------------------
 procedure UpdateActionState;
 var
-  NextText: String;
-  BackText: String;
-  CancelText: String;
+  Down: Boolean;
+  Changed: Boolean;
 begin
-  NextText := 'up';
-  BackText := 'up';
-  CancelText := 'up';
+  if (Input = nil) or not InputAvailable then
+    Exit;
 
-  if Input.IsPressed(ACTION_NEXT) then
-    NextText := 'DOWN';
-  if Input.IsPressed(ACTION_BACK) then
-    BackText := 'DOWN';
-  if Input.IsPressed(ACTION_CANCEL) then
-    CancelText := 'DOWN';
+  Changed := False;
+  Doc.BeginUpdate;
+  try
+    Down := Input.IsEnabled and Input.IsPressed(ACTION_NEXT);
+    if Down <> ActionNextDown then
+    begin
+      ActionNextDown := Down;
+      SetActionStateVisual(ACTION_NEXT, Down);
+      Changed := True;
+    end;
+    if Input.WasPressed(ACTION_NEXT) then
+    begin
+      AddEventLog('NEXT action pressed.');
+      SetInputStatus('NEXT action received from the bound input.');
+      Changed := True;
+    end;
 
-  ActionStateLabel.Caption :=
-    'NEXT: ' + NextText + '    BACK: ' + BackText +
-    '    CANCEL: ' + CancelText;
+    Down := Input.IsEnabled and Input.IsPressed(ACTION_BACK);
+    if Down <> ActionBackDown then
+    begin
+      ActionBackDown := Down;
+      SetActionStateVisual(ACTION_BACK, Down);
+      Changed := True;
+    end;
+    if Input.WasPressed(ACTION_BACK) then
+    begin
+      AddEventLog('BACK action pressed.');
+      SetInputStatus('BACK action received from the bound input.');
+      Changed := True;
+    end;
+
+    Down := Input.IsEnabled and Input.IsPressed(ACTION_CANCEL);
+    if Down <> ActionCancelDown then
+    begin
+      ActionCancelDown := Down;
+      SetActionStateVisual(ACTION_CANCEL, Down);
+      Changed := True;
+    end;
+    if Input.WasPressed(ACTION_CANCEL) then
+    begin
+      AddEventLog('CANCEL action pressed.');
+      SetInputStatus('CANCEL action received from the bound input.');
+      Changed := True;
+    end;
+  finally
+    Doc.EndUpdate;
+  end;
+
+  if Changed then
+    Doc.Changed;
 end;
 
+// ---------------------------------------------------------------------------
+// Profile and rumble
+// ---------------------------------------------------------------------------
+procedure SaveInputProfile;
+begin
+  if Input = nil then
+    Exit;
+
+  if Input.SaveProfile(ProfileFileName) then
+  begin
+    SetInputStatus('Profile saved to the Setup temporary directory.');
+    AddEventLog('Input profile saved.');
+  end
+  else
+    SetInputStatus('Profile save failed: ' + Input.LastError);
+end;
+
+procedure LoadInputProfile;
+begin
+  if Input = nil then
+    Exit;
+
+  if not FileExists(ProfileFileName) then
+  begin
+    SetInputStatus('No saved profile exists in this Setup session.');
+    Exit;
+  end;
+
+  if Input.LoadProfile(ProfileFileName) then
+  begin
+    SetInputStatus('Profile loaded. Saved bindings are active.');
+    SetTextById('capture-status', 'Loaded profile: ' + ProfileFileName);
+    AddEventLog('Input profile loaded.');
+  end
+  else
+    SetInputStatus('Profile load failed: ' + Input.LastError);
+  Doc.Changed;
+end;
+
+procedure TestRumble;
+var
+  DeviceIndex: Integer;
+begin
+  if Input = nil then
+    Exit;
+
+  DeviceIndex := FindSelectedDeviceIndex;
+  if (DeviceIndex < 0) or not Input.DeviceRumbleSupported(DeviceIndex) then
+  begin
+    SetInputStatus('Rumble is not supported by the selected device.');
+    Exit;
+  end;
+
+  if Input.SetRumble(SelectedDeviceID, 30000, 52000, 350) then
+  begin
+    SetInputStatus('Rumble command sent (350 ms).');
+    AddEventLog('Rumble test sent to selected controller.');
+  end
+  else
+    SetInputStatus('Rumble failed: ' + Input.LastError);
+end;
+
+// ---------------------------------------------------------------------------
+// HTML click routing
+// ---------------------------------------------------------------------------
+function ElementClick(Sender, El: TObject): Boolean;
+var
+  H: NativeInt;
+  Id: String;
+  Index: Integer;
+begin
+  Result := False;
+  if El = nil then
+    Exit;
+
+  H := NativeInt(El);
+  Id := '';
+  while H <> 0 do
+  begin
+    Elem.FCreate(H);
+    Id := Elem.GetAttr('id', '');
+    if Id <> '' then
+      Break;
+    H := Elem.Parent;
+  end;
+  if H = 0 then
+    Exit;
+
+  if Copy(Id, 1, 7) = 'device-' then
+  begin
+    Index := StrToInt(Copy(Id, 8, Length(Id) - 7));
+    SelectDevice(Index);
+    Result := True;
+    Exit;
+  end;
+
+  if Id = 'title-minimize' then
+  begin
+    FMXForm.Minimize;
+    Result := True;
+    Exit;
+  end;
+
+  if Id = 'title-close' then
+  begin
+    CloseSetup;
+    Result := True;
+    Exit;
+  end;
+
+  if Id = 'refresh-devices' then
+    RefreshInputDevices
+  else if Id = 'capture-next' then
+    StartCapture(ACTION_NEXT)
+  else if Id = 'capture-back' then
+    StartCapture(ACTION_BACK)
+  else if Id = 'capture-cancel' then
+    StartCapture(ACTION_CANCEL)
+  else if Id = 'cancel-capture' then
+    CancelCurrentCapture
+  else if Id = 'clear-bindings' then
+    ClearAllBindings
+  else if Id = 'save-profile' then
+    SaveInputProfile
+  else if Id = 'load-profile' then
+    LoadInputProfile
+  else if Id = 'rumble' then
+    TestRumble
+  else if Id = 'toggle-input' then
+  begin
+    if Input <> nil then
+    begin
+      Input.Enabled(not Input.IsEnabled);
+      if Input.IsEnabled then
+      begin
+        SetTextById('toggle-input', 'Disable input');
+        SetInputStatus('Input service enabled.');
+        AddEventLog('Input enabled.');
+      end
+      else
+      begin
+        SetTextById('toggle-input', 'Enable input');
+        CancelCurrentCapture;
+        SetInputStatus('Input service disabled.');
+        AddEventLog('Input disabled.');
+      end;
+      UpdateActionState;
+    end;
+  end
+  else
+    Exit;
+
+  Doc.Changed;
+  Result := True;
+end;
+
+// ---------------------------------------------------------------------------
+// Window dragging
+// ---------------------------------------------------------------------------
+procedure ViewMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Single);
+begin
+  if Button <> mbLeft then
+    Exit;
+
+  if (Y >= 0) and (Y < TITLEBAR_HEIGHT) and
+     (X < TitleView.GetWidth - TITLEBAR_BUTTONS_WIDTH) then
+    FMXForm.StartWindowDrag;
+end;
+
+// ---------------------------------------------------------------------------
+// Input timer
+// ---------------------------------------------------------------------------
 procedure InputTimerProc(hWnd: HWND; uMsg: UINT; idEvent: UINT_PTR;
   dwTime: DWORD);
 var
   ErrorText: String;
+  Tick: Int64;
 begin
   if Closing or (Input = nil) or not InputAvailable then
     Exit;
@@ -485,244 +984,133 @@ begin
   try
     if not Input.Poll then
     begin
-      CaptureStatusLabel.Caption := 'Input polling stopped: ' + Input.LastError;
+      SetInputStatus('Input polling stopped: ' + Input.LastError);
       AddEventLog('POLL ERROR: ' + Input.LastError);
       KillTimer(0, InputTimerID);
       InputTimerID := 0;
       Exit;
     end;
 
-    if DeviceListChanged then
-      PopulateDevices;
+    Tick := GetTickCount64External;
+    if Tick >= NextDeviceCheck then
+    begin
+      if DeviceListChanged then
+        PopulateDevices;
+      NextDeviceCheck := Tick + INPUT_DEVICE_CHECK_INTERVAL;
+    end;
 
     HandleCapturedInput;
     UpdateActionState;
-
-    // WasPressed consumes a rising-edge event. Holding a button therefore
-    // cannot repeatedly click the same installer control.
-    if Input.WasPressed(ACTION_CANCEL) then
-    begin
-      AddEventLog('Controller action: Cancel.');
-      if WizardForm.CancelButton.Enabled then
-        SendMessage(WizardForm.CancelButton.Handle, INPUT_BM_CLICK, 0, 0);
-      Exit;
-    end;
-
-    if Input.WasPressed(ACTION_BACK) then
-    begin
-      AddEventLog('Controller action: Back.');
-      if WizardForm.BackButton.Enabled then
-        SendMessage(WizardForm.BackButton.Handle, INPUT_BM_CLICK, 0, 0);
-      Exit;
-    end;
-
-    if Input.WasPressed(ACTION_NEXT) then
-    begin
-      AddEventLog('Controller action: Next / Install / Finish.');
-      if WizardForm.NextButton.Enabled then
-        SendMessage(WizardForm.NextButton.Handle, INPUT_BM_CLICK, 0, 0);
-      Exit;
-    end;
   except
     ErrorText := GetExceptionMessage;
-    CaptureStatusLabel.Caption := ErrorText;
-    AddEventLog('INPUT ERROR: ' + ErrorText);
+    SetInputStatus('INPUT ERROR: ' + ErrorText);
+    AddEventLog('Input timer stopped: ' + ErrorText);
     KillTimer(0, InputTimerID);
     InputTimerID := 0;
   end;
 end;
 
-procedure CreateInputPage;
-var
-  LabelControl: TNewStaticText;
-  PageWidth: Integer;
-  MemoTop: Integer;
+// ---------------------------------------------------------------------------
+// Initialization
+// ---------------------------------------------------------------------------
+procedure FMXInit;
 begin
-  InputPage := CreateCustomPage(wpWelcome,
-    'Controller and keyboard input',
-    'Capture physical controls and use them to operate the real Setup wizard.');
-
-  PageWidth := InputPage.SurfaceWidth;
-
-  LabelControl := TNewStaticText.Create(InputPage);
-  LabelControl.Parent := InputPage.Surface;
-  LabelControl.Left := 0;
-  LabelControl.Top := 0;
-  LabelControl.Caption := 'Input device:';
-  LabelControl.AutoSize := True;
-
-  DeviceCombo := TNewComboBox.Create(InputPage);
-  DeviceCombo.Parent := InputPage.Surface;
-  DeviceCombo.Left := 0;
-  DeviceCombo.Top := ScaleY(20);
-  DeviceCombo.Width := PageWidth - ScaleX(104);
-  DeviceCombo.Style := csDropDownList;
-  DeviceCombo.OnChange := @DeviceComboChange;
-
-  RefreshButton := TNewButton.Create(InputPage);
-  RefreshButton.Parent := InputPage.Surface;
-  RefreshButton.Left := DeviceCombo.Left + DeviceCombo.Width + ScaleX(6);
-  RefreshButton.Top := DeviceCombo.Top;
-  RefreshButton.Width := ScaleX(98);
-  RefreshButton.Height := DeviceCombo.Height;
-  RefreshButton.Caption := 'Refresh';
-  RefreshButton.OnClick := @RefreshButtonClick;
-
-  LabelControl := TNewStaticText.Create(InputPage);
-  LabelControl.Parent := InputPage.Surface;
-  LabelControl.Left := 0;
-  LabelControl.Top := ScaleY(53);
-  LabelControl.Caption := 'Controls exposed by the selected device:';
-  LabelControl.AutoSize := True;
-
-  ElementsMemo := TNewMemo.Create(InputPage);
-  ElementsMemo.Parent := InputPage.Surface;
-  ElementsMemo.Left := 0;
-  ElementsMemo.Top := ScaleY(72);
-  ElementsMemo.Width := PageWidth;
-  ElementsMemo.Height := ScaleY(82);
-  ElementsMemo.Anchors := [akLeft, akTop, akRight];
-  ElementsMemo.ReadOnly := True;
-  ElementsMemo.ScrollBars := ssVertical;
-  ElementsMemo.WordWrap := False;
-
-  LabelControl := TNewStaticText.Create(InputPage);
-  LabelControl.Parent := InputPage.Surface;
-  LabelControl.Left := 0;
-  LabelControl.Top := ScaleY(163);
-  LabelControl.Caption := 'Assign a control to an installer action:';
-  LabelControl.AutoSize := True;
-
-  ActionCombo := TNewComboBox.Create(InputPage);
-  ActionCombo.Parent := InputPage.Surface;
-  ActionCombo.Left := 0;
-  ActionCombo.Top := ScaleY(183);
-  ActionCombo.Width := ScaleX(190);
-  ActionCombo.Style := csDropDownList;
-  ActionCombo.Items.Add('Next / Install / Finish');
-  ActionCombo.Items.Add('Back');
-  ActionCombo.Items.Add('Cancel');
-  ActionCombo.ItemIndex := 0;
-
-  CaptureButton := TNewButton.Create(InputPage);
-  CaptureButton.Parent := InputPage.Surface;
-  CaptureButton.Left := ActionCombo.Left + ActionCombo.Width + ScaleX(6);
-  CaptureButton.Top := ActionCombo.Top;
-  CaptureButton.Width := ScaleX(112);
-  CaptureButton.Height := ActionCombo.Height;
-  CaptureButton.Caption := 'Capture';
-  CaptureButton.OnClick := @CaptureButtonClick;
-
-  ClearButton := TNewButton.Create(InputPage);
-  ClearButton.Parent := InputPage.Surface;
-  ClearButton.Left := CaptureButton.Left + CaptureButton.Width + ScaleX(6);
-  ClearButton.Top := ActionCombo.Top;
-  ClearButton.Width := ScaleX(82);
-  ClearButton.Height := ActionCombo.Height;
-  ClearButton.Caption := 'Clear';
-  ClearButton.OnClick := @ClearButtonClick;
-
-  RumbleButton := TNewButton.Create(InputPage);
-  RumbleButton.Parent := InputPage.Surface;
-  RumbleButton.Left := 0;
-  RumbleButton.Top := ScaleY(216);
-  RumbleButton.Width := ScaleX(130);
-  RumbleButton.Height := ScaleY(24);
-  RumbleButton.Caption := 'Test vibration';
-  RumbleButton.Enabled := False;
-  RumbleButton.OnClick := @RumbleButtonClick;
-
-  DeviceStatusLabel := TNewStaticText.Create(InputPage);
-  DeviceStatusLabel.Parent := InputPage.Surface;
-  DeviceStatusLabel.Left := RumbleButton.Left + RumbleButton.Width + ScaleX(8);
-  DeviceStatusLabel.Top := ScaleY(219);
-  DeviceStatusLabel.Width := PageWidth - DeviceStatusLabel.Left;
-  DeviceStatusLabel.Height := ScaleY(20);
-  DeviceStatusLabel.AutoSize := False;
-  DeviceStatusLabel.Caption := 'No device selected.';
-
-  CaptureStatusLabel := TNewStaticText.Create(InputPage);
-  CaptureStatusLabel.Parent := InputPage.Surface;
-  CaptureStatusLabel.Left := 0;
-  CaptureStatusLabel.Top := ScaleY(247);
-  CaptureStatusLabel.Width := PageWidth;
-  CaptureStatusLabel.Height := ScaleY(22);
-  CaptureStatusLabel.AutoSize := False;
-  CaptureStatusLabel.Caption := 'Choose a device and action, then click Capture.';
-
-  ActionStateLabel := TNewStaticText.Create(InputPage);
-  ActionStateLabel.Parent := InputPage.Surface;
-  ActionStateLabel.Left := 0;
-  ActionStateLabel.Top := ScaleY(271);
-  ActionStateLabel.Width := PageWidth;
-  ActionStateLabel.Height := ScaleY(20);
-  ActionStateLabel.AutoSize := False;
-  ActionStateLabel.Caption := 'NEXT: up   BACK: up   CANCEL: up';
-
-  MemoTop := ScaleY(296);
-  EventsMemo := TNewMemo.Create(InputPage);
-  EventsMemo.Parent := InputPage.Surface;
-  EventsMemo.Left := 0;
-  EventsMemo.Top := MemoTop;
-  EventsMemo.Width := PageWidth;
-  EventsMemo.Height := InputPage.SurfaceHeight - MemoTop - ScaleY(4);
-  if EventsMemo.Height < ScaleY(48) then
-    EventsMemo.Height := ScaleY(48);
-  EventsMemo.Anchors := [akLeft, akTop, akRight, akBottom];
-  EventsMemo.ReadOnly := True;
-  EventsMemo.ScrollBars := ssVertical;
-  EventsMemo.WordWrap := False;
-  EventsMemo.Lines.Add('Input event log.');
+  FMXForm := InitFormHandle;
+  TitleView := InitPixieHtmlView;
+  View := InitPixieHtmlView;
+  Doc := InitPixieDocument;
+  Elem := InitPixieElement;
 end;
 
-// ---------------------------------------------------------------------------
-// Inno Setup lifecycle
-// ---------------------------------------------------------------------------
+function InitializeSetup(): Boolean;
+begin
+  FMXInit;
+  Result := True;
+end;
+
 procedure InitializeWizard;
 begin
   Closing := False;
-  InputTimerID := 0;
   InputAvailable := False;
+  InputTimerID := 0;
+  NextDeviceCheck := 0;
+  CaptureAction := 0;
+  EventCount := 0;
+
+  ActionNextDown := False;
+  ActionBackDown := False;
+  ActionCancelDown := False;
+
+  BindingTextNext := 'Not bound';
+  BindingTextBack := 'Not bound';
+  BindingTextCancel := 'Not bound';
+
+  SelectedDeviceID := '';
   DeviceIDs := TStringList.Create;
 
-  WizardForm.ClientWidth := ScaleX(640);
-  WizardForm.ClientHeight := ScaleY(560);
-  WizardForm.Position := poScreenCenter;
+  ProfileFileName := ExpandConstant('{tmp}') + '\FMXPixieInputProfile.json';
 
-  CreateInputPage;
+  EmptyWizardForm(DEMO_FORM_WIDTH, DEMO_FORM_HEIGHT);
+  FMXForm.FCreateBackdropForm(WizardForm.Handle, btMain, True, True);
+  FMXForm.Caption('FMXPixie - Gamepad Input Demo');
+  FMXForm.ChangeBorderColor($FF2D5278);
 
-  // This is the same DLL extraction scheme used by the other FMXPixie demos.
-  ExtractTemporaryFile('FMXPixie.dll');
+  TitleView.FCreate(FMXForm.Handle);
+  TitleView.Left(0);
+  TitleView.Top(0);
+  TitleView.Width(DEMO_FORM_WIDTH);
+  TitleView.Height(TITLEBAR_HEIGHT);
+  TitleView.ColorScheme(pcsDark);
+  TitleView.OnElementClick(@ElementClick);
+  TitleView.OnMouseDown(@ViewMouseDown);
+  TitleView.LoadFromString(BuildTitleBarHtml);
 
+  View.FCreate(FMXForm.Handle);
+  View.Left(0);
+  View.Top(TITLEBAR_HEIGHT);
+  View.Width(DEMO_FORM_WIDTH);
+  View.Height(DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT);
+  View.ColorScheme(pcsDark);
+  View.LoadFromString(BuildInputHtml);
+
+  Doc.FCreate(View.GetDocument);
+
+  // Input is created here, on the same thread that owns the Setup UI.
   try
     Input := InitInput;
     InputAvailable := Input <> nil;
-    if InputAvailable then
-      AddEventLog('FMXInput initialized.');
   except
-    AddEventLog('FMXInput initialization failed: ' + GetExceptionMessage);
+    SetInputStatus('FMXInput initialization failed: ' + GetExceptionMessage);
+    AddEventLog('FMXInput initialization failed.');
   end;
 
   if InputAvailable then
   begin
     if Input.Refresh then
-      PopulateDevices
+    begin
+      PopulateDevices;
+      SetInputStatus('FMXInput initialized and device enumeration completed.');
+    end
     else
-      AddEventLog('Initial device refresh failed: ' + Input.LastError);
+      SetInputStatus('Initial device refresh failed: ' + Input.LastError);
+
+    NextDeviceCheck := GetTickCount64External +
+      INPUT_DEVICE_CHECK_INTERVAL;
 
     InputTimerID := SetTimer(0, 0, INPUT_POLL_INTERVAL,
       CreateCallback(@InputTimerProc));
-
     if InputTimerID = 0 then
-      AddEventLog('Unable to create the input polling timer.');
+      SetInputStatus('Unable to create the input polling timer.');
   end
   else
-  begin
-    DeviceStatusLabel.Caption := 'FMXInput could not be initialized. Check the DLL and log.';
-    CaptureButton.Enabled := False;
-    RefreshButton.Enabled := False;
-    RumbleButton.Enabled := False;
-  end;
+    SetInputStatus('FMXInput is unavailable. Check the DLL and initialization error.');
+
+  FMXForm.Show;
+end;
+
+procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);
+begin
+  Confirm := False;
 end;
 
 procedure DeinitializeSetup;
@@ -737,9 +1125,10 @@ begin
 
   if Input <> nil then
   begin
-    Input.StopPolling;
-    Input.CancelCapture;
-    Input.StopRumble('');
+    if Input.Capturing then
+      Input.CancelCapture;
+    if SelectedDeviceID <> '' then
+      Input.StopRumble(SelectedDeviceID);
     Input.Shutdown;
     Input := nil;
   end;
@@ -749,4 +1138,6 @@ begin
     DeviceIDs.Free;
     DeviceIDs := nil;
   end;
+
+  FMXPixieShutDown;
 end;
