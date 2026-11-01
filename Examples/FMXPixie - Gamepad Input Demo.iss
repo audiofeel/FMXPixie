@@ -71,13 +71,9 @@ var
   Input: FInput;
 
   DeviceIDs: TStringList;
-  SelectedDeviceID: String;
-  ProfileFileName: String;
-
   InputTimerID: UINT_PTR;
   NextDeviceCheck: Int64;
   CaptureAction: Integer;
-  EventCount: Integer;
 
   InputAvailable: Boolean;
   Closing: Boolean;
@@ -93,10 +89,6 @@ var
   CustomNextAssigned: Boolean;
   CustomBackAssigned: Boolean;
   CustomCancelAssigned: Boolean;
-
-  BindingTextNext: String;
-  BindingTextBack: String;
-  BindingTextCancel: String;
 
   DefaultXboxBindingsApplied: Boolean;
 
@@ -118,18 +110,6 @@ function GetTickCount64External: Int64;
 // Enum names. Values are the ordinal values of the shared types declared in
 // FMXPixieHandle.iss and the corresponding FMXInput enums.
 // ---------------------------------------------------------------------------
-function InputDeviceKindName(Kind: Integer): String;
-begin
-  if Kind = Ord(Keyboard) then
-    Result := 'Keyboard'
-  else if Kind = Ord(Controller) then
-    Result := 'Controller'
-  else if Kind = Ord(Mouse) then
-    Result := 'Mouse'
-  else
-    Result := 'Unknown';
-end;
-
 function InputElementKindName(Kind: Integer): String;
 begin
   if Kind = Ord(Key) then
@@ -262,19 +242,19 @@ begin
 
     '<div class="panel">' +
     '<div class="panel-head"><span>XBOX — ГОТОВАЯ РАСКЛАДКА</span><span class="panel-caption">XINPUT</span></div>' +
-    '<div class="panel-note">Стандартные кнопки Xbox уже назначены. Подключи контроллер — и можно сразу проверять.</div>' +
+    '<div class="panel-note">Готовая схема Xbox. При подключении XInput-контроллера A / B / X назначатся автоматически.</div>' +
 
     '<div id="xbox-row-next" class="xbox-row">' +
     '<div class="xbox-copy"><span class="xbox-title">Далее</span><span class="xbox-hint">Продолжить / подтвердить</span></div>' +
-    '<div class="xbox-right"><span id="xbox-state-next" class="xbox-state">RELEASED</span><span class="xbox-key xbox-a">A</span></div></div>' +
+    '<div class="xbox-right"><span id="xbox-state-next" class="xbox-state">NO PAD</span><span class="xbox-key xbox-a">A</span></div></div>' +
 
     '<div id="xbox-row-back" class="xbox-row">' +
     '<div class="xbox-copy"><span class="xbox-title">Назад</span><span class="xbox-hint">Вернуться к предыдущему шагу</span></div>' +
-    '<div class="xbox-right"><span id="xbox-state-back" class="xbox-state">RELEASED</span><span class="xbox-key xbox-b">B</span></div></div>' +
+    '<div class="xbox-right"><span id="xbox-state-back" class="xbox-state">NO PAD</span><span class="xbox-key xbox-b">B</span></div></div>' +
 
     '<div id="xbox-row-cancel" class="xbox-row">' +
     '<div class="xbox-copy"><span class="xbox-title">Отмена</span><span class="xbox-hint">Закрыть / отменить действие</span></div>' +
-    '<div class="xbox-right"><span id="xbox-state-cancel" class="xbox-state">RELEASED</span><span class="xbox-key xbox-x">X</span></div></div>' +
+    '<div class="xbox-right"><span id="xbox-state-cancel" class="xbox-state">NO PAD</span><span class="xbox-key xbox-x">X</span></div></div>' +
 
     '<div id="xbox-status" class="xbox-status">Ожидание Xbox-контроллера. Раскладка: A — Далее, B — Назад, X — Отмена.</div>' +
     '</div>' +
@@ -285,20 +265,20 @@ begin
 
     '<div id="custom-row-next" class="custom-row"><div class="custom-copy"><span class="custom-title">Далее</span>' +
     '<span id="custom-binding-next" class="custom-binding">Не назначено</span></div>' +
-    '<div class="custom-right"><span id="custom-state-next" class="custom-state">NOT SET</span>' +
+    '<div class="custom-right"><span id="custom-state-next" class="custom-state">—</span>' +
     '<button id="custom-assign-next" class="assign-btn" type="button">Назначить</button></div></div>' +
 
     '<div id="custom-row-back" class="custom-row"><div class="custom-copy"><span class="custom-title">Назад</span>' +
     '<span id="custom-binding-back" class="custom-binding">Не назначено</span></div>' +
-    '<div class="custom-right"><span id="custom-state-back" class="custom-state">NOT SET</span>' +
+    '<div class="custom-right"><span id="custom-state-back" class="custom-state">—</span>' +
     '<button id="custom-assign-back" class="assign-btn" type="button">Назначить</button></div></div>' +
 
     '<div id="custom-row-cancel" class="custom-row"><div class="custom-copy"><span class="custom-title">Отмена</span>' +
     '<span id="custom-binding-cancel" class="custom-binding">Не назначено</span></div>' +
-    '<div class="custom-right"><span id="custom-state-cancel" class="custom-state">NOT SET</span>' +
+    '<div class="custom-right"><span id="custom-state-cancel" class="custom-state">—</span>' +
     '<button id="custom-assign-cancel" class="assign-btn" type="button">Назначить</button></div></div>' +
 
-    '<div id="capture-status" class="capture-status">Свои назначения добавляются к готовой раскладке Xbox. Например, можно оставить A/B/X и дополнительно назначить Enter, Esc или пробел.</div>' +
+    '<div id="capture-status" class="capture-status">Отдельная раскладка для клавиатуры, мыши или другого контроллера. Она проверяется независимо от кнопок Xbox.</div>' +
     '</div>' +
 
     '</div></div></body></html>';
@@ -307,21 +287,6 @@ end;
 // ---------------------------------------------------------------------------
 // DOM helpers
 // ---------------------------------------------------------------------------
-function HtmlEscapeText(const S: String): String;
-var
-  I: Integer;
-begin
-  Result := '';
-  for I := 1 to Length(S) do
-    case S[I] of
-      '&': Result := Result + '&amp;';
-      '<': Result := Result + '&lt;';
-      '>': Result := Result + '&gt;';
-    else
-      Result := Result + S[I];
-    end;
-end;
-
 procedure SetTextById(const Id, S: String);
 var
   H: NativeInt;
@@ -347,39 +312,30 @@ begin
   SetTextById('input-status', S);
   if not InputAvailable then
   begin
-    SetTextById('input-state', 'INPUT: OFFLINE');
+    SetTextById('input-state', 'ВВОД: НЕТ');
     SetClassById('status-dot', 'status-dot');
   end
   else if Input = nil then
   begin
-    SetTextById('input-state', 'INPUT: OFFLINE');
+    SetTextById('input-state', 'ВВОД: НЕТ');
     SetClassById('status-dot', 'status-dot');
   end
   else if Input.IsEnabled then
   begin
-    SetTextById('input-state', 'INPUT: ON');
+    SetTextById('input-state', 'ВВОД: ВКЛ');
     SetClassById('status-dot', 'status-dot on');
   end
   else
   begin
-    SetTextById('input-state', 'INPUT: PAUSED');
+    SetTextById('input-state', 'ВВОД: ПАУЗА');
     SetClassById('status-dot', 'status-dot');
   end;
-end;
-
-procedure AddEventLog(const S: String);
-begin
-  Inc(EventCount);
-  SetTextById('last-event',
-    GetDateTimeString('hh:nn:ss', #0, ':') + '  ' + S);
-  SetTextById('event-count', IntToStr(EventCount) + ' events');
 end;
 
 procedure SetBindingText(Action: Integer; const S: String);
 begin
   if Action = ACTION_NEXT then
   begin
-    BindingTextNext := S;
     CustomNextAssigned := True;
     SetTextById('custom-binding-next', S);
     SetClassById('custom-state-next', 'custom-state');
@@ -387,7 +343,6 @@ begin
   end
   else if Action = ACTION_BACK then
   begin
-    BindingTextBack := S;
     CustomBackAssigned := True;
     SetTextById('custom-binding-back', S);
     SetClassById('custom-state-back', 'custom-state');
@@ -395,7 +350,6 @@ begin
   end
   else if Action = ACTION_CANCEL then
   begin
-    BindingTextCancel := S;
     CustomCancelAssigned := True;
     SetTextById('custom-binding-cancel', S);
     SetClassById('custom-state-cancel', 'custom-state');
@@ -476,14 +430,6 @@ end;
 // ---------------------------------------------------------------------------
 // Device enumeration and element list
 // ---------------------------------------------------------------------------
-function FindSelectedDeviceIndex: Integer;
-begin
-  Result := -1;
-  if (Input = nil) or (SelectedDeviceID = '') then
-    Exit;
-  Result := DeviceIDs.IndexOf(SelectedDeviceID);
-end;
-
 function DeviceListChanged: Boolean;
 var
   I: Integer;
@@ -504,77 +450,6 @@ begin
       Result := True;
       Exit;
     end;
-end;
-
-procedure UpdateSelectedDevice;
-var
-  DeviceIndex: Integer;
-  I: Integer;
-  Count: Integer;
-  Kind: Integer;
-  Code: Integer;
-  Line: String;
-  DeviceNote: String;
-  ElementsHtml: String;
-  ElementListHandle: NativeInt;
-begin
-  DeviceIndex := FindSelectedDeviceIndex;
-  ElementListHandle := Doc.GetElementById('element-list');
-
-  Doc.BeginUpdate;
-  try
-    if DeviceIndex < 0 then
-    begin
-      if ElementListHandle <> 0 then
-        Doc.SetInnerHtml(ElementListHandle, '');
-      SetTextById('selected-device-name', 'No device selected');
-      SetTextById('selected-device-id', '');
-      SetTextById('selected-device-note', 'Choose a device from the list above.');
-      SetTextById('element-total', '0 controls');
-      SetTextById('element-summary', 'Select a device in Step 1 to inspect its controls.');
-      SetClassById('rumble', 'btn small is-hidden');
-    end
-    else
-    begin
-      SetTextById('selected-device-name', Input.DeviceName(DeviceIndex));
-      SetTextById('selected-device-id', SelectedDeviceID);
-
-      if Input.DeviceAvailable(DeviceIndex) then
-        DeviceNote := InputDeviceKindName(Input.DeviceKind(DeviceIndex)) + ' / available'
-      else
-        DeviceNote := InputDeviceKindName(Input.DeviceKind(DeviceIndex)) +
-          ' / unavailable: ' + Input.DeviceError(DeviceIndex);
-      SetTextById('selected-device-note', DeviceNote);
-
-      if Input.DeviceRumbleSupported(DeviceIndex) then
-        SetClassById('rumble', 'btn small')
-      else
-        SetClassById('rumble', 'btn small is-hidden');
-
-      Count := Input.ElementCount(DeviceIndex);
-      SetTextById('element-total', IntToStr(Count) + ' controls');
-      SetTextById('element-summary',
-        'Reference list of keys, buttons, axes and other controls found on this device.');
-
-      ElementsHtml := '';
-      for I := 0 to Count - 1 do
-      begin
-        Kind := Input.ElementKind(DeviceIndex, I);
-        Code := Input.ElementCode(DeviceIndex, I);
-        Line := InputElementKindName(Kind) + '  |  ' +
-          Input.ElementName(DeviceIndex, I) + '  |  code ' + IntToStr(Code);
-        ElementsHtml := ElementsHtml +
-          '<div id="element-' + IntToStr(I) + '" class="element-row">' +
-          HtmlEscapeText(Line) + '</div>';
-      end;
-
-      if ElementListHandle <> 0 then
-        Doc.SetInnerHtml(ElementListHandle, ElementsHtml);
-    end;
-  finally
-    Doc.EndUpdate;
-  end;
-  Doc.Changed;
 end;
 
 procedure ApplyDefaultXboxBindings;
@@ -620,15 +495,17 @@ begin
         begin
           SetTextById('xbox-status',
             'Не удалось назначить стандартные кнопки Xbox: ' + ErrorText);
-          SetInputStatus('Default Xbox assignment failed: ' + ErrorText);
+          SetInputStatus('Не удалось назначить Xbox A / B / X: ' + ErrorText);
           Exit;
         end;
 
         DefaultXboxBindingsApplied := True;
+        SetActionStateVisual(ACTION_XBOX_NEXT, False);
+        SetActionStateVisual(ACTION_XBOX_BACK, False);
+        SetActionStateVisual(ACTION_XBOX_CANCEL, False);
         SetTextById('xbox-status',
           DeviceName + ': A — Далее, B — Назад, X — Отмена. Готово к работе.');
-        SetInputStatus('Xbox controller connected. A / B / X are ready.');
-        AddEventLog('Default Xbox A / B / X controls assigned.');
+        SetInputStatus('Xbox-контроллер подключён. A / B / X готовы.');
         Exit;
       end;
     end;
@@ -651,74 +528,6 @@ begin
 
   // Device enumeration is kept internal. The demo UI does not need a technical list.
   ApplyDefaultXboxBindings;
-end;
-
-procedure CancelCurrentCapture;
-begin
-  if Input <> nil then
-    if Input.Capturing then
-    begin
-      Input.CancelCapture;
-      AddEventLog('Assignment cancelled.');
-      SetTextById('capture-status', 'Назначение отменено. Уже назначенные кнопки контроллера сохранены.');
-    end
-    else
-      SetTextById('capture-status', 'Сейчас ничего не назначается. Можно добавить клавиатуру или мышь к игровым действиям.');
-  CaptureAction := 0;
-  Doc.Changed;
-end;
-
-procedure SelectDevice(Index: Integer);
-var
-  I: Integer;
-  H: NativeInt;
-  RowClass: String;
-begin
-  if (Index < 0) or (Index >= DeviceIDs.Count) then
-    Exit;
-
-  if Input <> nil then
-    if Input.Capturing then
-      CancelCurrentCapture;
-
-  SelectedDeviceID := DeviceIDs[Index];
-  Doc.BeginUpdate;
-  try
-    for I := 0 to DeviceIDs.Count - 1 do
-    begin
-      H := Doc.GetElementById('device-' + IntToStr(I));
-      if H <> 0 then
-      begin
-        RowClass := 'device-row';
-        if not Input.DeviceAvailable(I) then
-          RowClass := RowClass + ' is-unavailable';
-        if I = Index then
-          RowClass := RowClass + ' is-selected';
-        Elem.FCreate(H);
-        Elem.SetAttr('class', RowClass);
-      end;
-    end;
-  finally
-    Doc.EndUpdate;
-  end;
-  Doc.Changed;
-  UpdateSelectedDevice;
-end;
-
-procedure RefreshInputDevices;
-begin
-  if (Input = nil) or not InputAvailable then
-    Exit;
-
-  if Input.Refresh then
-  begin
-    PopulateDevices;
-    NextDeviceCheck := GetTickCount64External +
-      INPUT_DEVICE_CHECK_INTERVAL;
-    AddEventLog('Device enumeration refreshed.');
-  end
-  else
-    SetInputStatus('Refresh failed: ' + Input.LastError);
 end;
 
 // ---------------------------------------------------------------------------
@@ -748,7 +557,6 @@ begin
       'Нажми нужную клавишу или кнопку. Ожидается назначение для действия ' +
       InputActionName(Action) + '.');
     SetInputStatus('Ожидание кнопки для действия ' + InputActionName(Action) + '.');
-    AddEventLog('Started custom assignment for ' + InputActionName(Action) + '.');
     Doc.Changed;
   end
   else
@@ -827,7 +635,22 @@ begin
   if DeviceName = 'Keyboard' then
     DeviceName := 'Клавиатура'
   else if DeviceName = 'Mouse' then
-    DeviceName := 'Мышь'
+  begin
+    DeviceName := 'Мышь';
+    if Kind = Ord(Button) then
+      case Code of
+        0: ElementName := 'Левая кнопка';
+        1: ElementName := 'Правая кнопка';
+        2: ElementName := 'Средняя кнопка';
+        3: ElementName := 'Назад';
+        4: ElementName := 'Вперёд';
+      end
+    else if Kind = Ord(RelativeAxis) then
+      case Code of
+        2: ElementName := 'Колесо';
+        3: ElementName := 'Горизонтальное колесо';
+      end;
+  end
   else if DeviceName = '' then
     DeviceName := 'Устройство';
 
@@ -872,8 +695,7 @@ begin
     SetBindingText(Action, BindingText);
     SetTextById('capture-status', 'Готово: ' + InputActionName(Action) +
       ' — ' + BindingText + '. Нажми назначенную кнопку, чтобы проверить.');
-    SetInputStatus(InputActionName(Action) + ' assigned successfully.');
-    AddEventLog('Assigned ' + InputActionName(Action) + '.');
+    SetInputStatus('Назначено действие «' + InputActionName(Action) + '».');
   end
   else
   begin
@@ -882,51 +704,6 @@ begin
   end;
 
   CaptureAction := 0;
-  Doc.Changed;
-end;
-
-procedure ClearAllBindings;
-begin
-  if Input = nil then
-    Exit;
-
-  Input.CancelCapture;
-  Input.ClearBindings;
-  CaptureAction := 0;
-  DefaultXboxBindingsApplied := False;
-
-  CustomNextAssigned := False;
-  CustomBackAssigned := False;
-  CustomCancelAssigned := False;
-  ActionNextDown := False;
-  ActionBackDown := False;
-  ActionCancelDown := False;
-  XboxNextDown := False;
-  XboxBackDown := False;
-  XboxCancelDown := False;
-
-  SetTextById('custom-binding-next', 'Не назначено');
-  SetTextById('custom-binding-back', 'Не назначено');
-  SetTextById('custom-binding-cancel', 'Не назначено');
-  SetTextById('custom-state-next', 'NOT SET');
-  SetTextById('custom-state-back', 'NOT SET');
-  SetTextById('custom-state-cancel', 'NOT SET');
-
-  SetClassById('custom-state-next', 'custom-state');
-  SetClassById('custom-state-back', 'custom-state');
-  SetClassById('custom-state-cancel', 'custom-state');
-  SetClassById('custom-row-next', 'custom-row');
-  SetClassById('custom-row-back', 'custom-row');
-  SetClassById('custom-row-cancel', 'custom-row');
-
-  SetActionStateVisual(ACTION_XBOX_NEXT, False);
-  SetActionStateVisual(ACTION_XBOX_BACK, False);
-  SetActionStateVisual(ACTION_XBOX_CANCEL, False);
-
-  SetTextById('xbox-status',
-    'Xbox-назначения очищены. Перезапусти демо или обнови подключение контроллера.');
-  SetTextById('capture-status', 'Все назначения очищены.');
-  SetInputStatus('Все назначения очищены.');
   Doc.Changed;
 end;
 
@@ -1033,78 +810,6 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-// Profile and rumble
-// ---------------------------------------------------------------------------
-procedure SaveInputProfile;
-begin
-  if Input = nil then
-    Exit;
-
-  if Input.SaveProfile(ProfileFileName) then
-  begin
-    SetInputStatus('Profile saved to the Setup temporary directory.');
-    AddEventLog('Input profile saved.');
-  end
-  else
-    SetInputStatus('Profile save failed: ' + Input.LastError);
-end;
-
-procedure LoadInputProfile;
-begin
-  if Input = nil then
-    Exit;
-
-  if not FileExists(ProfileFileName) then
-  begin
-    SetInputStatus('No saved profile exists in this Setup session.');
-    Exit;
-  end;
-
-  if Input.LoadProfile(ProfileFileName) then
-  begin
-    SetBindingText(ACTION_NEXT, 'Assigned (restored from profile)');
-    SetBindingText(ACTION_BACK, 'Assigned (restored from profile)');
-    SetBindingText(ACTION_CANCEL, 'Assigned (restored from profile)');
-    SetInputStatus('Profile loaded. Saved assignments are active.');
-    SetTextById('capture-status', 'Profile loaded. The saved assignments are active; press a bound control to test them.');
-    UpdateActionState;
-    AddEventLog('Input profile loaded.');
-  end
-  else
-    SetInputStatus('Profile load failed: ' + Input.LastError);
-  Doc.Changed;
-end;
-
-procedure TestRumble;
-var
-  DeviceIndex: Integer;
-begin
-  if Input = nil then
-    Exit;
-
-  DeviceIndex := FindSelectedDeviceIndex;
-  if DeviceIndex < 0 then
-  begin
-    SetInputStatus('Select an input device first.');
-    Exit;
-  end;
-
-  if not Input.DeviceRumbleSupported(DeviceIndex) then
-  begin
-    SetInputStatus('Rumble is not supported by the selected device.');
-    Exit;
-  end;
-
-  if Input.SetRumble(SelectedDeviceID, 30000, 52000, 350) then
-  begin
-    SetInputStatus('Vibration test sent (350 ms).');
-    AddEventLog('Vibration test sent to the selected controller.');
-  end
-  else
-    SetInputStatus('Vibration test failed: ' + Input.LastError);
-end;
-
-// ---------------------------------------------------------------------------
 // HTML click routing
 // ---------------------------------------------------------------------------
 function ElementClick(Sender, El: TObject): Boolean;
@@ -1186,8 +891,7 @@ begin
     if not Input.Poll then
     begin
       InputAvailable := False;
-      SetInputStatus('Input polling stopped: ' + Input.LastError);
-      AddEventLog('POLL ERROR: ' + Input.LastError);
+      SetInputStatus('Опрос устройств остановлен: ' + Input.LastError);
       Doc.Changed;
       KillTimer(0, InputTimerID);
       InputTimerID := 0;
@@ -1207,8 +911,7 @@ begin
   except
     ErrorText := GetExceptionMessage;
     InputAvailable := False;
-    SetInputStatus('INPUT ERROR: ' + ErrorText);
-    AddEventLog('Input timer stopped: ' + ErrorText);
+    SetInputStatus('Ошибка ввода: ' + ErrorText);
     Doc.Changed;
     KillTimer(0, InputTimerID);
     InputTimerID := 0;
@@ -1240,7 +943,6 @@ begin
   InputTimerID := 0;
   NextDeviceCheck := 0;
   CaptureAction := 0;
-  EventCount := 0;
   DefaultXboxBindingsApplied := False;
 
   ActionNextDown := False;
@@ -1259,10 +961,7 @@ begin
   BindingTextBack := 'Не назначено';
   BindingTextCancel := 'Не назначено';
 
-  SelectedDeviceID := '';
   DeviceIDs := TStringList.Create;
-
-  ProfileFileName := ExpandConstant('{tmp}') + '\FMXPixieInputProfile.json';
 
   EmptyWizardForm(DEMO_FORM_WIDTH, DEMO_FORM_HEIGHT);
   FMXForm.FCreateBackdropForm(WizardForm.Handle, btMain, True, True);
@@ -1295,8 +994,7 @@ begin
     Input := InitInput;
     InputAvailable := Input <> nil;
   except
-    SetInputStatus('FMXInput initialization failed: ' + GetExceptionMessage);
-    AddEventLog('FMXInput initialization failed.');
+    SetInputStatus('Ошибка инициализации ввода: ' + GetExceptionMessage);
   end;
 
   if InputAvailable then
@@ -1310,7 +1008,7 @@ begin
         SetInputStatus('Ввод готов. Подключите Xbox или назначьте свои кнопки справа.');
     end
     else
-      SetInputStatus('Initial device refresh failed: ' + Input.LastError);
+      SetInputStatus('Не удалось обновить устройства: ' + Input.LastError);
 
     NextDeviceCheck := GetTickCount64External +
       INPUT_DEVICE_CHECK_INTERVAL;
@@ -1320,11 +1018,11 @@ begin
     if InputTimerID = 0 then
     begin
       InputAvailable := False;
-      SetInputStatus('Unable to create the input polling timer.');
+      SetInputStatus('Не удалось запустить таймер опроса устройств.');
     end;
   end
   else
-    SetInputStatus('FMXInput is unavailable. Check the DLL and initialization error.');
+    SetInputStatus('Служба ввода недоступна. Проверь DLL и причину ошибки инициализации.');
 
   FMXForm.Show;
 end;
