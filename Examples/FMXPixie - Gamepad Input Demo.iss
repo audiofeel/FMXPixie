@@ -167,7 +167,7 @@ begin
   if EventsMemo = nil then
     Exit;
 
-  EventsMemo.Lines.Add(FormatDateTime('hh:nn:ss', Now) + '  ' + Text);
+  EventsMemo.Lines.Add(GetDateTimeString('hh:nn:ss', #0, ':') + '  ' + Text);
   while EventsMemo.Lines.Count > 100 do
     EventsMemo.Lines.Delete(0);
   EventsMemo.SelStart := Length(EventsMemo.Text);
