@@ -1,4 +1,4 @@
-unit Pixie.ElInput;
+﻿unit Pixie.ElInput;
 
 // Owner-drawn <input type="checkbox">, <input type="radio"> and <button>
 // elements. All are replaced elements that draw their own visuals.
@@ -23,6 +23,7 @@ type
     constructor Create(ADoc: TObject);
 
     procedure Toggle;
+    procedure SetChecked(AValue: Boolean);
     function IsReplaced: Boolean; override;
     procedure ParseAttributes; override;
     procedure GetContentSize(var Sz: TPixieSize;
@@ -53,6 +54,7 @@ type
     constructor Create(ADoc: TObject);
 
     procedure Toggle;
+    procedure SetChecked(AValue: Boolean);
     function IsReplaced: Boolean; override;
     procedure ParseAttributes; override;
     procedure GetContentSize(var Sz: TPixieSize;
@@ -258,6 +260,15 @@ begin
     FChecked := not FChecked;
     SetPseudoClass(Ord(psid_checked), FChecked);
   end;
+end;
+
+procedure TPixieElCheckbox.SetChecked(AValue: Boolean);
+begin
+  if FChecked = AValue then
+    Exit;
+
+  FChecked := AValue;
+  SetPseudoClass(Ord(psid_checked), FChecked);
 end;
 
 procedure TPixieElCheckbox.OnClick;
@@ -468,6 +479,18 @@ begin
     FChecked := True;
     SetPseudoClass(Ord(psid_checked), True);
   end;
+end;
+
+procedure TPixieElRadio.SetChecked(AValue: Boolean);
+begin
+  if FChecked = AValue then
+    Exit;
+
+  if AValue then
+    UncheckSiblings;
+
+  FChecked := AValue;
+  SetPseudoClass(Ord(psid_checked), FChecked);
 end;
 
 procedure TPixieElRadio.OnClick;
