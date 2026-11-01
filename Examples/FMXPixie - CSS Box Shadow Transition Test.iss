@@ -1,0 +1,279 @@
+﻿; ============================================================================
+; FMXPixie - CSS Box Shadow Transition Test
+;
+; Static and animated CSS box-shadow regression coverage:
+;   static shadow, none-to-shadow, geometry/color interpolation, delay,
+;   combined background-color transition, and rapid retargeting.
+;
+; Build from the Examples directory beside Modules\ and Files\.
+; Use a DLL built from feature/css-layout-transition-displaylink.
+; ============================================================================
+
+#define DemoAppName "FMXPixie - CSS Box Shadow Transition Test"
+#define DemoAppVersion "1.0"
+
+[Setup]
+AppName={#DemoAppName}
+AppVersion={#DemoAppVersion}
+CreateAppDir=no
+Uninstallable=no
+OutputBaseFilename=FMXPixie - CSS Box Shadow Transition Test
+//SetupArchitecture=x64
+SetupIconFile=Files\setup.ico
+
+[Files]
+#if SetupSetting("SetupArchitecture") == "x64"
+Source: "Modules\FMXPixie_x64.dll"; DestName: "FMXPixie.dll"; Flags: dontcopy
+#else
+Source: "Modules\FMXPixie_x86.dll"; DestName: "FMXPixie.dll"; Flags: dontcopy
+#endif
+
+[Code]
+#include "Modules\FMXPixieHandle.iss"
+
+const
+  TEST_FORM_WIDTH = 1080;
+  TEST_FORM_HEIGHT = 820;
+  TITLEBAR_HEIGHT = 42;
+  TITLEBAR_BUTTONS_WIDTH = 92;
+
+var
+  FMXForm: FForm;
+  View: FPixieHtmlView;
+  Elem: FPixieElement;
+
+function BuildTestHtml: String;
+begin
+  Result :=
+    '<!doctype html><html><head><meta charset="utf-8"><style>' +
+    '*{box-sizing:border-box;}' +
+    'html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;}' +
+    'body{background:#e6edf5;color:#1e293b;font-family:"Segoe UI",Arial,sans-serif;font-size:13px;}' +
+    '.titlebar{position:relative;height:42px;line-height:41px;background:#101a2b;border-bottom:1px solid #263852;overflow:hidden;}' +
+    '.brand{margin-left:16px;color:#88c9ff;font-size:11px;font-weight:bold;letter-spacing:1.5px;}' +
+    '.subtitle{margin-left:13px;color:#8498b4;font-size:10px;}' +
+    '.window-controls{position:absolute;right:0;top:0;width:92px;height:41px;font-size:0;}' +
+    '.window-button{display:inline-block;vertical-align:top;width:46px;height:41px;line-height:40px;text-align:center;font-size:19px;color:#d8e2f0;cursor:pointer;transition:background-color 150ms ease-out;}' +
+    '.window-button:hover{background-color:#263750;}' +
+    '.window-close:hover{background-color:#c43c4a;}' +
+    '.page{padding:20px 24px;}' +
+    '.eyebrow{color:#62d8c3;font-size:9px;font-weight:bold;letter-spacing:2px;}' +
+    '.headline{margin-top:5px;font-size:25px;font-weight:600;letter-spacing:-.4px;color:#f4f7fc;}' +
+    '.intro{margin-top:7px;max-width:980px;color:#526277;font-size:11px;line-height:1.5;}' +
+    '.section-title{margin-top:17px;margin-bottom:10px;color:#17649b;font-size:9px;font-weight:bold;letter-spacing:1.3px;}' +
+    '.row{display:flex;margin-top:8px;padding:30px 5px 36px;}' +
+    '.row-three .card{width:30%;margin-right:5%;}' +
+    '.row-three .card:last-child{margin-right:0;}' +
+    '.card{position:relative;width:20%;height:142px;margin-right:6.66%;padding:13px;border:1px solid #b8c7d8;border-radius:12px;background:#ffffff;}' +
+    '.card:last-child{margin-right:0;}' +
+    '.card-index{font-size:9px;font-weight:bold;letter-spacing:1.1px;color:#64748b;}' +
+    '.card-title{margin-top:15px;font-size:16px;font-weight:600;color:#172033;}' +
+    '.card-copy{margin-top:7px;color:#526277;font-size:10px;line-height:1.45;}' +
+    '.card-hint{position:absolute;left:13px;right:13px;bottom:11px;padding-top:7px;border-top:1px solid #d8e1eb;color:#17649b;font-size:8px;letter-spacing:.6px;}' +
+    '#shadow-static{box-shadow:0 5px 24px 4px rgba(15,23,42,.70);}' +
+    '#shadow-hover{box-shadow:0 1px 5px 0 rgba(0,0,0,.16);transition:box-shadow 340ms cubic-bezier(.2,.75,.25,1);}' +
+    '#shadow-hover:hover{box-shadow:0 6px 30px 4px rgba(0,150,255,.92);}' +
+    '#shadow-none{box-shadow:none;transition:box-shadow 380ms ease-out;}' +
+    '#shadow-none:hover{box-shadow:0 5px 28px 2px rgba(124,58,237,.94);}' +
+    '#shadow-delay{box-shadow:0 1px 5px 0 rgba(0,0,0,.16);transition-property:box-shadow;transition-duration:260ms;transition-timing-function:ease-out;transition-delay:320ms;}' +
+    '#shadow-delay:hover{box-shadow:0 5px 24px 3px rgba(249,115,22,.95);}' +
+    '#shadow-combo{background-color:#152238;box-shadow:0 1px 5px 0 rgba(0,0,0,.16);transition:background-color 220ms linear,box-shadow 360ms ease-out;}' +
+    '#shadow-combo:hover{background-color:#164e63;box-shadow:0 5px 26px 3px rgba(20,184,166,.95);}' +
+    '#shadow-retarget{box-shadow:0 0 0 0 rgba(56,189,248,0);transition:box-shadow 560ms ease-in-out;}' +
+    '#shadow-retarget:hover{box-shadow:0 6px 32px 5px rgba(56,189,248,.96);}' +
+    '#shadow-spread{box-shadow:0 2px 8px -3px rgba(0,0,0,.3);transition:box-shadow 360ms ease-out;}' +
+    '#shadow-spread:hover{box-shadow:0 4px 20px 7px rgba(244,63,94,.94);}' +
+    '.intensity-radio{display:none;}' +
+    '.intensity-panel{display:flex;align-items:center;gap:7px;margin-top:13px;margin-bottom:4px;padding:10px 12px;border:1px solid #b8c7d8;border-radius:9px;background:#f8fafc;}' +
+    '.intensity-label{margin-right:5px;color:#334155;font-size:10px;font-weight:bold;letter-spacing:.7px;}' +
+    '.intensity-choice{min-width:48px;padding:6px 9px;border:1px solid #b8c7d8;border-radius:6px;background:#fff;color:#334155;text-align:center;font-size:10px;font-weight:600;cursor:pointer;}' +
+    '.intensity-choice:hover{background:#eaf3fb;border-color:#8ba9c6;}' +
+    '.intensity-help{margin-left:auto;color:#64748b;font-size:9px;}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-static{box-shadow:0 5px 24px 4px rgba(15,23,42,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-hover{box-shadow:0 1px 5px 0 rgba(0,0,0,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-hover:hover{box-shadow:0 6px 30px 4px rgba(0,150,255,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-none:hover{box-shadow:0 5px 28px 2px rgba(124,58,237,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-delay{box-shadow:0 1px 5px 0 rgba(0,0,0,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-delay:hover{box-shadow:0 5px 24px 3px rgba(249,115,22,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-combo{box-shadow:0 1px 5px 0 rgba(0,0,0,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-combo:hover{box-shadow:0 5px 26px 3px rgba(20,184,166,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-retarget:hover{box-shadow:0 6px 32px 5px rgba(56,189,248,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-spread{box-shadow:0 2px 8px -3px rgba(0,0,0,.15);}' +
+    '#intensity-15:checked ~ .shadow-content #shadow-spread:hover{box-shadow:0 4px 20px 7px rgba(244,63,94,.15);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-static{box-shadow:0 5px 24px 4px rgba(15,23,42,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-hover{box-shadow:0 1px 5px 0 rgba(0,0,0,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-hover:hover{box-shadow:0 6px 30px 4px rgba(0,150,255,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-none:hover{box-shadow:0 5px 28px 2px rgba(124,58,237,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-delay{box-shadow:0 1px 5px 0 rgba(0,0,0,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-delay:hover{box-shadow:0 5px 24px 3px rgba(249,115,22,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-combo{box-shadow:0 1px 5px 0 rgba(0,0,0,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-combo:hover{box-shadow:0 5px 26px 3px rgba(20,184,166,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-retarget:hover{box-shadow:0 6px 32px 5px rgba(56,189,248,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-spread{box-shadow:0 2px 8px -3px rgba(0,0,0,.30);}' +
+    '#intensity-30:checked ~ .shadow-content #shadow-spread:hover{box-shadow:0 4px 20px 7px rgba(244,63,94,.30);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-static{box-shadow:0 5px 24px 4px rgba(15,23,42,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-hover{box-shadow:0 1px 5px 0 rgba(0,0,0,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-hover:hover{box-shadow:0 6px 30px 4px rgba(0,150,255,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-none:hover{box-shadow:0 5px 28px 2px rgba(124,58,237,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-delay{box-shadow:0 1px 5px 0 rgba(0,0,0,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-delay:hover{box-shadow:0 5px 24px 3px rgba(249,115,22,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-combo{box-shadow:0 1px 5px 0 rgba(0,0,0,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-combo:hover{box-shadow:0 5px 26px 3px rgba(20,184,166,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-retarget:hover{box-shadow:0 6px 32px 5px rgba(56,189,248,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-spread{box-shadow:0 2px 8px -3px rgba(0,0,0,.45);}' +
+    '#intensity-45:checked ~ .shadow-content #shadow-spread:hover{box-shadow:0 4px 20px 7px rgba(244,63,94,.45);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-static{box-shadow:0 5px 24px 4px rgba(15,23,42,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-hover{box-shadow:0 1px 5px 0 rgba(0,0,0,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-hover:hover{box-shadow:0 6px 30px 4px rgba(0,150,255,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-none:hover{box-shadow:0 5px 28px 2px rgba(124,58,237,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-delay{box-shadow:0 1px 5px 0 rgba(0,0,0,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-delay:hover{box-shadow:0 5px 24px 3px rgba(249,115,22,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-combo{box-shadow:0 1px 5px 0 rgba(0,0,0,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-combo:hover{box-shadow:0 5px 26px 3px rgba(20,184,166,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-retarget:hover{box-shadow:0 6px 32px 5px rgba(56,189,248,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-spread{box-shadow:0 2px 8px -3px rgba(0,0,0,.60);}' +
+    '#intensity-60:checked ~ .shadow-content #shadow-spread:hover{box-shadow:0 4px 20px 7px rgba(244,63,94,.60);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-static{box-shadow:0 5px 24px 4px rgba(15,23,42,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-hover{box-shadow:0 1px 5px 0 rgba(0,0,0,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-hover:hover{box-shadow:0 6px 30px 4px rgba(0,150,255,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-none:hover{box-shadow:0 5px 28px 2px rgba(124,58,237,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-delay{box-shadow:0 1px 5px 0 rgba(0,0,0,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-delay:hover{box-shadow:0 5px 24px 3px rgba(249,115,22,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-combo{box-shadow:0 1px 5px 0 rgba(0,0,0,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-combo:hover{box-shadow:0 5px 26px 3px rgba(20,184,166,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-retarget:hover{box-shadow:0 6px 32px 5px rgba(56,189,248,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-spread{box-shadow:0 2px 8px -3px rgba(0,0,0,.75);}' +
+    '#intensity-75:checked ~ .shadow-content #shadow-spread:hover{box-shadow:0 4px 20px 7px rgba(244,63,94,.75);}' +
+    '#intensity-15:checked ~ .intensity-panel .choice-15{background:#17649b;border-color:#17649b;color:#fff;}' +
+    '#intensity-30:checked ~ .intensity-panel .choice-30{background:#17649b;border-color:#17649b;color:#fff;}' +
+    '#intensity-45:checked ~ .intensity-panel .choice-45{background:#17649b;border-color:#17649b;color:#fff;}' +
+    '#intensity-60:checked ~ .intensity-panel .choice-60{background:#17649b;border-color:#17649b;color:#fff;}' +
+    '#intensity-75:checked ~ .intensity-panel .choice-75{background:#17649b;border-color:#17649b;color:#fff;}' +
+    '.note{margin-top:14px;padding:11px 13px;border:1px solid #b8c7d8;background:#f8fafc;color:#526277;font-size:10px;line-height:1.55;}' +
+    '.note strong{color:#172033;}' +
+    '.footer{margin-top:12px;padding-top:8px;border-top:1px solid #c5d1df;color:#64748b;font-size:8px;letter-spacing:.8px;}' +
+    '</style></head><body>' +
+    '<div class="titlebar">' +
+    '<span class="brand">FMXPIXIE / BOX-SHADOW LAB</span>' +
+    '<span class="subtitle">DisplayLink shadow test · hover TEST 02–07</span>' +
+    '<div class="window-controls">' +
+    '<div id="title-minimize" class="window-button" title="Свернуть">−</div>' +
+    '<div id="title-close" class="window-button window-close" title="Закрыть">×</div>' +
+    '</div></div>' +
+    '<div class="page">' +
+    '<div class="eyebrow">CSS BOX-SHADOW / STATIC + TRANSITION</div>' +
+    '<div class="headline">Тень: отрисовка и плавное изменение</div>' +
+    '<div class="intro">Сначала проверьте статическую серую тень слева. Она должна быть видна постоянно и иметь мягкий край. На остальных карточках наведите курсор и уберите его: меняются смещение, размытие, spread и цвет. Тень должна появляться и исчезать без скачка; у карточки 04 начало специально задержано.</div>' +
+    '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-15" />' +
+    '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-30" checked />' +
+    '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-45" />' +
+    '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-60" />' +
+    '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-75" />' +
+    '<div class="intensity-panel"><span class="intensity-label">ИНТЕНСИВНОСТЬ ТЕНИ</span>' +
+    '<label class="intensity-choice choice-15" for="intensity-15">15%</label>' +
+    '<label class="intensity-choice choice-30" for="intensity-30">30%</label>' +
+    '<label class="intensity-choice choice-45" for="intensity-45">45%</label>' +
+    '<label class="intensity-choice choice-60" for="intensity-60">60%</label>' +
+    '<label class="intensity-choice choice-75" for="intensity-75">75%</label>' +
+    '<span class="intensity-help">Общий уровень для всех тестов, включая HOVER</span></div>' +
+    '<div class="shadow-content">' +
+    '<div class="section-title">01 / STATIC SHADOW — БЕЗ АНИМАЦИИ</div>' +
+    '<div class="row">' +
+    '<div id="shadow-static" class="card"><div class="card-index">TEST 01 / STATIC</div><div class="card-title">Обычная тень</div><div class="card-copy">Постоянная контрастная RGBA-тень с размытием. Это проверка разбора rgba(), blur и самого вызова отрисовки.</div><div class="card-hint">0 5px 24px 4px · RGBA + BLUR</div></div>' +
+    '<div id="shadow-hover" class="card"><div class="card-index">TEST 02 / HOVER</div><div class="card-title">Изменение параметров</div><div class="card-copy">Смещение, blur, spread и цвет меняются вместе.</div><div class="card-hint">340 ms · CUBIC-BEZIER</div></div>' +
+    '<div id="shadow-none" class="card"><div class="card-index">TEST 03 / NONE → SHADOW</div><div class="card-title">Появление тени</div><div class="card-copy">Переход из box-shadow:none и обратно.</div><div class="card-hint">380 ms · EASE-OUT</div></div>' +
+    '<div id="shadow-delay" class="card"><div class="card-index">TEST 04 / DELAY</div><div class="card-title">Задержка старта</div><div class="card-copy">После наведения тень начинает меняться через 320 ms.</div><div class="card-hint">320 ms DELAY · 260 ms DURATION</div></div>' +
+    '</div>' +
+    '<div class="section-title">02 / COMBINED + RETARGET + SPREAD</div>' +
+    '<div class="row row-three">' +
+    '<div id="shadow-combo" class="card"><div class="card-index">TEST 05 / COMBINED</div><div class="card-title">Два свойства</div><div class="card-copy">Цвет фона и тень анимируются одновременно.</div><div class="card-hint">BACKGROUND + BOX-SHADOW</div></div>' +
+    '<div id="shadow-retarget" class="card"><div class="card-index">TEST 06 / RETARGET</div><div class="card-title">Быстрый реверс</div><div class="card-copy">Быстро входите и выходите до окончания анимации.</div><div class="card-hint">560 ms · EASE-IN-OUT</div></div>' +
+    '<div id="shadow-spread" class="card"><div class="card-index">TEST 07 / SPREAD</div><div class="card-title">Распространение</div><div class="card-copy">Отрицательный spread переходит в положительный.</div><div class="card-hint">360 ms · EASE-OUT</div></div>' +
+    '</div>' +
+    '<div class="note"><strong>Что проверять:</strong> Регулятор выше меняет интенсивность всех теней (включая состояния HOVER) без изменения геометрии. TEST 01 показывает постоянную тень. TEST 02–07 должны реагировать на наведение и возвращаться к исходному состоянию после ухода курсора. Для TEST 06 быстро наведите и уберите курсор несколько раз до завершения перехода: тень должна менять направление от текущего состояния. У всех теней проверьте мягкость края и соответствие скруглениям карточки. <strong>Ограничения:</strong> одна внешняя тень; поддерживаются 2–4 длины (offset-x, offset-y, blur, spread) и один цвет, включая rgba() и currentColor. Несколько теней через запятую и inset пока не поддерживаются. Размытие аппроксимируется несколькими полупрозрачными скруглёнными слоями, а не точным Gaussian blur.</div>' +
+    '<div class="footer">FMXPIXIE · BOX-SHADOW TRANSITIONS ON FMX DISPLAY LINK · NO NEW TIMER · EXPERIMENTAL BRANCH</div>' +
+    '</div></div></body></html>';
+end;
+
+procedure CloseSetup;
+begin
+  WizardForm.CancelButton.OnClick(WizardForm.CancelButton);
+end;
+
+function ElementClick(Sender, El: TObject): Boolean;
+var
+  H: NativeInt;
+  Id: String;
+begin
+  Result := False;
+  if El = nil then
+    Exit;
+
+  H := NativeInt(El);
+  while H <> 0 do
+  begin
+    Elem.FCreate(H);
+    Id := Elem.GetAttr('id', '');
+    if Id <> '' then
+      Break;
+    H := Elem.Parent;
+  end;
+
+  if H = 0 then
+    Exit;
+
+  if Id = 'title-minimize' then
+  begin
+    FMXForm.Minimize;
+    Result := True;
+  end
+  else if Id = 'title-close' then
+  begin
+    CloseSetup;
+    Result := True;
+  end;
+end;
+
+procedure ViewMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Single);
+begin
+  if Button <> mbLeft then
+    Exit;
+
+  if (Y >= 0) and (Y < TITLEBAR_HEIGHT) and
+     (X < View.GetWidth - TITLEBAR_BUTTONS_WIDTH) then
+    FMXForm.StartWindowDrag;
+end;
+
+procedure InitializeWizard;
+begin
+  EmptyWizardForm(TEST_FORM_WIDTH, TEST_FORM_HEIGHT);
+
+  FMXForm := InitFormHandle;
+  View := InitPixieHtmlView;
+  Elem := InitPixieElement;
+
+  FMXForm.FCreateBackdropForm(WizardForm.Handle, btMain, True, True);
+
+  View.FCreate(FMXForm.Handle);
+  View.Left(0);
+  View.Top(0);
+  View.Width(TEST_FORM_WIDTH);
+  View.Height(TEST_FORM_HEIGHT);
+  View.ColorScheme(pcsDark);
+  View.OnElementClick(@ElementClick);
+  View.OnMouseDown(@ViewMouseDown);
+  View.LoadFromString(BuildTestHtml);
+
+  FMXForm.Show;
+end;
+
+procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);
+begin
+  Confirm := False;
+end;
+
+procedure DeinitializeSetup;
+begin
+  FMXPixieShutDown;
+end;
