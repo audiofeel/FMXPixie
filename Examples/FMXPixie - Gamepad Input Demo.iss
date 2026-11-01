@@ -341,13 +341,25 @@ procedure SetInputStatus(const S: String);
 begin
   SetTextById('input-status', S);
   if not InputAvailable then
-    SetTextById('input-state', 'INPUT: OFFLINE')
+  begin
+    SetTextById('input-state', 'INPUT: OFFLINE');
+    SetClassById('status-dot', 'status-dot');
+  end
   else if Input = nil then
-    SetTextById('input-state', 'INPUT: OFFLINE')
+  begin
+    SetTextById('input-state', 'INPUT: OFFLINE');
+    SetClassById('status-dot', 'status-dot');
+  end
   else if Input.IsEnabled then
-    SetTextById('input-state', 'INPUT: ON')
+  begin
+    SetTextById('input-state', 'INPUT: ON');
+    SetClassById('status-dot', 'status-dot on');
+  end
   else
+  begin
     SetTextById('input-state', 'INPUT: PAUSED');
+    SetClassById('status-dot', 'status-dot');
+  end;
 end;
 
 procedure AddEventLog(const S: String);
@@ -593,6 +605,9 @@ var
 begin
   if (Index < 0) or (Index >= DeviceIDs.Count) then
     Exit;
+
+  if (Input <> nil) and Input.Capturing then
+    CancelCurrentCapture;
 
   SelectedDeviceID := DeviceIDs[Index];
   Doc.BeginUpdate;
@@ -857,6 +872,7 @@ begin
     SetBindingText(ACTION_CANCEL, 'Restored from profile (details not exposed)');
     SetInputStatus('Profile loaded. Saved bindings are active.');
     SetTextById('capture-status', 'Loaded profile: ' + ProfileFileName);
+    UpdateActionState;
     AddEventLog('Input profile loaded.');
   end
   else
