@@ -190,7 +190,8 @@ begin
     '.panel-caption{font-size:9px;font-weight:600;color:#8292a8;letter-spacing:.8px;}' +
     '.panel-note{font-size:10px;line-height:15px;color:#8999ae;margin:12px 0 15px 0;}' +
     '.xbox-row{display:flex;align-items:center;justify-content:space-between;' +
-    'min-height:70px;padding:10px 12px;margin:0 0 9px 0;' +
+    'width:100%;min-height:70px;padding:10px 12px;margin:0 0 9px 0;' +
+    'text-align:left;cursor:pointer;color:#e5edf8;' +
     'background:#162338;border:1px solid #2b3e58;border-radius:7px;}' +
     '.xbox-row.is-down{background:#173d36;border-color:#38b78a;}' +
     '.xbox-copy{display:flex;flex-direction:column;}' +
@@ -245,17 +246,17 @@ begin
     '<div class="panel-head"><span>XBOX — ГОТОВАЯ РАСКЛАДКА</span><span class="panel-caption">XINPUT</span></div>' +
     '<div class="panel-note">Готовая схема Xbox. При подключении XInput-контроллера A / B / X назначатся автоматически.</div>' +
 
-    '<div id="xbox-row-next" class="xbox-row">' +
+    '<button id="xbox-row-next" class="xbox-row" type="button">' +
     '<div class="xbox-copy"><span class="xbox-title">Далее</span><span class="xbox-hint">Продолжить / подтвердить</span></div>' +
-    '<div class="xbox-right"><span id="xbox-state-next" class="xbox-state">NO PAD</span><span class="xbox-key xbox-a">A</span></div></div>' +
+    '<div class="xbox-right"><span id="xbox-state-next" class="xbox-state">NO PAD</span><span class="xbox-key xbox-a">A</span></div></button>' +
 
-    '<div id="xbox-row-back" class="xbox-row">' +
+    '<button id="xbox-row-back" class="xbox-row" type="button">' +
     '<div class="xbox-copy"><span class="xbox-title">Назад</span><span class="xbox-hint">Вернуться к предыдущему шагу</span></div>' +
-    '<div class="xbox-right"><span id="xbox-state-back" class="xbox-state">NO PAD</span><span class="xbox-key xbox-b">B</span></div></div>' +
+    '<div class="xbox-right"><span id="xbox-state-back" class="xbox-state">NO PAD</span><span class="xbox-key xbox-b">B</span></div></button>' +
 
-    '<div id="xbox-row-cancel" class="xbox-row">' +
+    '<button id="xbox-row-cancel" class="xbox-row" type="button">' +
     '<div class="xbox-copy"><span class="xbox-title">Отмена</span><span class="xbox-hint">Закрыть / отменить действие</span></div>' +
-    '<div class="xbox-right"><span id="xbox-state-cancel" class="xbox-state">NO PAD</span><span class="xbox-key xbox-x">X</span></div></div>' +
+    '<div class="xbox-right"><span id="xbox-state-cancel" class="xbox-state">NO PAD</span><span class="xbox-key xbox-x">X</span></div></button>' +
 
     '<div id="xbox-status" class="xbox-status">Ожидание Xbox-контроллера. Раскладка: A — Далее, B — Назад, X — Отмена.</div>' +
     '</div>' +
@@ -842,6 +843,25 @@ begin
   if Id = 'title-close' then
   begin
     WizardForm.Close;
+    Result := True;
+    Exit;
+  end;
+
+  if Id = 'xbox-row-next' then
+  begin
+    SetInputStatus('Нажатие мышью: «Далее». Физическая кнопка Xbox — A.');
+    Result := True;
+    Exit;
+  end
+  else if Id = 'xbox-row-back' then
+  begin
+    SetInputStatus('Нажатие мышью: «Назад». Физическая кнопка Xbox — B.');
+    Result := True;
+    Exit;
+  end
+  else if Id = 'xbox-row-cancel' then
+  begin
+    SetInputStatus('Нажатие мышью: «Отмена». Физическая кнопка Xbox — X.');
     Result := True;
     Exit;
   end;
