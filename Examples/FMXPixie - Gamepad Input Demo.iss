@@ -907,7 +907,6 @@ function ElementClick(Sender, El: TObject): Boolean;
 var
   H: NativeInt;
   Id: String;
-  Index: Integer;
 begin
   Result := False;
   if El = nil then
@@ -946,39 +945,6 @@ begin
     StartCapture(ACTION_BACK)
   else if Id = 'custom-assign-cancel' then
     StartCapture(ACTION_CANCEL)
-  else if Id = 'title-close' then
-  begin
-    WizardForm.Close;
-    Result := True;
-    Exit;
-  end
-  else if Id = 'title-minimize' then
-  begin
-    FMXForm.Minimize;
-    Result := True;
-    Exit;
-  end
-  else if Id = 'refresh-devices' then
-  begin
-    if Input <> nil then
-    begin
-      Input.Enabled(not Input.IsEnabled);
-      if Input.IsEnabled then
-      begin
-        SetTextById('toggle-input', 'Pause input');
-        SetInputStatus('Input resumed.');
-        AddEventLog('Input resumed.');
-      end
-      else
-      begin
-        SetTextById('toggle-input', 'Resume input');
-        CancelCurrentCapture;
-        SetInputStatus('Input paused.');
-        AddEventLog('Input paused.');
-      end;
-      UpdateActionState;
-    end;
-  end
   else
     Exit;
 
