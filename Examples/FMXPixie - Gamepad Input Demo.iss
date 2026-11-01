@@ -597,6 +597,19 @@ begin
   UpdateSelectedDevice;
 end;
 
+procedure CancelCurrentCapture;
+begin
+  if Input <> nil then
+    if Input.Capturing then
+    begin
+      Input.CancelCapture;
+      AddEventLog('Capture cancelled.');
+    end;
+  CaptureAction := 0;
+  SetTextById('capture-status', 'Capture is not active.');
+  Doc.Changed;
+end;
+
 procedure SelectDevice(Index: Integer);
 var
   I: Integer;
@@ -693,19 +706,6 @@ begin
   end
   else
     SetInputStatus('Capture failed: ' + Input.LastError);
-end;
-
-procedure CancelCurrentCapture;
-begin
-  if Input <> nil then
-    if Input.Capturing then
-    begin
-      Input.CancelCapture;
-      AddEventLog('Capture cancelled.');
-    end;
-  CaptureAction := 0;
-  SetTextById('capture-status', 'Capture is not active.');
-  Doc.Changed;
 end;
 
 procedure HandleCapturedInput;
