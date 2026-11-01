@@ -194,6 +194,7 @@ begin
     '.panel-head{display:flex;align-items:center;justify-content:space-between;' +
     'font-size:14px;font-weight:700;color:#e5edf8;padding-bottom:11px;' +
     'border-bottom:1px solid #26364d;}' +
+    '.panel-caption{font-size:9px;font-weight:600;color:#8292a8;letter-spacing:.8px;}' +
     '.panel-note{font-size:10px;line-height:15px;color:#8999ae;margin:12px 0 15px 0;}' +
     '.xbox-row{display:flex;align-items:center;justify-content:space-between;' +
     'min-height:70px;padding:10px 12px;margin:0 0 9px 0;' +
@@ -249,15 +250,15 @@ begin
 
     '<div id="xbox-row-next" class="xbox-row">' +
     '<div class="xbox-copy"><span class="xbox-title">Далее</span><span class="xbox-hint">Продолжить / подтвердить</span></div>' +
-    '<div class="xbox-right"><span id="state-next" class="xbox-state">READY</span><span class="xbox-key xbox-a">A</span></div></div>' +
+    '<div class="xbox-right"><span id="state-next" class="xbox-state">RELEASED</span><span class="xbox-key xbox-a">A</span></div></div>' +
 
     '<div id="xbox-row-back" class="xbox-row">' +
     '<div class="xbox-copy"><span class="xbox-title">Назад</span><span class="xbox-hint">Вернуться к предыдущему шагу</span></div>' +
-    '<div class="xbox-right"><span id="state-back" class="xbox-state">READY</span><span class="xbox-key xbox-b">B</span></div></div>' +
+    '<div class="xbox-right"><span id="state-back" class="xbox-state">RELEASED</span><span class="xbox-key xbox-b">B</span></div></div>' +
 
     '<div id="xbox-row-cancel" class="xbox-row">' +
     '<div class="xbox-copy"><span class="xbox-title">Отмена</span><span class="xbox-hint">Закрыть / отменить действие</span></div>' +
-    '<div class="xbox-right"><span id="state-cancel" class="xbox-state">READY</span><span class="xbox-key xbox-x">X</span></div></div>' +
+    '<div class="xbox-right"><span id="state-cancel" class="xbox-state">RELEASED</span><span class="xbox-key xbox-x">X</span></div></div>' +
 
     '<div id="xbox-status" class="xbox-status">Ожидание Xbox-контроллера. Раскладка: A — Далее, B — Назад, X — Отмена.</div>' +
     '</div>' +
@@ -397,13 +398,13 @@ begin
   if Down then
   begin
     SetClassById(Id, 'xbox-state is-down');
-    SetClassById(ButtonId, 'game-action is-down');
+    SetClassById(ButtonId, 'xbox-row is-down');
     TextValue := 'PRESSED';
   end
   else
   begin
     SetClassById(Id, 'xbox-state');
-    SetClassById(ButtonId, 'game-action');
+    SetClassById(ButtonId, 'xbox-row');
     TextValue := 'RELEASED';
   end;
   SetTextById(Id, TextValue);
@@ -1054,7 +1055,7 @@ begin
 
   EmptyWizardForm(DEMO_FORM_WIDTH, DEMO_FORM_HEIGHT);
   FMXForm.FCreateBackdropForm(WizardForm.Handle, btMain, True, True);
-  FMXForm.Caption('FMXPixie - Input Demo');
+  FMXForm.Caption('FMXPixie - Game Menu Input Demo');
   FMXForm.ChangeBorderColor($FF2D5278);
 
   TitleView.FCreate(FMXForm.Handle);
