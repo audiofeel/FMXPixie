@@ -157,8 +157,8 @@ begin
     '.win:hover{background:#29374c;color:#fff;}' +
     '.close:hover{background:#c42b1c;color:#fff;}' +
     '</style></head><body><div class="bar">' +
-    '<span class="caption">FMXPIXIE / INPUT LAB</span>' +
-    '<span class="note">FMXInput device and binding monitor</span>' +
+    '<span class="caption">FMXPIXIE / INPUT DEMO</span>' +
+    '<span class="note">Keyboard / Mouse / Controller</span>' +
     '<div class="controls">' +
     '<div id="title-minimize" class="win">−</div>' +
     '<div id="title-close" class="win close">×</div>' +
@@ -191,7 +191,8 @@ begin
     '.panel-head{height:26px;display:flex;align-items:center;justify-content:space-between;' +
     'color:#dce7f5;font-size:12px;font-weight:700;}' +
     '.panel-caption{font-size:10px;color:#7f90a8;font-weight:400;}' +
-    '.device-list{height:calc(100% - 112px);overflow-y:auto;margin-top:7px;}' +
+    '.panel-hint{font-size:9px;line-height:13px;color:#8292a8;margin:4px 0 7px 0;}' +
+    '.device-list{height:calc(100% - 134px);overflow-y:auto;margin-top:4px;}' +
     '.device-row{display:block;width:100%;height:32px;margin:0 0 5px 0;padding:0 8px;' +
     'text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
     'background:#162338;border:1px solid #293b55;border-radius:4px;color:#aebed2;' +
@@ -211,8 +212,10 @@ begin
     'font-size:10px;color:#b7c7dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
     '.element-row:nth-child(even){background:#111e31;}' +
     '.empty{color:#687b95;font-style:italic;}' +
-    '.action-card{padding:9px;margin-top:7px;background:#142136;border:1px solid #2a3c56;border-radius:5px;}' +
-    '.action-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}' +
+    '.action-help{font-size:9px;line-height:13px;color:#8292a8;margin:6px 0 8px 0;}' +
+    '.action-card{padding:8px 9px;margin-top:6px;background:#142136;border:1px solid #2a3c56;border-radius:5px;}' +
+    '.action-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}' +
+    '.action-description{font-size:9px;color:#8292a8;margin-bottom:5px;}' +
     '.action-name{font-size:11px;font-weight:700;color:#dbeafe;}' +
     '.action-state{padding:2px 7px;border-radius:3px;background:#263449;color:#91a2b9;' +
     'font-size:9px;font-weight:700;letter-spacing:.4px;}' +
@@ -227,7 +230,7 @@ begin
     '.btn.small{height:23px;padding:0 7px;font-size:9px;}' +
     '.toolbar{margin-top:10px;padding-top:8px;border-top:1px solid #293a51;}' +
     '.toolbar-title{font-size:9px;color:#7e91aa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}' +
-    '.capture-status{min-height:27px;margin-top:7px;padding:6px 7px;background:#111e30;' +
+    '.capture-status{min-height:34px;margin-top:7px;padding:6px 7px;background:#111e30;' +
     'border:1px solid #26364d;border-radius:4px;font-size:9px;color:#9fb2cb;}' +
     '.footer{height:21px;line-height:20px;margin-top:8px;padding:0 3px;color:#71839b;font-size:9px;}' +
     '.footer-event{display:inline-block;max-width:80%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
@@ -236,7 +239,7 @@ begin
     '</style></head><body><div class="app">' +
 
     '<div class="header"><div><div class="brand">Input device monitor</div>' +
-    '<div class="sub">Raw Input / XInput / DirectInput through FMXInput</div></div>' +
+    '<div class="sub">1. Select a device  &gt;  2. Assign an action  &gt;  3. Press it to test</div></div>' +
     '<div><button id="refresh-devices" class="btn small">Refresh devices</button></div></div>' +
 
     '<div class="status"><span id="status-dot" class="status-dot"></span>' +
@@ -246,50 +249,55 @@ begin
     '<div class="workspace">' +
 
     '<div class="panel devices">' +
-    '<div class="panel-head"><span>DEVICES</span><span id="device-count" class="panel-caption">0 detected</span></div>' +
+    '<div class="panel-head"><span>1. CHOOSE A DEVICE</span><span id="device-count" class="panel-caption">0 found</span></div>' +
+    '<div class="panel-hint">Select a keyboard, mouse, or controller.</div>' +
     '<div id="device-list" class="device-list"></div>' +
     '<div class="selected-info">' +
     '<div id="selected-device-name" class="selected-name">No device selected</div>' +
     '<div id="selected-device-id" class="selected-id"></div>' +
-    '<div id="selected-device-note" class="device-note">Select a device to inspect its controls.</div></div>' +
+    '<div id="selected-device-note" class="device-note">Choose a device from the list above.</div></div>' +
     '</div>' +
 
     '<div class="panel elements">' +
-    '<div class="panel-head"><span>DEVICE ELEMENTS</span><span id="element-total" class="panel-caption">0 controls</span></div>' +
-    '<div id="element-summary" class="element-summary">Select a device.</div>' +
+    '<div class="panel-head"><span>DEVICE CONTROLS</span><span id="element-total" class="panel-caption">0 controls</span></div>' +
+    '<div id="element-summary" class="element-summary">Reference list: keys, buttons, axes and other controls found on the selected device.</div>' +
     '<div id="element-list" class="element-list"></div>' +
     '</div>' +
 
     '<div class="panel actions">' +
-    '<div class="panel-head"><span>ACTION BINDINGS</span><span class="panel-caption">Rising-edge events</span></div>' +
+    '<div class="panel-head"><span>2. ASSIGN ACTIONS</span><span class="panel-caption">3. Press to test</span></div>' +
+    '<div class="action-help">Click Assign, then press the key, mouse button, or controller control you want to use. The indicator changes when that action is pressed.</div>' +
 
     '<div class="action-card"><div class="action-head"><span class="action-name">NEXT</span>' +
     '<span id="state-next" class="action-state">RELEASED</span></div>' +
-    '<div id="binding-next" class="binding">Not bound</div>' +
-    '<button id="capture-next" class="btn primary small">Capture Next</button></div>' +
+    '<div class="action-description">Continue or confirm.</div>' +
+    '<div id="binding-next" class="binding">Not assigned</div>' +
+    '<button id="capture-next" class="btn primary small">Assign NEXT</button></div>' +
 
     '<div class="action-card"><div class="action-head"><span class="action-name">BACK</span>' +
     '<span id="state-back" class="action-state">RELEASED</span></div>' +
-    '<div id="binding-back" class="binding">Not bound</div>' +
-    '<button id="capture-back" class="btn primary small">Capture Back</button></div>' +
+    '<div class="action-description">Return to the previous step.</div>' +
+    '<div id="binding-back" class="binding">Not assigned</div>' +
+    '<button id="capture-back" class="btn primary small">Assign BACK</button></div>' +
 
     '<div class="action-card"><div class="action-head"><span class="action-name">CANCEL</span>' +
     '<span id="state-cancel" class="action-state">RELEASED</span></div>' +
-    '<div id="binding-cancel" class="binding">Not bound</div>' +
-    '<button id="capture-cancel" class="btn primary small">Capture Cancel</button></div>' +
+    '<div class="action-description">Cancel the current operation.</div>' +
+    '<div id="binding-cancel" class="binding">Not assigned</div>' +
+    '<button id="capture-cancel" class="btn primary small">Assign CANCEL</button></div>' +
 
-    '<div id="capture-status" class="capture-status">Choose a device, then capture a control.</div>' +
+    '<div id="capture-status" class="capture-status">Step 1: select a device. Step 2: click Assign. Step 3: press the control you want to use.</div>' +
 
-    '<div class="toolbar"><div class="toolbar-title">INPUT SERVICE</div>' +
-    '<button id="toggle-input" class="btn small">Disable input</button>' +
-    '<button id="cancel-capture" class="btn small">Cancel capture</button>' +
-    '<button id="clear-bindings" class="btn danger small">Clear bindings</button>' +
+    '<div class="toolbar"><div class="toolbar-title">EXTRA OPTIONS</div>' +
+    '<button id="toggle-input" class="btn small">Pause input</button>' +
+    '<button id="cancel-capture" class="btn small">Stop assignment</button>' +
+    '<button id="clear-bindings" class="btn danger small">Clear assignments</button>' +
     '</div>' +
 
     '<div class="toolbar"><div class="toolbar-title">PROFILE / CONTROLLER</div>' +
     '<button id="save-profile" class="btn small">Save profile</button>' +
     '<button id="load-profile" class="btn small">Load profile</button>' +
-    '<button id="rumble" class="btn small is-hidden">Test rumble</button>' +
+    '<button id="rumble" class="btn small is-hidden">Test vibration</button>' +
     '</div>' +
     '</div>' +
 
@@ -469,9 +477,9 @@ begin
         Doc.SetInnerHtml(ElementListHandle, '');
       SetTextById('selected-device-name', 'No device selected');
       SetTextById('selected-device-id', '');
-      SetTextById('selected-device-note', 'Select a device to inspect its controls.');
+      SetTextById('selected-device-note', 'Choose a device from the list above.');
       SetTextById('element-total', '0 controls');
-      SetTextById('element-summary', 'Select a device.');
+      SetTextById('element-summary', 'Select a device in Step 1 to inspect its controls.');
       SetClassById('rumble', 'btn small is-hidden');
     end
     else
@@ -494,7 +502,7 @@ begin
       Count := Input.ElementCount(DeviceIndex);
       SetTextById('element-total', IntToStr(Count) + ' controls');
       SetTextById('element-summary',
-        'Controls exposed by the selected input device.');
+        'Reference list of keys, buttons, axes and other controls found on this device.');
 
       ElementsHtml := '';
       for I := 0 to Count - 1 do
@@ -582,6 +590,9 @@ begin
         '" type="button">' + HtmlEscapeText(NameText) + '</button>';
     end;
 
+    if DeviceIDs.Count = 0 then
+      DevicesHtml := '<div class="empty">No devices found. Connect a keyboard, mouse, or controller, then click Refresh.</div>';
+
     if DeviceListHandle <> 0 then
       Doc.SetInnerHtml(DeviceListHandle, DevicesHtml);
 
@@ -603,10 +614,12 @@ begin
     if Input.Capturing then
     begin
       Input.CancelCapture;
-      AddEventLog('Capture cancelled.');
-    end;
+      AddEventLog('Assignment cancelled.');
+      SetTextById('capture-status', 'Assignment cancelled. Choose another action, or test an existing assignment.');
+    end
+    else
+      SetTextById('capture-status', 'No assignment is in progress. Click Assign next to an action to begin.');
   CaptureAction := 0;
-  SetTextById('capture-status', 'Capture is not active.');
   Doc.Changed;
 end;
 
@@ -676,13 +689,17 @@ begin
   DeviceIndex := FindSelectedDeviceIndex;
   if DeviceIndex < 0 then
   begin
-    SetInputStatus('Select an input device first.');
+    SetInputStatus('Select a device in Step 1 first.');
+    SetTextById('capture-status', 'Select a device in the left panel before assigning an action.');
+    Doc.Changed;
     Exit;
   end;
 
   if not Input.IsEnabled then
   begin
-    SetInputStatus('Input is disabled. Enable the service before capturing.');
+    SetInputStatus('Input is paused. Resume input before assigning controls.');
+    SetTextById('capture-status', 'Input is paused. Click Resume input under Extra Options, then try again.');
+    Doc.Changed;
     Exit;
   end;
 
@@ -699,9 +716,9 @@ begin
   begin
     CaptureAction := Action;
     SetTextById('capture-status',
-      'Waiting for a physical control for ' + InputActionName(Action) + '...');
-    SetInputStatus('Capture active on ' + Input.DeviceName(DeviceIndex) + '.');
-    AddEventLog('Started capture for ' + InputActionName(Action) + '.');
+      'Assigning ' + InputActionName(Action) + ': press the key, mouse button, or controller control now.');
+    SetInputStatus('Waiting for a control on ' + Input.DeviceName(DeviceIndex) + '.');
+    AddEventLog('Started assigning ' + InputActionName(Action) + '.');
     Doc.Changed;
   end
   else
@@ -737,15 +754,14 @@ begin
   if Input.AcceptCaptured then
   begin
     SetBindingText(Action, BindingText);
-    SetTextById('capture-status', 'Bound ' + InputActionName(Action) +
-      ' to ' + BindingText);
-    SetInputStatus('Binding accepted.');
-    AddEventLog('Captured and bound ' + InputActionName(Action) + '.');
+    SetTextById('capture-status', InputActionName(Action) + ' assigned. Press that control to test it; its indicator should show PRESSED.');
+    SetInputStatus(InputActionName(Action) + ' assigned successfully.');
+    AddEventLog('Assigned ' + InputActionName(Action) + '.');
   end
   else
   begin
-    SetTextById('capture-status', 'Binding failed: ' + Input.LastError);
-    SetInputStatus('Unable to accept captured input: ' + Input.LastError);
+    SetTextById('capture-status', 'Assignment failed: ' + Input.LastError);
+    SetInputStatus('Unable to assign this control: ' + Input.LastError);
   end;
 
   CaptureAction := 0;
@@ -772,8 +788,8 @@ begin
   SetActionStateVisual(ACTION_BACK, False);
   SetActionStateVisual(ACTION_CANCEL, False);
 
-  SetTextById('capture-status', 'All action bindings cleared.');
-  SetInputStatus('Bindings cleared.');
+  SetTextById('capture-status', 'All assignments cleared. Assign a control to NEXT, BACK, or CANCEL to begin again.');
+  SetInputStatus('All action assignments cleared.');
   AddEventLog('All bindings cleared.');
   Doc.Changed;
 end;
@@ -871,11 +887,11 @@ begin
 
   if Input.LoadProfile(ProfileFileName) then
   begin
-    SetBindingText(ACTION_NEXT, 'Restored from profile (details not exposed)');
-    SetBindingText(ACTION_BACK, 'Restored from profile (details not exposed)');
-    SetBindingText(ACTION_CANCEL, 'Restored from profile (details not exposed)');
+    SetBindingText(ACTION_NEXT, 'Assigned (restored from profile)');
+    SetBindingText(ACTION_BACK, 'Assigned (restored from profile)');
+    SetBindingText(ACTION_CANCEL, 'Assigned (restored from profile)');
     SetInputStatus('Profile loaded. Saved bindings are active.');
-    SetTextById('capture-status', 'Loaded profile: ' + ProfileFileName);
+    SetTextById('capture-status', 'Profile loaded. The saved assignments are active; press a bound control to test them.');
     UpdateActionState;
     AddEventLog('Input profile loaded.');
   end
@@ -986,16 +1002,16 @@ begin
       Input.Enabled(not Input.IsEnabled);
       if Input.IsEnabled then
       begin
-        SetTextById('toggle-input', 'Disable input');
-        SetInputStatus('Input service enabled.');
-        AddEventLog('Input enabled.');
+        SetTextById('toggle-input', 'Pause input');
+        SetInputStatus('Input resumed.');
+        AddEventLog('Input resumed.');
       end
       else
       begin
-        SetTextById('toggle-input', 'Enable input');
+        SetTextById('toggle-input', 'Resume input');
         CancelCurrentCapture;
-        SetInputStatus('Input service disabled.');
-        AddEventLog('Input disabled.');
+        SetInputStatus('Input paused.');
+        AddEventLog('Input paused.');
       end;
       UpdateActionState;
     end;
@@ -1108,7 +1124,7 @@ begin
 
   EmptyWizardForm(DEMO_FORM_WIDTH, DEMO_FORM_HEIGHT);
   FMXForm.FCreateBackdropForm(WizardForm.Handle, btMain, True, True);
-  FMXForm.Caption('FMXPixie - Gamepad Input Demo');
+  FMXForm.Caption('FMXPixie - Input Demo');
   FMXForm.ChangeBorderColor($FF2D5278);
 
   TitleView.FCreate(FMXForm.Handle);
