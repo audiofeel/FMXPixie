@@ -21,6 +21,17 @@ uses
 // FPixieTagBar
 // =============================================================================
 type
+  TPixieTagAddingCallback = procedure(Sender: TObject;
+    const Text: WideString; Color: TAlphaColor;
+    var Allow: Boolean) of object;
+
+  TPixieTagDeletingCallback = procedure(Sender: TObject;
+    ID: Integer; var Allow: Boolean) of object;
+
+  TPixieTagChangingCallback = procedure(Sender: TObject;
+    ID: Integer; const NewText: WideString;
+    NewColor: TAlphaColor; var Allow: Boolean) of object;
+
   FPixieTagBar = interface(IUnknown)
     ['{4EDC2B7F-57A8-4C72-8CB2-21F3E5B7626B}']
     procedure FCreate(FParent: TFmxObject); stdcall;
@@ -70,15 +81,21 @@ type
     function GetTagText(FTagText: Integer): WideString; stdcall;
     function GetTagColor(FTagColor: Integer): TAlphaColor; stdcall;
     function IsChecked(ID: Integer): Boolean; stdcall;
+    function GetCheckedCount: Integer; stdcall;
+    function GetCheckedID(Index: Integer): Integer; stdcall;
+    function GetObject: TFmxObject; stdcall;
     procedure OnTagChecked(Event: TPixieTagCheckedEvent); stdcall;
     procedure OnChanged(Event: TNotifyEvent); stdcall;
-    function GetObject: TFmxObject; stdcall;
+    procedure OnTagAdding(Event: TPixieTagAddingCallback); stdcall;
+    procedure OnTagDeleting(Event: TPixieTagDeletingCallback); stdcall;
+    procedure OnTagChanging(Event: TPixieTagChangingCallback); stdcall;
     function Handle: TFmxObject; stdcall;
   end;
 
   TFPixieTagBar = class(TInterfacedObject, FPixieTagBar)
   private
     ControlTagBar: TPixieTagBar;
+    FEventBridge: TComponent;
   public
     procedure FCreate(FParent: TFmxObject); stdcall;
     procedure Left(FLeft: Single); stdcall;
@@ -127,9 +144,14 @@ type
     function GetTagText(FTagText: Integer): WideString; stdcall;
     function GetTagColor(FTagColor: Integer): TAlphaColor; stdcall;
     function IsChecked(ID: Integer): Boolean; stdcall;
+    function GetCheckedCount: Integer; stdcall;
+    function GetCheckedID(Index: Integer): Integer; stdcall;
+    function GetObject: TFmxObject; stdcall;
     procedure OnTagChecked(Event: TPixieTagCheckedEvent); stdcall;
     procedure OnChanged(Event: TNotifyEvent); stdcall;
-    function GetObject: TFmxObject; stdcall;
+    procedure OnTagAdding(Event: TPixieTagAddingCallback); stdcall;
+    procedure OnTagDeleting(Event: TPixieTagDeletingCallback); stdcall;
+    procedure OnTagChanging(Event: TPixieTagChangingCallback); stdcall;
     function Handle: TFmxObject; stdcall;
   end;
 
@@ -139,6 +161,25 @@ type
 function InitPixieTagBar: FPixieTagBar; stdcall;
 
 implementation
+
+type
+  TTagBarEventBridge = class(TComponent)
+  private
+    FOnTagAdding: TPixieTagAddingCallback;
+    FOnTagDeleting: TPixieTagDeletingCallback;
+    FOnTagChanging: TPixieTagChangingCallback;
+
+    procedure DoTagAdding(Sender: TObject;
+      const Text: string; Color: TPixieWebColor;
+      var Allow: Boolean);
+
+    procedure DoTagDeleting(Sender: TObject;
+      ID: Integer; var Allow: Boolean);
+
+    procedure DoTagChanging(Sender: TObject;
+      ID: Integer; const NewText: string;
+      NewColor: TPixieWebColor; var Allow: Boolean);
+  end;
 
 function AlphaColorToWebColor(Value: TAlphaColor): TPixieWebColor;
 begin
@@ -153,13 +194,49 @@ begin
     (Cardinal(Value.Green) shl 8) or Cardinal(Value.Blue);
 end;
 
+procedure TTagBarEventBridge.DoTagAdding(Sender: TObject;
+  const Text: string; Color: TPixieWebColor;
+  var Allow: Boolean);
+begin
+  if Assigned(FOnTagAdding) then
+    FOnTagAdding(Sender, WideString(Text),
+      WebColorToAlphaColor(Color), Allow);
+end;
+
+procedure TTagBarEventBridge.DoTagDeleting(Sender: TObject;
+  ID: Integer; var Allow: Boolean);
+begin
+  if Assigned(FOnTagDeleting) then
+    FOnTagDeleting(Sender, ID, Allow);
+end;
+
+procedure TTagBarEventBridge.DoTagChanging(Sender: TObject;
+  ID: Integer; const NewText: string;
+  NewColor: TPixieWebColor; var Allow: Boolean);
+begin
+  if Assigned(FOnTagChanging) then
+    FOnTagChanging(Sender, ID, WideString(NewText),
+      WebColorToAlphaColor(NewColor), Allow);
+end;
+
 // =============================================================================
 // FPixieTagBar
 // =============================================================================
 procedure TFPixieTagBar.FCreate(FParent: TFmxObject);
 begin
   if ControlTagBar = nil then
+  begin
     ControlTagBar := TPixieTagBar.Create(nil);
+
+    FEventBridge := TTagBarEventBridge.Create(ControlTagBar);
+
+    ControlTagBar.OnTagAdding :=
+      TTagBarEventBridge(FEventBridge).DoTagAdding;
+    ControlTagBar.OnTagDeleting :=
+      TTagBarEventBridge(FEventBridge).DoTagDeleting;
+    ControlTagBar.OnTagChanging :=
+      TTagBarEventBridge(FEventBridge).DoTagChanging;
+  end;
 
   ControlTagBar.Parent := TFmxObject(FParent);
 end;
@@ -407,6 +484,36 @@ begin
   Result := ControlTagBar.IsChecked(ID);
 end;
 
+function TFPixieTagBar.GetObject: TFmxObject;
+begin
+  Result := TFmxObject(ControlTagBar);
+end;
+
+function TFPixieTagBar.GetCheckedCount: Integer;
+var
+  IDs: TArray<Integer>;
+begin
+  IDs := ControlTagBar.GetCheckedIDs;
+  Result := Length(IDs);
+end;
+
+function TFPixieTagBar.GetCheckedID(Index: Integer): Integer;
+var
+  IDs: TArray<Integer>;
+begin
+  Result := -1;
+
+  if Index < 0 then
+    Exit;
+
+  IDs := ControlTagBar.GetCheckedIDs;
+
+  if Index >= Length(IDs) then
+    Exit;
+
+  Result := IDs[Index];
+end;
+
 procedure TFPixieTagBar.OnTagChecked(Event: TPixieTagCheckedEvent);
 begin
   ControlTagBar.OnTagChecked := Event;
@@ -417,9 +524,22 @@ begin
   ControlTagBar.OnChanged := Event;
 end;
 
-function TFPixieTagBar.GetObject: TFmxObject;
+procedure TFPixieTagBar.OnTagAdding(Event: TPixieTagAddingCallback);
 begin
-  Result := TFmxObject(ControlTagBar);
+  if FEventBridge <> nil then
+    TTagBarEventBridge(FEventBridge).FOnTagAdding := Event;
+end;
+
+procedure TFPixieTagBar.OnTagDeleting(Event: TPixieTagDeletingCallback);
+begin
+  if FEventBridge <> nil then
+    TTagBarEventBridge(FEventBridge).FOnTagDeleting := Event;
+end;
+
+procedure TFPixieTagBar.OnTagChanging(Event: TPixieTagChangingCallback);
+begin
+  if FEventBridge <> nil then
+    TTagBarEventBridge(FEventBridge).FOnTagChanging := Event;
 end;
 
 function TFPixieTagBar.Handle: TFmxObject;
