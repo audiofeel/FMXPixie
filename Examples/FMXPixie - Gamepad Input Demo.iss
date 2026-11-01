@@ -180,9 +180,10 @@ begin
     '.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;' +
     'background:#64748b;margin-right:8px;}' +
     '.status-dot.on{background:#34d399;}' +
-    '.workspace{display:flex;width:100%;height:calc(100% - 112px);gap:14px;}' +
+    '.workspace{display:flex;width:100%;height:calc(100% - 112px);}' +
     '.panel{flex:1;min-width:0;background:#101a2a;border:1px solid #26364d;' +
     'border-radius:9px;padding:17px;overflow:hidden;}' +
+    '.custom-panel{margin-left:14px;}' +
     '.panel-head{display:flex;align-items:center;justify-content:space-between;' +
     'font-size:14px;font-weight:700;color:#e5edf8;padding-bottom:11px;' +
     'border-bottom:1px solid #26364d;}' +
@@ -190,16 +191,16 @@ begin
     '.panel-note{font-size:10px;line-height:15px;color:#8999ae;margin:12px 0 15px 0;}' +
     '.xbox-row{display:flex;align-items:center;justify-content:space-between;' +
     'min-height:70px;padding:10px 12px;margin:0 0 9px 0;' +
-    'background:#162338;border:1px solid #2b3e58;border-radius:7px;' +
-    'transition:background-color .12s,border-color .12s;}' +
+    'background:#162338;border:1px solid #2b3e58;border-radius:7px;}' +
     '.xbox-row.is-down{background:#173d36;border-color:#38b78a;}' +
-    '.xbox-copy{display:flex;flex-direction:column;gap:4px;}' +
+    '.xbox-copy{display:flex;flex-direction:column;}' +
+    '.xbox-hint{margin-top:4px;}' +
     '.xbox-title{font-size:15px;font-weight:600;color:#f1f5f9;}' +
     '.xbox-hint{font-size:10px;color:#8292a8;}' +
-    '.xbox-right{display:flex;align-items:center;gap:12px;}' +
-    '.xbox-state{font-size:9px;color:#71839b;letter-spacing:.5px;font-weight:700;}' +
+    '.xbox-right{display:flex;align-items:center;}' +
+    '.xbox-state{font-size:9px;color:#71839b;letter-spacing:.5px;font-weight:700;margin-right:12px;}' +
     '.xbox-state.is-down{color:#9af0c8;}' +
-    '.xbox-key{display:inline-flex;align-items:center;justify-content:center;' +
+    '.xbox-key{display:flex;align-items:center;justify-content:center;' +
     'width:38px;height:38px;border-radius:50%;color:#fff;font-size:16px;font-weight:800;' +
     'border:1px solid rgba(255,255,255,.28);' +
     'box-shadow:inset 0 -3px 0 rgba(0,0,0,.22),0 2px 5px rgba(0,0,0,.25);}' +
@@ -209,14 +210,14 @@ begin
     '.xbox-status{margin-top:13px;padding:10px 11px;border-radius:6px;' +
     'background:#111e30;border:1px solid #26364d;color:#91a6c1;font-size:10px;line-height:15px;}' +
     '.custom-row{display:flex;align-items:center;justify-content:space-between;' +
-    'gap:8px;min-height:66px;padding:9px 10px;margin:0 0 9px 0;' +
+    'min-height:66px;padding:9px 10px;margin:0 0 9px 0;' +
     'background:#162338;border:1px solid #2b3e58;border-radius:7px;}' +
-    '.custom-copy{display:flex;flex-direction:column;gap:5px;min-width:0;}' +
+    '.custom-copy{display:flex;flex-direction:column;min-width:0;}' +
     '.custom-title{font-size:13px;font-weight:600;color:#e5edf8;}' +
-    '.custom-binding{font-size:10px;color:#8292a8;white-space:nowrap;' +
+    '.custom-binding{font-size:10px;color:#8292a8;white-space:nowrap;margin-top:5px;' +
     'overflow:hidden;text-overflow:ellipsis;max-width:265px;}' +
-    '.custom-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}' +
-    '.custom-state{font-size:9px;color:#71839b;font-weight:700;letter-spacing:.4px;}' +
+    '.custom-right{display:flex;align-items:center;flex-shrink:0;}' +
+    '.custom-state{font-size:9px;color:#71839b;font-weight:700;letter-spacing:.4px;margin-right:10px;}' +
     '.custom-state.is-down{color:#9af0c8;}' +
     '.custom-row.is-down{background:#173d36;border-color:#38b78a;}' +
     'button{font:11px "Segoe UI",Arial,sans-serif;cursor:pointer;}' +
@@ -236,7 +237,7 @@ begin
 
     '<div class="status"><span id="status-dot" class="status-dot"></span>' +
     '<span id="input-status">Подключите Xbox-контроллер или назначьте свои кнопки справа.</span>' +
-    '<span style="float:right" id="input-state">INPUT: --</span></div>' +
+    '<span style="float:right" id="input-state">ВВОД: --</span></div>' +
 
     '<div class="workspace">' +
 
@@ -259,7 +260,7 @@ begin
     '<div id="xbox-status" class="xbox-status">Ожидание Xbox-контроллера. Раскладка: A — Далее, B — Назад, X — Отмена.</div>' +
     '</div>' +
 
-    '<div class="panel">' +
+    '<div class="panel custom-panel">' +
     '<div class="panel-head"><span>СВОИ НАЗНАЧЕНИЯ</span><span class="panel-caption">ЛЮБОЙ ВВОД</span></div>' +
     '<div class="panel-note">Здесь можно добавить свои клавиши или кнопки. Нажми «Назначить», затем нажми нужную кнопку на клавиатуре, мыши или контроллере.</div>' +
 
@@ -956,10 +957,6 @@ begin
   CustomNextAssigned := False;
   CustomBackAssigned := False;
   CustomCancelAssigned := False;
-
-  BindingTextNext := 'Не назначено';
-  BindingTextBack := 'Не назначено';
-  BindingTextCancel := 'Не назначено';
 
   DeviceIDs := TStringList.Create;
 
