@@ -339,7 +339,10 @@ end;
 procedure SetInputStatus(const S: String);
 begin
   SetTextById('input-status', S);
-  SetTextById('input-state', 'INPUT: ' + IfThen(Input <> nil, 'READY', 'OFFLINE'));
+  if InputAvailable then
+    SetTextById('input-state', 'INPUT: READY')
+  else
+    SetTextById('input-state', 'INPUT: OFFLINE');
 end;
 
 procedure AddEventLog(const S: String);
