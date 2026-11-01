@@ -57,7 +57,7 @@
         <GenDll>true</GenDll>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <SanitizedProjectName>FMXPixie</SanitizedProjectName>
-        <DCC_UnitSearchPath>.\Fix;.\Forms;.\Pixie\HtmlView;.\Pixie\Common;.\Pixie\SvgView;.\Pixie\Webp;.\Pixie\Markdown;.\Pixie\TagBar;.\Pixie\PaintBox;.\Custom\AudioPlayer\Source;.\Custom\AudioPlayer\Dependencies\PCMAudio;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>.\ThirdParty\FMXInput;.\Fix;.\Forms;.\Pixie\HtmlView;.\Pixie\Common;.\Pixie\SvgView;.\Pixie\Webp;.\Pixie\Markdown;.\Pixie\TagBar;.\Pixie\PaintBox;.\Custom\AudioPlayer\Source;.\Custom\AudioPlayer\Dependencies\PCMAudio;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_UsePackage>vclwinx;DataSnapServer;fmx;emshosting;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;DBXMSSQLDriver;FireDACCommonODBC;emsclient;FireDACCommonDriver;RadiantShapesFmx_Design;IndyProtocols;vclx;Skia.Package.RTL;IndyIPClient;dbxcds;vcledge;bindcompvclwinx;emsedge;bindcompfmx;DBXFirebirdDriver;inetdb;FireDACSqliteDriver;DbxClientDriver;FireDACASADriver;soapmidas;vclactnband;fmxFireDAC;dbexpress;FireDACInfxDriver;DBXMySQLDriver;VclSmp;inet;DataSnapCommon;fmxase;vcltouch;DBXOdbcDriver;DzHTMLText_FMX;dbrtl;FireDACDBXDriver;Skia.Package.FMX;FireDACOracleDriver;fmxdae;FMXGIF100;FireDACMSAccDriver;CustomIPTransport;vclwinxnav;FireDACMSSQLDriver;DataSnapIndy10ServerTransport;DataSnapConnectors;vcldsnap;DBXInterBaseDriver;FireDACMongoDBDriver;IndySystem;RadiantShapesFmx;FireDACTDataDriver;Skia.Package.VCL;vcldb;vclFireDAC;bindcomp;FireDACCommon;DataSnapServerMidas;FireDACODBCDriver;emsserverresource;inetstn;IndyCore;RESTBackendComponents;bindcompdbx;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;DBXSqliteDriver;vcl;IndyIPServer;dsnapxml;adortl;DataSnapClient;dsnapcon;DataSnapProviderClient;DBXSybaseASEDriver;DBXDb2Driver;vclimg;DataSnapFireDAC;emsclientfiredac;inetdbxpress;FireDAC;FireDACPgDriver;FireDACDSDriver;xmlrtl;tethering;bindcompvcl;dsnap;CloudService;DBXSybaseASADriver;DBXOracleDriver;FireDACDb2Driver;DBXInformixDriver;fmxobj;bindcompvclsmp;DataSnapNativeClient;DatasnapConnectorsFreePascal;soaprtl;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
@@ -116,6 +116,9 @@
         <DCCReference Include="Pixie\FMXPixie.PaintBox.pas"/>
         <DCCReference Include="Custom\AudioPlayer\FMXPixie.AudioPlayer.pas"/>
         <DCCReference Include="Custom\FMXPixie.SystemInfo.pas"/>
+        <DCCReference Include="ThirdParty\FMXInput\FMXInput.pas"/>
+        <DCCReference Include="ThirdParty\FMXInput\FMXInput.Windows.pas"/>
+        <DCCReference Include="Custom\FMXPixie.Input.pas"/>
         <DCCReference Include="FMX\FMXPixie.System.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

@@ -28,6 +28,9 @@ uses
   FMXPixie.TagBar in 'Pixie\FMXPixie.TagBar.pas',
   FMXPixie.PaintBox in 'Pixie\FMXPixie.PaintBox.pas',
   FMXPixie.AudioPlayer in 'Custom\AudioPlayer\FMXPixie.AudioPlayer.pas',
+  FMXInput in 'ThirdParty\FMXInput\FMXInput.pas',
+  FMXInput.Windows in 'ThirdParty\FMXInput\FMXInput.Windows.pas',
+  FMXPixie.Input in 'Custom\FMXPixie.Input.pas',
   FMXPixie.SystemInfo in 'Custom\FMXPixie.SystemInfo.pas',
   FMXPixie.System in 'FMX\FMXPixie.System.pas';
 
