@@ -9,6 +9,8 @@
 ;   - show only selected tags in a filter row
 ;   - change tag shape, inspect colors and swatches
 ;   - query tag IDs/text/colors and selection from Inno Pascal Script
+;   - test OnTagAdding / OnTagDeleting / OnTagChanging veto callbacks
+;   - test GetCheckedCount / GetCheckedID through the selection summary
 ;   - configure options using TPixieTagBarOptions set values (not a bit mask)
 ;
 ; Required:
@@ -57,6 +59,7 @@ var
   DisplayTags: FPixieTagBar;
 
   AddedCount: Integer;
+  ProtectedTagID: Integer;
   TempDir: String;
   CurrentShape: TPixieTagShape;
 
@@ -117,7 +120,7 @@ begin
     '<h1>TagBar <span style="color:#67e8f9">/</span> component lab</h1>' +
     '<div class="hero-sub">Color-coded labels, keyboard editing, selection state and filter views — hosted by FMXPixie.</div></div>' +
     '<div id="main-label" class="label">01 / EDITABLE COLLECTION</div>' +
-    '<div id="main-surface" class="surface"><div class="hint">Click a pill to select it · “+” creates a tag · × removes it · F2 or double-click renames the focused tag.</div>' +
+    '<div id="main-surface" class="surface"><div class="hint">Click to select · “+” creates (type blocked to test veto) · × removes (Delphi is protected) · F2/double-click renames (try reserved).</div>' +
     '<div class="tag-metric"><span id="main-count">0</span> TAGS</div>' +
     '</div>' +
     '<div id="filter-label" class="label">02 / HORIZONTAL FILTER BAR</div>' +
@@ -171,20 +174,31 @@ end;
 function CheckedSummary(Bar: FPixieTagBar): String;
 var
   I, ID: Integer;
-  S: String;
+  S, IDs: String;
 begin
   Result := '';
-  for I := 0 to Bar.TagCount - 1 do
+  IDs := '';
+
+  // Exercise the DLL wrappers for GetCheckedCount and GetCheckedID.
+  for I := 0 to Bar.GetCheckedCount - 1 do
   begin
-    ID := Bar.GetTagID(I);
-    if Bar.IsChecked(ID) then
-    begin
-      S := Bar.GetTagText(I);
-      if Result <> '' then Result := Result + ' · ';
-      Result := Result + S;
-    end;
+    ID := Bar.GetCheckedID(I);
+    S := TagNameByID(Bar, ID);
+
+    if Result <> '' then Result := Result + ' · ';
+    if S <> '' then
+      Result := Result + S
+    else
+      Result := Result + '#' + IntToStr(ID);
+
+    if IDs <> '' then IDs := IDs + ', ';
+    IDs := IDs + IntToStr(ID);
   end;
-  if Result = '' then Result := '(none)';
+
+  if Result = '' then
+    Result := '(none) [IDs: none]'
+  else
+    Result := Result + ' [IDs: ' + IDs + ']';
 end;
 
 procedure RefreshStats;
@@ -210,6 +224,52 @@ end;
 procedure FilterTagBarChanged(Sender: TObject);
 begin
   RefreshStats;
+end;
+
+// OnTagAdding is called for tags created through the TagBar's inline '+'.
+// Enter 'blocked' to verify that Allow=False cancels the operation.
+procedure MainTagAdding(Sender: TObject; const Text: WideString;
+  Color: TAlphaColor; var Allow: Boolean);
+begin
+  Allow := Lowercase(Text) <> 'blocked';
+
+  if Allow then
+    SetStatus('OnTagAdding: allowed tag "' + Text + '".')
+  else
+    SetStatus('OnTagAdding: vetoed tag "' + Text + '" (Allow=False).');
+end;
+
+// The first demo tag is deliberately protected from deletion by its ID.
+procedure MainTagDeleting(Sender: TObject; ID: Integer;
+  var Allow: Boolean);
+var
+  TagName: String;
+begin
+  TagName := TagNameByID(MainTags, ID);
+  Allow := ID <> ProtectedTagID;
+
+  if Allow then
+    SetStatus('OnTagDeleting: allowed removal of "' + TagName +
+      '" (ID ' + IntToStr(ID) + ').')
+  else
+    SetStatus('OnTagDeleting: vetoed removal of "' + TagName +
+      '" (ID ' + IntToStr(ID) + ').');
+end;
+
+// Enter 'reserved' while renaming a tag to verify the change veto.
+// Color changes also pass through this event and are allowed.
+procedure MainTagChanging(Sender: TObject; ID: Integer;
+  const NewText: WideString; NewColor: TAlphaColor;
+  var Allow: Boolean);
+begin
+  Allow := Lowercase(NewText) <> 'reserved';
+
+  if Allow then
+    SetStatus('OnTagChanging: allowed change for ID ' +
+      IntToStr(ID) + ' ("' + NewText + '").')
+  else
+    SetStatus('OnTagChanging: vetoed change to "' + NewText +
+      '" (Allow=False).');
 end;
 
 procedure MainTagChecked(Sender: TObject; ID: Integer; Checked: Boolean);
@@ -239,7 +299,7 @@ end;
 procedure AddInitialTags;
 begin
   MainTags.ClearTags;
-  MainTags.AddTagWithColor('Delphi', $FF60A5FA);
+  ProtectedTagID := MainTags.AddTagWithColor('Delphi', $FF60A5FA);
   MainTags.AddTagWithColor('FireMonkey', $FFA78BFA);
   MainTags.AddTagWithColor('Inno Setup', $FF34D399);
   MainTags.AddTagWithColor('Pixie', $FF22D3EE);
@@ -530,10 +590,13 @@ begin
   AddInitialTags;
   MainTags.OnTagChecked(@MainTagChecked);
   MainTags.OnChanged(@MainTagBarChanged);
+  MainTags.OnTagAdding(@MainTagAdding);
+  MainTags.OnTagDeleting(@MainTagDeleting);
+  MainTags.OnTagChanging(@MainTagChanging);
   FilterTags.OnTagChecked(@FilterTagChecked);
   FilterTags.OnChanged(@FilterTagBarChanged);
   RefreshStats;
-  SetStatus('Ready — click tags to select them. Add/edit/delete uses the native TagBar interaction.');
+  SetStatus('Ready — try blocked (add veto), reserved (rename veto), or deleting Delphi (delete veto). Checked summaries show IDs.');
   FMXForm.Show;
 end;
 
