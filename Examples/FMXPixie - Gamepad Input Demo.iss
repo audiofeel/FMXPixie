@@ -47,6 +47,7 @@ const
   ACTION_CANCEL = 103;
 
   INPUT_POLL_INTERVAL = 16;
+  INPUT_BM_CLICK = $00F5;
 
 
 var
@@ -501,7 +502,7 @@ begin
     begin
       AddEventLog('Controller action: Cancel.');
       if WizardForm.CancelButton.Enabled then
-        WizardForm.CancelButton.Click;
+        SendMessage(WizardForm.CancelButton.Handle, INPUT_BM_CLICK, 0, 0);
       Exit;
     end;
 
@@ -509,7 +510,7 @@ begin
     begin
       AddEventLog('Controller action: Back.');
       if WizardForm.BackButton.Enabled then
-        WizardForm.BackButton.Click;
+        SendMessage(WizardForm.BackButton.Handle, INPUT_BM_CLICK, 0, 0);
       Exit;
     end;
 
@@ -517,7 +518,7 @@ begin
     begin
       AddEventLog('Controller action: Next / Install / Finish.');
       if WizardForm.NextButton.Enabled then
-        WizardForm.NextButton.Click;
+        SendMessage(WizardForm.NextButton.Handle, INPUT_BM_CLICK, 0, 0);
       Exit;
     end;
   except
