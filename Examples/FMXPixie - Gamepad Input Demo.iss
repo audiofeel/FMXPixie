@@ -248,7 +248,7 @@ begin
     '<div class="panel devices">' +
     '<div class="panel-head"><span>DEVICES</span><span id="device-count" class="panel-caption">0 detected</span></div>' +
     '<div id="device-list" class="device-list"></div>' +
-    '<div class="selected-info">';
+    '<div class="selected-info">' +
     '<div id="selected-device-name" class="selected-name">No device selected</div>' +
     '<div id="selected-device-id" class="selected-id"></div>' +
     '<div id="selected-device-note" class="device-note">Select a device to inspect its controls.</div></div>' +
@@ -451,11 +451,10 @@ begin
 
   Doc.BeginUpdate;
   try
-    if ElementListHandle <> 0 then
-      Doc.SetInnerHtml(ElementListHandle, '');
-
     if DeviceIndex < 0 then
     begin
+      if ElementListHandle <> 0 then
+        Doc.SetInnerHtml(ElementListHandle, '');
       SetTextById('selected-device-name', 'No device selected');
       SetTextById('selected-device-id', '');
       SetTextById('selected-device-note', 'Select a device to inspect its controls.');
