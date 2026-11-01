@@ -199,6 +199,7 @@ begin
       ElementsMemo.Lines.Add('No input device selected.');
       DeviceStatusLabel.Caption := 'Select an available input device.';
       RumbleButton.Enabled := False;
+      CaptureButton.Enabled := False;
       Exit;
     end;
 
@@ -210,9 +211,13 @@ begin
       DeviceStatusLabel.Caption := DeviceStatusLabel.Caption +
         '  |  unavailable: ' + Input.DeviceError(DeviceIndex);
       RumbleButton.Enabled := False;
+      CaptureButton.Enabled := False;
     end
     else
+    begin
       RumbleButton.Enabled := Input.DeviceRumbleSupported(DeviceIndex);
+      CaptureButton.Enabled := Input.IsEnabled and not Input.Capturing;
+    end;
 
     for I := 0 to Input.ElementCount(DeviceIndex) - 1 do
     begin
@@ -350,12 +355,25 @@ begin
   end;
 
   Action := InputActionFromIndex(ActionCombo.ItemIndex);
+  if Input.Capturing then
+  begin
+    Input.CancelCapture;
+    ActionCombo.Enabled := True;
+    CaptureButton.Caption := 'Capture';
+    CaptureButton.Enabled := Input.DeviceAvailable(DeviceCombo.ItemIndex);
+    CaptureStatusLabel.Caption := 'Capture cancelled.';
+    AddEventLog('Capture cancelled.');
+    Exit;
+  end;
+
   if Input.BeginCapture(Action, DeviceID, False) then
   begin
+    ActionCombo.Enabled := False;
     CaptureStatusLabel.Caption := 'Press a button, move an axis or press the D-Pad...';
     AddEventLog('Capture started for "' + InputActionName(Action) +
       '" on ' + Input.DeviceName(DeviceCombo.ItemIndex) + '.');
-    CaptureButton.Enabled := False;
+    CaptureButton.Caption := 'Cancel capture';
+    CaptureButton.Enabled := True;
   end
   else
     CaptureStatusLabel.Caption := 'Capture failed: ' + Input.LastError;
@@ -368,7 +386,10 @@ begin
 
   Input.CancelCapture;
   Input.ClearBindings;
-  CaptureButton.Enabled := InputAvailable and (DeviceCombo.ItemIndex >= 0);
+  ActionCombo.Enabled := True;
+  CaptureButton.Caption := 'Capture';
+  CaptureButton.Enabled := InputAvailable and (DeviceCombo.ItemIndex >= 0) and
+    Input.DeviceAvailable(DeviceCombo.ItemIndex);
   CaptureStatusLabel.Caption := 'All bindings cleared.';
   ActionStateLabel.Caption := 'NEXT: up   BACK: up   CANCEL: up';
   AddEventLog('All action bindings cleared.');
@@ -417,7 +438,10 @@ begin
   else
     CaptureStatusLabel.Caption := 'Binding failed: ' + Input.LastError;
 
-  CaptureButton.Enabled := InputAvailable;
+  ActionCombo.Enabled := True;
+  CaptureButton.Caption := 'Capture';
+  CaptureButton.Enabled := InputAvailable and (DeviceCombo.ItemIndex >= 0) and
+    Input.DeviceAvailable(DeviceCombo.ItemIndex);
 end;
 
 procedure UpdateActionState;
@@ -633,7 +657,9 @@ begin
   EventsMemo.Left := 0;
   EventsMemo.Top := MemoTop;
   EventsMemo.Width := PageWidth;
-  EventsMemo.Height := InputPage.SurfaceHeight - MemoTop;
+  EventsMemo.Height := InputPage.SurfaceHeight - MemoTop - ScaleY(4);
+  if EventsMemo.Height < ScaleY(48) then
+    EventsMemo.Height := ScaleY(48);
   EventsMemo.Anchors := [akLeft, akTop, akRight, akBottom];
   EventsMemo.ReadOnly := True;
   EventsMemo.ScrollBars := ssVertical;
@@ -651,6 +677,10 @@ begin
   LastDeviceCount := -1;
   InputAvailable := False;
   DeviceIDs := TStringList.Create;
+
+  WizardForm.ClientWidth := ScaleX(640);
+  WizardForm.ClientHeight := ScaleY(560);
+  WizardForm.Position := poScreenCenter;
 
   // This is the same DLL extraction scheme used by the other FMXPixie demos.
   ExtractTemporaryFile('FMXPixie.dll');
