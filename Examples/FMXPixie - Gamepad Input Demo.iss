@@ -299,11 +299,17 @@ begin
     Exit;
 
   if DeviceIDs.Count <> Input.DeviceCount then
-    Exit(True);
+  begin
+    Result := True;
+    Exit;
+  end;
 
   for I := 0 to DeviceIDs.Count - 1 do
     if DeviceIDs[I] <> Input.DeviceID(I) then
-      Exit(True);
+    begin
+      Result := True;
+      Exit;
+    end;
 end;
 
 procedure RefreshButtonClick(Sender: TObject);
