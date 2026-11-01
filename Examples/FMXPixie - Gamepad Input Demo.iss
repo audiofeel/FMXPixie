@@ -290,7 +290,7 @@ begin
     '<button id="clear-bindings" class="btn danger small">Clear assignments</button>' +
     '</div>' +
 
-    '<div class="toolbar"><div class="toolbar-title">PROFILE / CONTROLLER</div>' +
+    '<div class="toolbar"><div class="toolbar-title">TEMP PROFILE / CONTROLLER</div>' +
     '<button id="save-profile" class="btn small">Save profile</button>' +
     '<button id="load-profile" class="btn small">Load profile</button>' +
     '<button id="rumble" class="btn small is-hidden">Test vibration</button>' +
