@@ -700,8 +700,7 @@ begin
     if InputAvailable then
       AddEventLog('FMXInput initialized.');
   except
-    on E: Exception do
-      AddEventLog('FMXInput initialization failed: ' + E.ClassName + ': ' + E.Message);
+    AddEventLog('FMXInput initialization failed: ' + GetExceptionMessage);
   end;
 
   if InputAvailable then
