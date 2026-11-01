@@ -956,7 +956,7 @@ begin
 
   if Id = 'title-close' then
   begin
-    CloseSetup;
+    WizardForm.Close;
     Result := True;
     Exit;
   end;
