@@ -171,9 +171,9 @@ begin
   try
     FManager := TInputManager.Create(CreateFMXInputBackend);
   except
-    FActionPressed.Free;
-    FActionDown.Free;
-    FActionIDs.Free;
+    FreeAndNil(FActionPressed);
+    FreeAndNil(FActionDown);
+    FreeAndNil(FActionIDs);
     raise;
   end;
 end;
@@ -393,8 +393,11 @@ begin
   if FTimer <> nil then
   begin
     FTimer.OnTimer := nil;
-    FTimer.Free;
-    FTimer := nil;
+    if not FInPoll then
+    begin
+      FTimer.Free;
+      FTimer := nil;
+    end;
   end;
 
   if FManager <> nil then
@@ -411,9 +414,12 @@ begin
   end;
 
   FHasCaptured := False;
-  FActionIDs.Clear;
-  FActionDown.Clear;
-  FActionPressed.Clear;
+  if FActionIDs <> nil then
+    FActionIDs.Clear;
+  if FActionDown <> nil then
+    FActionDown.Clear;
+  if FActionPressed <> nil then
+    FActionPressed.Clear;
 end;
 
 function TFInputService.Poll: Boolean;
