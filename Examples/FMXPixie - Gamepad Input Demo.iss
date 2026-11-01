@@ -547,6 +547,7 @@ begin
     Exit;
   end;
 
+  CaptureAction := 0;
   if Input.Capturing then
     Input.CancelCapture;
 
@@ -665,9 +666,7 @@ procedure HandleCapturedInput;
 var
   Action: Integer;
   Kind: Integer;
-  Code: Integer;
   Direction: Integer;
-  DeviceName: String;
   BindingText: String;
 begin
   if Input = nil then
@@ -677,9 +676,7 @@ begin
 
   Action := CaptureAction;
   Kind := Input.CapturedKind;
-  Code := Input.CapturedCode;
   Direction := Input.CapturedDirection;
-  DeviceName := Input.CapturedDeviceName;
 
   BindingText := CapturedInputText;
   if (Kind = Ord(Axis)) or (Kind = Ord(RelativeAxis)) or
