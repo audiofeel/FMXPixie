@@ -52,6 +52,11 @@ const
   ACTION_BACK = 102;
   ACTION_CANCEL = 103;
 
+  XINPUT_BUTTON_A_CODE = 12;
+  XINPUT_BUTTON_B_CODE = 13;
+  XINPUT_BUTTON_X_CODE = 14;
+  XINPUT_DEVICE_ID_PREFIX = 'windows:xinput:slot:';
+
 
 var
   FMXForm: FForm;
@@ -80,6 +85,8 @@ var
   BindingTextNext: String;
   BindingTextBack: String;
   BindingTextCancel: String;
+
+  DefaultXboxBindingsApplied: Boolean;
 
 // ---------------------------------------------------------------------------
 // WinAPI timer. The callback runs on the Setup UI thread. This is required
@@ -213,6 +220,23 @@ begin
     '.element-row:nth-child(even){background:#111e31;}' +
     '.empty{color:#687b95;font-style:italic;}' +
     '.action-help{font-size:9px;line-height:13px;color:#8292a8;margin:6px 0 8px 0;}' +
+    '.game-action-list{margin-top:8px;}' +
+    '.game-action{display:flex;align-items:center;justify-content:space-between;width:100%;' +
+    'min-height:48px;padding:6px 10px;margin:0 0 7px 0;text-align:left;' +
+    'background:#162338;border:1px solid #2d405b;border-radius:5px;color:#e5edf8;' +
+    'font:12px "Segoe UI",Arial,sans-serif;cursor:pointer;}' +
+    '.game-action:hover{background:#1c2f49;border-color:#5274a4;}' +
+    '.game-action.is-down{background:#173d36;border-color:#38b78a;color:#d9fff0;}' +
+    '.game-action-copy{display:flex;flex-direction:column;gap:3px;}' +
+    '.game-action-label{font-size:13px;font-weight:600;}' +
+    '.game-action-binding{font-size:9px;color:#8093ad;}' +
+    '.game-action-right{display:flex;align-items:center;gap:9px;}' +
+    '.xbox-key{display:inline-block;width:27px;height:27px;line-height:27px;' +
+    'border-radius:50%;text-align:center;color:#fff;font-size:12px;font-weight:700;' +
+    'border:1px solid rgba(255,255,255,.24);box-shadow:inset 0 -2px 0 rgba(0,0,0,.24);}' +
+    '.xbox-a{background:#168a43;}' +
+    '.xbox-b{background:#c73535;}' +
+    '.xbox-x{background:#286bc3;}' +
     '.action-card{padding:8px 9px;margin-top:6px;background:#142136;border:1px solid #2a3c56;border-radius:5px;}' +
     '.action-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}' +
     '.action-name{font-size:11px;font-weight:700;color:#dbeafe;}' +
@@ -264,25 +288,26 @@ begin
     '</div>' +
 
     '<div class="panel actions">' +
-    '<div class="panel-head"><span>2. ASSIGN ACTIONS</span><span class="panel-caption">3. Press to test</span></div>' +
-    '<div class="action-help">Assign a control, then press it to test. NEXT = continue, BACK = previous, CANCEL = cancel. This demo only shows input state.</div>' +
-
-    '<div class="action-card"><div class="action-head"><span class="action-name">NEXT</span>' +
-    '<span id="state-next" class="action-state">RELEASED</span></div>' +
-    '<div id="binding-next" class="binding">Not assigned</div>' +
-    '<button id="capture-next" class="btn primary small">Assign NEXT</button></div>' +
-
-    '<div class="action-card"><div class="action-head"><span class="action-name">BACK</span>' +
-    '<span id="state-back" class="action-state">RELEASED</span></div>' +
-    '<div id="binding-back" class="binding">Not assigned</div>' +
-    '<button id="capture-back" class="btn primary small">Assign BACK</button></div>' +
-
-    '<div class="action-card"><div class="action-head"><span class="action-name">CANCEL</span>' +
-    '<span id="state-cancel" class="action-state">RELEASED</span></div>' +
-    '<div id="binding-cancel" class="binding">Not assigned</div>' +
-    '<button id="capture-cancel" class="btn primary small">Assign CANCEL</button></div>' +
-
-    '<div id="capture-status" class="capture-status">Step 1: select a device. Step 2: click Assign. Step 3: press the control you want to use.</div>' +
+    '<div class="panel-head"><span>GAME UI PREVIEW</span><span class="panel-caption">Xbox layout</span></div>' +
+    '<div class="action-help">Готовые игровые подсказки. Нажми кнопку на контроллере — соответствующая строка подсветится.</div>' +
+    '<div class="game-action-list">' +
+    '<button id="game-next" class="game-action" type="button">' +
+    '<span class="game-action-copy"><span class="game-action-label">Далее</span><span id="binding-next" class="game-action-binding">Не назначено</span></span>' +
+    '<span class="game-action-right"><span id="state-next" class="action-state">RELEASED</span><span class="xbox-key xbox-a">A</span></span></button>' +
+    '<button id="game-back" class="game-action" type="button">' +
+    '<span class="game-action-copy"><span class="game-action-label">Назад</span><span id="binding-back" class="game-action-binding">Не назначено</span></span>' +
+    '<span class="game-action-right"><span id="state-back" class="action-state">RELEASED</span><span class="xbox-key xbox-b">B</span></span></button>' +
+    '<button id="game-cancel" class="game-action" type="button">' +
+    '<span class="game-action-copy"><span class="game-action-label">Отмена</span><span id="binding-cancel" class="game-action-binding">Не назначено</span></span>' +
+    '<span class="game-action-right"><span id="state-cancel" class="action-state">RELEASED</span><span class="xbox-key xbox-x">X</span></span></button>' +
+    '</div>' +
+    '<div id="gamepad-map-info" class="capture-status">Ожидание Xbox-контроллера. Для теста используются A — Далее, B — Назад, X — Отмена.</div>' +
+    '<div class="toolbar"><div class="toolbar-title">ДОБАВИТЬ ДРУГОЙ ВВОД</div>' +
+    '<button id="capture-next" class="btn primary small">Добавить ввод: Далее</button>' +
+    '<button id="capture-back" class="btn primary small">Добавить ввод: Назад</button>' +
+    '<button id="capture-cancel" class="btn primary small">Добавить ввод: Отмена</button>' +
+    '</div>' +
+    '<div id="capture-status" class="capture-status">Можно добавить клавиатуру или мышь к уже назначенным кнопкам контроллера.</div>' +
 
     '<div class="toolbar"><div class="toolbar-title">EXTRA OPTIONS</div>' +
     '<button id="toggle-input" class="btn small">Pause input</button>' +
@@ -395,23 +420,34 @@ end;
 
 procedure SetActionStateVisual(Action: Integer; Down: Boolean);
 var
-  Id, TextValue: String;
+  Id, ButtonId, TextValue: String;
 begin
   if Action = ACTION_NEXT then
-    Id := 'state-next'
+  begin
+    Id := 'state-next';
+    ButtonId := 'game-next';
+  end
   else if Action = ACTION_BACK then
-    Id := 'state-back'
+  begin
+    Id := 'state-back';
+    ButtonId := 'game-back';
+  end
   else
+  begin
     Id := 'state-cancel';
+    ButtonId := 'game-cancel';
+  end;
 
   if Down then
   begin
     SetClassById(Id, 'action-state is-down');
+    SetClassById(ButtonId, 'game-action is-down');
     TextValue := 'PRESSED';
   end
   else
   begin
     SetClassById(Id, 'action-state');
+    SetClassById(ButtonId, 'game-action');
     TextValue := 'RELEASED';
   end;
   SetTextById(Id, TextValue);
@@ -521,6 +557,69 @@ begin
   Doc.Changed;
 end;
 
+procedure ApplyDefaultXboxBindings;
+var
+  I: Integer;
+  DeviceID: String;
+  DeviceName: String;
+  ErrorText: String;
+begin
+  if (Input = nil) or not InputAvailable or DefaultXboxBindingsApplied then
+    Exit;
+
+  for I := 0 to Input.DeviceCount - 1 do
+  begin
+    if (Input.DeviceKind(I) <> Ord(Controller)) or
+       not Input.DeviceAvailable(I) then
+      Continue;
+
+    DeviceID := Input.DeviceID(I);
+    if Copy(DeviceID, 1, Length(XINPUT_DEVICE_ID_PREFIX)) <>
+       XINPUT_DEVICE_ID_PREFIX then
+      Continue;
+
+    DeviceName := Input.DeviceName(I);
+
+    if not Input.Bind(ACTION_NEXT, DeviceID, Ord(Button),
+      XINPUT_BUTTON_A_CODE, 0) then
+      ErrorText := Input.LastError
+    else if not Input.Bind(ACTION_BACK, DeviceID, Ord(Button),
+      XINPUT_BUTTON_B_CODE, 0) then
+    begin
+      ErrorText := Input.LastError;
+      Input.RemoveBindings(ACTION_NEXT);
+    end
+    else if not Input.Bind(ACTION_CANCEL, DeviceID, Ord(Button),
+      XINPUT_BUTTON_X_CODE, 0) then
+    begin
+      ErrorText := Input.LastError;
+      Input.RemoveBindings(ACTION_NEXT);
+      Input.RemoveBindings(ACTION_BACK);
+    end;
+
+    if ErrorText <> '' then
+    begin
+      SetTextById('gamepad-map-info',
+        'Не удалось назначить кнопки Xbox: ' + ErrorText);
+      SetInputStatus('Default Xbox assignment failed: ' + ErrorText);
+      Exit;
+    end;
+
+    DefaultXboxBindingsApplied := True;
+    SetBindingText(ACTION_NEXT, DeviceName + ' / A');
+    SetBindingText(ACTION_BACK, DeviceName + ' / B');
+    SetBindingText(ACTION_CANCEL, DeviceName + ' / X');
+    SetTextById('gamepad-map-info',
+      'Назначено автоматически: A — Далее, B — Назад, X — Отмена. Нажми кнопки на контроллере для проверки.');
+    SetInputStatus('Xbox controller found. Default A / B / X controls are ready.');
+    AddEventLog('Default Xbox A / B / X controls assigned.');
+    Exit;
+  end;
+
+  SetTextById('gamepad-map-info',
+    'Xbox-контроллер не обнаружен. Подключи XInput-контроллер или добавь свой ввод вручную.');
+end;
+
 procedure PopulateDevices;
 var
   I: Integer;
@@ -546,12 +645,26 @@ begin
   if SelectedIndex < 0 then
   begin
     SelectedIndex := -1;
+
+    // Prefer a native XInput controller for this Xbox-oriented demo.
     for I := 0 to DeviceIDs.Count - 1 do
-      if Input.DeviceAvailable(I) then
+      if Input.DeviceAvailable(I) and
+        (Copy(DeviceIDs[I], 1, Length(XINPUT_DEVICE_ID_PREFIX)) =
+          XINPUT_DEVICE_ID_PREFIX) then
       begin
         SelectedIndex := I;
         Break;
       end;
+
+    // Fall back to the first available keyboard, mouse or controller.
+    if SelectedIndex < 0 then
+      for I := 0 to DeviceIDs.Count - 1 do
+        if Input.DeviceAvailable(I) then
+        begin
+          SelectedIndex := I;
+          Break;
+        end;
+
     if (SelectedIndex < 0) and (DeviceIDs.Count > 0) then
       SelectedIndex := 0;
   end;
@@ -602,6 +715,7 @@ begin
   Doc.Changed;
 
   UpdateSelectedDevice;
+  ApplyDefaultXboxBindings;
 end;
 
 procedure CancelCurrentCapture;
@@ -611,10 +725,10 @@ begin
     begin
       Input.CancelCapture;
       AddEventLog('Assignment cancelled.');
-      SetTextById('capture-status', 'Assignment cancelled. Choose another action, or test an existing assignment.');
+      SetTextById('capture-status', 'Назначение отменено. Уже назначенные кнопки контроллера сохранены.');
     end
     else
-      SetTextById('capture-status', 'No assignment is in progress. Click Assign next to an action to begin.');
+      SetTextById('capture-status', 'Сейчас ничего не назначается. Можно добавить клавиатуру или мышь к игровым действиям.');
   CaptureAction := 0;
   Doc.Changed;
 end;
@@ -712,7 +826,8 @@ begin
   begin
     CaptureAction := Action;
     SetTextById('capture-status',
-      'Assigning ' + InputActionName(Action) + ': press the key, mouse button, or controller control now.');
+      'Нажми клавишу, кнопку мыши или контроллера для действия ' +
+      InputActionName(Action) + '.');
     SetInputStatus('Waiting for a control on ' + Input.DeviceName(DeviceIndex) + '.');
     AddEventLog('Started assigning ' + InputActionName(Action) + '.');
     Doc.Changed;
@@ -753,7 +868,8 @@ begin
   if Input.AcceptCaptured then
   begin
     SetBindingText(Action, BindingText);
-    SetTextById('capture-status', InputActionName(Action) + ' assigned. Press that control to test it; its indicator should show PRESSED.');
+    SetTextById('capture-status', InputActionName(Action) +
+      ': дополнительный ввод назначен. Проверь его нажатием.');
     SetInputStatus(InputActionName(Action) + ' assigned successfully.');
     AddEventLog('Assigned ' + InputActionName(Action) + '.');
   end
@@ -787,7 +903,8 @@ begin
   SetActionStateVisual(ACTION_BACK, False);
   SetActionStateVisual(ACTION_CANCEL, False);
 
-  SetTextById('capture-status', 'All assignments cleared. Assign a control to NEXT, BACK, or CANCEL to begin again.');
+  SetTextById('capture-status', 'Все назначения очищены. Стандартные кнопки A / B / X также удалены.');
+  SetTextById('gamepad-map-info', 'Назначения очищены. Добавь ввод вручную или перезапусти демо для автоматической схемы Xbox.');
   SetInputStatus('All action assignments cleared.');
   AddEventLog('All assignments cleared.');
   Doc.Changed;
@@ -969,6 +1086,28 @@ begin
     Exit;
   end;
 
+  if Id = 'game-next' then
+  begin
+    AddEventLog('UI button clicked: Далее.');
+    SetInputStatus('Кнопка интерфейса «Далее» нажата мышью.');
+    Result := True;
+    Exit;
+  end
+  else if Id = 'game-back' then
+  begin
+    AddEventLog('UI button clicked: Назад.');
+    SetInputStatus('Кнопка интерфейса «Назад» нажата мышью.');
+    Result := True;
+    Exit;
+  end
+  else if Id = 'game-cancel' then
+  begin
+    AddEventLog('UI button clicked: Отмена.');
+    SetInputStatus('Кнопка интерфейса «Отмена» нажата мышью.');
+    Result := True;
+    Exit;
+  end;
+
   if Id = 'title-close' then
   begin
     WizardForm.Close;
@@ -1107,6 +1246,7 @@ begin
   NextDeviceCheck := 0;
   CaptureAction := 0;
   EventCount := 0;
+  DefaultXboxBindingsApplied := False;
 
   ActionNextDown := False;
   ActionBackDown := False;
