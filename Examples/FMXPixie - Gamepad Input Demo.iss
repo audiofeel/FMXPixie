@@ -178,154 +178,110 @@ begin
     '<!doctype html><html><head><meta charset="utf-8"><style>' +
     '*{box-sizing:border-box;}' +
     'html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;}' +
-    'body{background:#0b1220;color:#e5e7eb;font:12px "Segoe UI",Arial,sans-serif;}' +
-    '.app{width:100%;height:100%;padding:15px 17px 12px 17px;}' +
-    '.header{height:38px;display:flex;align-items:center;justify-content:space-between;}' +
-    '.brand{font-size:17px;font-weight:700;color:#f1f5f9;letter-spacing:.2px;}' +
-    '.sub{font-size:10px;color:#8492a8;margin-top:3px;}' +
-    '.status{height:30px;line-height:29px;padding:0 10px;margin:8px 0 12px 0;' +
-    'background:#111d30;border:1px solid #25364f;border-radius:5px;color:#a9bdd7;}' +
+    'body{background:#0b1220;color:#e5e7eb;font:13px "Segoe UI",Arial,sans-serif;}' +
+    '.app{width:100%;height:100%;padding:20px 22px 15px 22px;}' +
+    '.header{height:55px;display:flex;align-items:center;justify-content:space-between;}' +
+    '.brand{font-size:20px;font-weight:700;color:#f1f5f9;letter-spacing:.2px;}' +
+    '.sub{font-size:11px;color:#8796aa;margin-top:4px;}' +
+    '.status{height:32px;line-height:30px;padding:0 11px;margin:9px 0 16px 0;' +
+    'background:#111d30;border:1px solid #25364f;border-radius:6px;color:#a9bdd7;font-size:11px;}' +
     '.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;' +
     'background:#64748b;margin-right:8px;}' +
     '.status-dot.on{background:#34d399;}' +
-    '.workspace{display:flex;width:100%;height:calc(100% - 111px);}' +
-    '.panel{min-width:0;background:#101a2a;border:1px solid #26364d;border-radius:7px;' +
-    'padding:12px;margin-right:10px;overflow:hidden;}' +
-    '.panel:last-child{margin-right:0;}' +
-    '.devices{width:29%;}' +
-    '.elements{width:35%;}' +
-    '.actions{flex:1;}' +
-    '.panel-head{height:26px;display:flex;align-items:center;justify-content:space-between;' +
-    'color:#dce7f5;font-size:12px;font-weight:700;}' +
-    '.panel-caption{font-size:10px;color:#7f90a8;font-weight:400;}' +
-    '.panel-hint{font-size:9px;line-height:13px;color:#8292a8;margin:4px 0 7px 0;}' +
-    '.device-list{height:calc(100% - 134px);overflow-y:auto;margin-top:4px;}' +
-    '.device-row{display:block;width:100%;height:32px;margin:0 0 5px 0;padding:0 8px;' +
-    'text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
-    'background:#162338;border:1px solid #293b55;border-radius:4px;color:#aebed2;' +
-    'font:10px "Segoe UI",Arial,sans-serif;cursor:pointer;}' +
-    '.device-row:hover{background:#1b2d47;border-color:#5274a4;color:#fff;}' +
-    '.device-row.is-selected{background:#1b3553;border-color:#4e83bd;color:#e6f2ff;}' +
-    '.device-row.is-unavailable{color:#78869a;border-color:#303947;}' +
-    '.selected-info{margin-top:8px;padding-top:8px;border-top:1px solid #26364d;}' +
-    '.selected-name{font-size:11px;font-weight:700;color:#dbeafe;}' +
-    '.selected-id{margin-top:3px;font-size:9px;color:#6f829c;white-space:nowrap;' +
-    'overflow:hidden;text-overflow:ellipsis;}' +
-    '.device-note{margin-top:5px;font-size:9px;color:#8190a5;}' +
-    '.element-summary{font-size:10px;color:#8292a8;margin:5px 0 8px 0;}' +
-    '.element-list{height:calc(100% - 62px);overflow-y:auto;}' +
-    '.element-row{height:26px;line-height:25px;padding:0 7px;margin-bottom:3px;' +
-    'background:#142136;border:1px solid #24364e;border-radius:3px;' +
-    'font-size:10px;color:#b7c7dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
-    '.element-row:nth-child(even){background:#111e31;}' +
-    '.empty{color:#687b95;font-style:italic;}' +
-    '.action-help{font-size:9px;line-height:13px;color:#8292a8;margin:6px 0 8px 0;}' +
-    '.game-action-list{margin-top:8px;}' +
-    '.game-action{display:flex;align-items:center;justify-content:space-between;width:100%;' +
-    'min-height:48px;padding:6px 10px;margin:0 0 7px 0;text-align:left;' +
-    'background:#162338;border:1px solid #2d405b;border-radius:5px;color:#e5edf8;' +
-    'font:12px "Segoe UI",Arial,sans-serif;cursor:pointer;}' +
-    '.game-action:hover{background:#1c2f49;border-color:#5274a4;}' +
-    '.game-action.is-down{background:#173d36;border-color:#38b78a;color:#d9fff0;}' +
-    '.game-action-copy{display:flex;flex-direction:column;gap:3px;}' +
-    '.game-action-label{font-size:13px;font-weight:600;}' +
-    '.game-action-binding{font-size:9px;color:#8093ad;}' +
-    '.game-action-right{display:flex;align-items:center;gap:9px;}' +
-    '.xbox-key{display:inline-block;width:27px;height:27px;line-height:27px;' +
-    'border-radius:50%;text-align:center;color:#fff;font-size:12px;font-weight:700;' +
-    'border:1px solid rgba(255,255,255,.24);box-shadow:inset 0 -2px 0 rgba(0,0,0,.24);}' +
+    '.workspace{display:flex;width:100%;height:calc(100% - 112px);gap:14px;}' +
+    '.panel{flex:1;min-width:0;background:#101a2a;border:1px solid #26364d;' +
+    'border-radius:9px;padding:17px;overflow:hidden;}' +
+    '.panel-head{display:flex;align-items:center;justify-content:space-between;' +
+    'font-size:14px;font-weight:700;color:#e5edf8;padding-bottom:11px;' +
+    'border-bottom:1px solid #26364d;}' +
+    '.panel-note{font-size:10px;line-height:15px;color:#8999ae;margin:12px 0 15px 0;}' +
+    '.xbox-row{display:flex;align-items:center;justify-content:space-between;' +
+    'min-height:70px;padding:10px 12px;margin:0 0 9px 0;' +
+    'background:#162338;border:1px solid #2b3e58;border-radius:7px;' +
+    'transition:background-color .12s,border-color .12s;}' +
+    '.xbox-row.is-down{background:#173d36;border-color:#38b78a;}' +
+    '.xbox-copy{display:flex;flex-direction:column;gap:4px;}' +
+    '.xbox-title{font-size:15px;font-weight:600;color:#f1f5f9;}' +
+    '.xbox-hint{font-size:10px;color:#8292a8;}' +
+    '.xbox-right{display:flex;align-items:center;gap:12px;}' +
+    '.xbox-state{font-size:9px;color:#71839b;letter-spacing:.5px;font-weight:700;}' +
+    '.xbox-state.is-down{color:#9af0c8;}' +
+    '.xbox-key{display:inline-flex;align-items:center;justify-content:center;' +
+    'width:38px;height:38px;border-radius:50%;color:#fff;font-size:16px;font-weight:800;' +
+    'border:1px solid rgba(255,255,255,.28);' +
+    'box-shadow:inset 0 -3px 0 rgba(0,0,0,.22),0 2px 5px rgba(0,0,0,.25);}' +
     '.xbox-a{background:#168a43;}' +
     '.xbox-b{background:#c73535;}' +
     '.xbox-x{background:#286bc3;}' +
-    '.action-card{padding:8px 9px;margin-top:6px;background:#142136;border:1px solid #2a3c56;border-radius:5px;}' +
-    '.action-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}' +
-    '.action-name{font-size:11px;font-weight:700;color:#dbeafe;}' +
-    '.action-state{padding:2px 7px;border-radius:3px;background:#263449;color:#91a2b9;' +
-    'font-size:9px;font-weight:700;letter-spacing:.4px;}' +
-    '.action-state.is-down{background:#14553f;color:#9af0c8;}' +
-    '.binding{font-size:9px;color:#91a3ba;min-height:14px;margin-bottom:7px;}' +
-    'button{font:10px "Segoe UI",Arial,sans-serif;cursor:pointer;}' +
-    '.btn{height:26px;padding:0 9px;margin:0 4px 4px 0;border:1px solid #3a5272;' +
-    'border-radius:4px;background:#20344f;color:#dceaff;}' +
-    '.btn:hover{background:#2a486c;border-color:#6593c7;color:#fff;}' +
-    '.btn.primary{background:#1d4d78;border-color:#3976ad;}' +
-    '.btn.danger{background:#472b35;border-color:#74404b;color:#ffd8df;}' +
-    '.btn.small{height:23px;padding:0 7px;font-size:9px;}' +
-    '.toolbar{margin-top:10px;padding-top:8px;border-top:1px solid #293a51;}' +
-    '.toolbar-title{font-size:9px;color:#7e91aa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}' +
-    '.capture-status{min-height:34px;margin-top:7px;padding:6px 7px;background:#111e30;' +
-    'border:1px solid #26364d;border-radius:4px;font-size:9px;color:#9fb2cb;}' +
-    '.footer{height:21px;line-height:20px;margin-top:8px;padding:0 3px;color:#71839b;font-size:9px;}' +
-    '.footer-event{display:inline-block;max-width:80%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
-    '.footer-count{float:right;color:#8ba2bf;}' +
+    '.xbox-status{margin-top:13px;padding:10px 11px;border-radius:6px;' +
+    'background:#111e30;border:1px solid #26364d;color:#91a6c1;font-size:10px;line-height:15px;}' +
+    '.custom-row{display:flex;align-items:center;justify-content:space-between;' +
+    'gap:8px;min-height:66px;padding:9px 10px;margin:0 0 9px 0;' +
+    'background:#162338;border:1px solid #2b3e58;border-radius:7px;}' +
+    '.custom-copy{display:flex;flex-direction:column;gap:5px;min-width:0;}' +
+    '.custom-title{font-size:13px;font-weight:600;color:#e5edf8;}' +
+    '.custom-binding{font-size:10px;color:#8292a8;white-space:nowrap;' +
+    'overflow:hidden;text-overflow:ellipsis;max-width:265px;}' +
+    'button{font:11px "Segoe UI",Arial,sans-serif;cursor:pointer;}' +
+    '.assign-btn{flex-shrink:0;min-width:94px;height:31px;padding:0 11px;' +
+    'border:1px solid #3b6da0;border-radius:5px;background:#1d4d78;color:#e4f1ff;}' +
+    '.assign-btn:hover{background:#28618f;border-color:#6aa2d8;color:#fff;}' +
+    '.capture-status{min-height:42px;margin-top:13px;padding:9px 10px;' +
+    'background:#111e30;border:1px solid #26364d;border-radius:6px;' +
+    'font-size:10px;line-height:15px;color:#9fb2cb;}' +
     '.is-hidden{display:none;}' +
     '</style></head><body><div class="app">' +
 
-    '<div class="header"><div><div class="brand">Input device monitor</div>' +
-    '<div class="sub">Connect an Xbox controller  &gt;  Press A / B / X  &gt;  Watch the prompts react</div></div>' +
-    '<div><button id="refresh-devices" class="btn small">Refresh devices</button></div></div>' +
+    '<div class="header"><div>' +
+    '<div class="brand">GAME MENU</div>' +
+    '<div class="sub">Пример управления игровым меню с помощью контроллера, клавиатуры или мыши</div>' +
+    '</div></div>' +
 
     '<div class="status"><span id="status-dot" class="status-dot"></span>' +
-    '<span id="input-status">Initializing FMXInput...</span>' +
+    '<span id="input-status">Подключите Xbox-контроллер или назначьте свои кнопки справа.</span>' +
     '<span style="float:right" id="input-state">INPUT: --</span></div>' +
 
     '<div class="workspace">' +
 
-    '<div class="panel devices">' +
-    '<div class="panel-head"><span>1. CHOOSE A DEVICE</span><span id="device-count" class="panel-caption">0 found</span></div>' +
-    '<div class="panel-hint">Select a keyboard, mouse, or controller.</div>' +
-    '<div id="device-list" class="device-list"></div>' +
-    '<div class="selected-info">' +
-    '<div id="selected-device-name" class="selected-name">No device selected</div>' +
-    '<div id="selected-device-id" class="selected-id"></div>' +
-    '<div id="selected-device-note" class="device-note">Choose a device from the list above.</div></div>' +
+    '<div class="panel">' +
+    '<div class="panel-head"><span>XBOX — ГОТОВАЯ РАСКЛАДКА</span><span class="panel-caption">XINPUT</span></div>' +
+    '<div class="panel-note">Стандартные кнопки Xbox уже назначены. Подключи контроллер — и можно сразу проверять.</div>' +
+
+    '<div id="xbox-row-next" class="xbox-row">' +
+    '<div class="xbox-copy"><span class="xbox-title">Далее</span><span class="xbox-hint">Продолжить / подтвердить</span></div>' +
+    '<div class="xbox-right"><span id="state-next" class="xbox-state">READY</span><span class="xbox-key xbox-a">A</span></div></div>' +
+
+    '<div id="xbox-row-back" class="xbox-row">' +
+    '<div class="xbox-copy"><span class="xbox-title">Назад</span><span class="xbox-hint">Вернуться к предыдущему шагу</span></div>' +
+    '<div class="xbox-right"><span id="state-back" class="xbox-state">READY</span><span class="xbox-key xbox-b">B</span></div></div>' +
+
+    '<div id="xbox-row-cancel" class="xbox-row">' +
+    '<div class="xbox-copy"><span class="xbox-title">Отмена</span><span class="xbox-hint">Закрыть / отменить действие</span></div>' +
+    '<div class="xbox-right"><span id="state-cancel" class="xbox-state">READY</span><span class="xbox-key xbox-x">X</span></div></div>' +
+
+    '<div id="xbox-status" class="xbox-status">Ожидание Xbox-контроллера. Раскладка: A — Далее, B — Назад, X — Отмена.</div>' +
     '</div>' +
 
-    '<div class="panel elements">' +
-    '<div class="panel-head"><span>DEVICE CONTROLS</span><span id="element-total" class="panel-caption">0 controls</span></div>' +
-    '<div id="element-summary" class="element-summary">Reference list: keys, buttons, axes and other controls found on the selected device.</div>' +
-    '<div id="element-list" class="element-list"></div>' +
+    '<div class="panel">' +
+    '<div class="panel-head"><span>СВОИ НАЗНАЧЕНИЯ</span><span class="panel-caption">ЛЮБОЙ ВВОД</span></div>' +
+    '<div class="panel-note">Здесь можно добавить свои клавиши или кнопки. Нажми «Назначить», затем нажми нужную кнопку на клавиатуре, мыши или контроллере.</div>' +
+
+    '<div class="custom-row"><div class="custom-copy"><span class="custom-title">Далее</span>' +
+    '<span id="custom-binding-next" class="custom-binding">Не назначено</span></div>' +
+    '<button id="custom-assign-next" class="assign-btn" type="button">Назначить</button></div>' +
+
+    '<div class="custom-row"><div class="custom-copy"><span class="custom-title">Назад</span>' +
+    '<span id="custom-binding-back" class="custom-binding">Не назначено</span></div>' +
+    '<button id="custom-assign-back" class="assign-btn" type="button">Назначить</button></div>' +
+
+    '<div class="custom-row"><div class="custom-copy"><span class="custom-title">Отмена</span>' +
+    '<span id="custom-binding-cancel" class="custom-binding">Не назначено</span></div>' +
+    '<button id="custom-assign-cancel" class="assign-btn" type="button">Назначить</button></div>' +
+
+    '<div id="capture-status" class="capture-status">Свои назначения добавляются к готовой раскладке Xbox. Например, можно оставить A/B/X и дополнительно назначить Enter, Esc или пробел.</div>' +
     '</div>' +
 
-    '<div class="panel actions">' +
-    '<div class="panel-head"><span>GAME UI PREVIEW</span><span class="panel-caption">Xbox layout</span></div>' +
-    '<div class="action-help">A — Далее, B — Назад, X — Отмена. При нажатии действие подсветится; этот экран демонстрирует ввод, но не переключает страницы.</div>' +
-    '<div class="game-action-list">' +
-    '<button id="game-next" class="game-action" type="button">' +
-    '<span class="game-action-copy"><span class="game-action-label">Далее</span><span id="binding-next" class="game-action-binding">Не назначено</span></span>' +
-    '<span class="game-action-right"><span id="state-next" class="action-state">RELEASED</span><span class="xbox-key xbox-a">A</span></span></button>' +
-    '<button id="game-back" class="game-action" type="button">' +
-    '<span class="game-action-copy"><span class="game-action-label">Назад</span><span id="binding-back" class="game-action-binding">Не назначено</span></span>' +
-    '<span class="game-action-right"><span id="state-back" class="action-state">RELEASED</span><span class="xbox-key xbox-b">B</span></span></button>' +
-    '<button id="game-cancel" class="game-action" type="button">' +
-    '<span class="game-action-copy"><span class="game-action-label">Отмена</span><span id="binding-cancel" class="game-action-binding">Не назначено</span></span>' +
-    '<span class="game-action-right"><span id="state-cancel" class="action-state">RELEASED</span><span class="xbox-key xbox-x">X</span></span></button>' +
-    '</div>' +
-    '<div id="gamepad-map-info" class="capture-status">Ожидание Xbox-контроллера. Для теста используются A — Далее, B — Назад, X — Отмена.</div>' +
-    '<div class="toolbar"><div class="toolbar-title">ДОБАВИТЬ ДРУГОЙ ВВОД</div>' +
-    '<button id="capture-next" class="btn primary small">Добавить ввод: Далее</button>' +
-    '<button id="capture-back" class="btn primary small">Добавить ввод: Назад</button>' +
-    '<button id="capture-cancel" class="btn primary small">Добавить ввод: Отмена</button>' +
-    '</div>' +
-    '<div id="capture-status" class="capture-status">Можно добавить клавиатуру или мышь к уже назначенным кнопкам контроллера.</div>' +
-
-    '<div class="toolbar"><div class="toolbar-title">EXTRA OPTIONS</div>' +
-    '<button id="toggle-input" class="btn small">Pause input</button>' +
-    '<button id="cancel-capture" class="btn small">Stop assignment</button>' +
-    '<button id="clear-bindings" class="btn danger small">Clear assignments</button>' +
-    '</div>' +
-
-    '<div class="toolbar"><div class="toolbar-title">TEMP PROFILE / CONTROLLER</div>' +
-    '<button id="save-profile" class="btn small">Save profile</button>' +
-    '<button id="load-profile" class="btn small">Load profile</button>' +
-    '<button id="rumble" class="btn small is-hidden">Test vibration</button>' +
-    '</div>' +
-    '</div>' +
-
-    '</div>' +
-    '<div class="footer"><span id="last-event" class="footer-event">No input events yet.</span>' +
-    '<span id="event-count" class="footer-count">0 events</span></div>' +
-    '</div></body></html>';
+    '</div></div></body></html>';
 end;
 
 // ---------------------------------------------------------------------------
@@ -404,17 +360,17 @@ begin
   if Action = ACTION_NEXT then
   begin
     BindingTextNext := S;
-    SetTextById('binding-next', S);
+    SetTextById('custom-binding-next', S);
   end
   else if Action = ACTION_BACK then
   begin
     BindingTextBack := S;
-    SetTextById('binding-back', S);
+    SetTextById('custom-binding-back', S);
   end
   else if Action = ACTION_CANCEL then
   begin
     BindingTextCancel := S;
-    SetTextById('binding-cancel', S);
+    SetTextById('custom-binding-cancel', S);
   end;
 end;
 
@@ -425,28 +381,28 @@ begin
   if Action = ACTION_NEXT then
   begin
     Id := 'state-next';
-    ButtonId := 'game-next';
+    ButtonId := 'xbox-row-next';
   end
   else if Action = ACTION_BACK then
   begin
     Id := 'state-back';
-    ButtonId := 'game-back';
+    ButtonId := 'xbox-row-back';
   end
   else
   begin
     Id := 'state-cancel';
-    ButtonId := 'game-cancel';
+    ButtonId := 'xbox-row-cancel';
   end;
 
   if Down then
   begin
-    SetClassById(Id, 'action-state is-down');
+    SetClassById(Id, 'xbox-state is-down');
     SetClassById(ButtonId, 'game-action is-down');
     TextValue := 'PRESSED';
   end
   else
   begin
-    SetClassById(Id, 'action-state');
+    SetClassById(Id, 'xbox-state');
     SetClassById(ButtonId, 'game-action');
     TextValue := 'RELEASED';
   end;
@@ -598,124 +554,38 @@ begin
 
         if ErrorText <> '' then
         begin
-          SetTextById('gamepad-map-info',
-            'Не удалось назначить кнопки Xbox: ' + ErrorText);
+          SetTextById('xbox-status',
+            'Не удалось назначить стандартные кнопки Xbox: ' + ErrorText);
           SetInputStatus('Default Xbox assignment failed: ' + ErrorText);
           Exit;
         end;
 
         DefaultXboxBindingsApplied := True;
-        SetBindingText(ACTION_NEXT, DeviceName + ' / A');
-        SetBindingText(ACTION_BACK, DeviceName + ' / B');
-        SetBindingText(ACTION_CANCEL, DeviceName + ' / X');
-        SetTextById('gamepad-map-info',
-          'Назначено автоматически: A — Далее, B — Назад, X — Отмена. Нажми кнопки на контроллере для проверки.');
-        SetInputStatus('Xbox controller found. Default A / B / X controls are ready.');
+        SetTextById('xbox-status',
+          DeviceName + ': A — Далее, B — Назад, X — Отмена. Готово к работе.');
+        SetInputStatus('Xbox controller connected. A / B / X are ready.');
         AddEventLog('Default Xbox A / B / X controls assigned.');
         Exit;
       end;
     end;
   end;
 
-  SetTextById('gamepad-map-info',
-    'Xbox-контроллер не обнаружен. Подключи XInput-контроллер или добавь свой ввод вручную.');
+  SetTextById('xbox-status',
+    'Xbox-контроллер не найден. Значки A / B / X показаны как пример стандартной раскладки.');
 end;
 
 procedure PopulateDevices;
 var
   I: Integer;
-  Count: Integer;
-  SelectedIndex: Integer;
-  PreviousID: String;
-  NameText: String;
-  RowClass: String;
-  DevicesHtml: String;
-  DeviceListHandle: NativeInt;
 begin
   if Input = nil then
     Exit;
 
-  PreviousID := SelectedDeviceID;
   DeviceIDs.Clear;
-  Count := Input.DeviceCount;
-
-  for I := 0 to Count - 1 do
+  for I := 0 to Input.DeviceCount - 1 do
     DeviceIDs.Add(Input.DeviceID(I));
 
-  SelectedIndex := DeviceIDs.IndexOf(PreviousID);
-  if SelectedIndex < 0 then
-  begin
-    SelectedIndex := -1;
-
-    // Prefer a native XInput controller for this Xbox-oriented demo.
-    for I := 0 to DeviceIDs.Count - 1 do
-      if Input.DeviceAvailable(I) and
-        (Copy(DeviceIDs[I], 1, Length(XINPUT_DEVICE_ID_PREFIX)) =
-          XINPUT_DEVICE_ID_PREFIX) then
-      begin
-        SelectedIndex := I;
-        Break;
-      end;
-
-    // Fall back to the first available keyboard, mouse or controller.
-    if SelectedIndex < 0 then
-      for I := 0 to DeviceIDs.Count - 1 do
-        if Input.DeviceAvailable(I) then
-        begin
-          SelectedIndex := I;
-          Break;
-        end;
-
-    if (SelectedIndex < 0) and (DeviceIDs.Count > 0) then
-      SelectedIndex := 0;
-  end;
-
-  if SelectedIndex >= 0 then
-    SelectedDeviceID := DeviceIDs[SelectedIndex]
-  else
-    SelectedDeviceID := '';
-
-  DeviceListHandle := Doc.GetElementById('device-list');
-  DevicesHtml := '';
-
-  Doc.BeginUpdate;
-  try
-    SetTextById('device-count', IntToStr(DeviceIDs.Count) + ' detected');
-
-    for I := 0 to DeviceIDs.Count - 1 do
-    begin
-      NameText := InputDeviceKindName(Input.DeviceKind(I)) + '  |  ' +
-        Input.DeviceName(I);
-      if not Input.DeviceAvailable(I) then
-        NameText := NameText + '  [unavailable]';
-
-      RowClass := 'device-row';
-      if not Input.DeviceAvailable(I) then
-        RowClass := RowClass + ' is-unavailable';
-      if DeviceIDs[I] = SelectedDeviceID then
-        RowClass := RowClass + ' is-selected';
-
-      DevicesHtml := DevicesHtml +
-        '<button id="device-' + IntToStr(I) + '" class="' + RowClass +
-        '" type="button">' + HtmlEscapeText(NameText) + '</button>';
-    end;
-
-    if DeviceIDs.Count = 0 then
-      DevicesHtml := '<div class="empty">No devices found. Connect a keyboard, mouse, or controller, then click Refresh.</div>';
-
-    if DeviceListHandle <> 0 then
-      Doc.SetInnerHtml(DeviceListHandle, DevicesHtml);
-
-    if DeviceIDs.Count = 0 then
-      SetInputStatus('No input devices detected. Connect a keyboard, mouse or controller.')
-    else
-      SetInputStatus('Enumerated ' + IntToStr(DeviceIDs.Count) + ' input devices.');
-  finally
-    Doc.EndUpdate;
-  end;
-  Doc.Changed;
-
-  UpdateSelectedDevice;
+  // Device enumeration is kept internal. The demo UI does not need a technical list.
   ApplyDefaultXboxBindings;
 end;
 
@@ -791,52 +661,36 @@ end;
 // Capture and bindings
 // ---------------------------------------------------------------------------
 procedure StartCapture(Action: Integer);
-var
-  DeviceIndex: Integer;
 begin
   if (Input = nil) or not InputAvailable then
     Exit;
 
-  DeviceIndex := FindSelectedDeviceIndex;
-  if DeviceIndex < 0 then
-  begin
-    SetInputStatus('Select a device in Step 1 first.');
-    SetTextById('capture-status', 'Select a device in the left panel before assigning an action.');
-    Doc.Changed;
-    Exit;
-  end;
-
   if not Input.IsEnabled then
   begin
-    SetInputStatus('Input is paused. Resume input before assigning controls.');
-    SetTextById('capture-status', 'Input is paused. Click Resume input under Extra Options, then try again.');
+    SetInputStatus('Ввод приостановлен. Возобновите его перед назначением кнопок.');
+    SetTextById('capture-status', 'Сейчас ввод приостановлен.');
     Doc.Changed;
-    Exit;
-  end;
-
-  if SelectedDeviceID = '' then
-  begin
-    SetInputStatus('Select an input device first.');
     Exit;
   end;
 
   if Input.Capturing then
     Input.CancelCapture;
 
-  if Input.BeginCapture(Action, SelectedDeviceID, True) then
+  // Empty DeviceID captures from any enumerated keyboard, mouse or controller.
+  if Input.BeginCapture(Action, '', False) then
   begin
     CaptureAction := Action;
     SetTextById('capture-status',
-      'Нажми клавишу, кнопку мыши или контроллера для действия ' +
+      'Нажми нужную клавишу или кнопку. Ожидается назначение для действия ' +
       InputActionName(Action) + '.');
-    SetInputStatus('Waiting for a control on ' + Input.DeviceName(DeviceIndex) + '.');
-    AddEventLog('Started assigning ' + InputActionName(Action) + '.');
+    SetInputStatus('Ожидание кнопки для действия ' + InputActionName(Action) + '.');
+    AddEventLog('Started custom assignment for ' + InputActionName(Action) + '.');
     Doc.Changed;
   end
   else
   begin
-    SetInputStatus('Could not start assignment: ' + Input.LastError);
-    SetTextById('capture-status', 'Assignment could not be started: ' + Input.LastError);
+    SetTextById('capture-status', 'Не удалось начать назначение: ' + Input.LastError);
+    SetInputStatus('Assignment failed: ' + Input.LastError);
   end;
 end;
 
@@ -860,24 +714,24 @@ begin
   Direction := Input.CapturedDirection;
   DeviceName := Input.CapturedDeviceName;
 
-  BindingText := DeviceName + ' / ' + InputElementKindName(Kind) +
-    ' / code ' + IntToStr(Code);
+  BindingText := DeviceName + ' — ' + InputElementKindName(Kind) +
+    ' ' + IntToStr(Code);
   if (Kind = Ord(Axis)) or (Kind = Ord(RelativeAxis)) or
      (Kind = Ord(Hat)) then
-    BindingText := BindingText + ' / direction ' + IntToStr(Direction);
+    BindingText := BindingText + ', direction ' + IntToStr(Direction);
 
   if Input.AcceptCaptured then
   begin
     SetBindingText(Action, BindingText);
-    SetTextById('capture-status', InputActionName(Action) +
-      ': дополнительный ввод назначен. Проверь его нажатием.');
+    SetTextById('capture-status', 'Готово: ' + InputActionName(Action) +
+      ' назначено. Кнопка добавлена как дополнительный вариант к раскладке Xbox.');
     SetInputStatus(InputActionName(Action) + ' assigned successfully.');
     AddEventLog('Assigned ' + InputActionName(Action) + '.');
   end
   else
   begin
-    SetTextById('capture-status', 'Assignment failed: ' + Input.LastError);
-    SetInputStatus('Unable to assign this control: ' + Input.LastError);
+    SetTextById('capture-status', 'Не удалось назначить кнопку: ' + Input.LastError);
+    SetInputStatus('Unable to assign input: ' + Input.LastError);
   end;
 
   CaptureAction := 0;
@@ -1072,39 +926,9 @@ begin
   if H = 0 then
     Exit;
 
-  if Copy(Id, 1, 7) = 'device-' then
-  begin
-    Index := StrToInt(Copy(Id, 8, Length(Id) - 7));
-    SelectDevice(Index);
-    Result := True;
-    Exit;
-  end;
-
   if Id = 'title-minimize' then
   begin
     FMXForm.Minimize;
-    Result := True;
-    Exit;
-  end;
-
-  if Id = 'game-next' then
-  begin
-    AddEventLog('UI button clicked: Далее.');
-    SetInputStatus('Кнопка интерфейса «Далее» нажата мышью.');
-    Result := True;
-    Exit;
-  end
-  else if Id = 'game-back' then
-  begin
-    AddEventLog('UI button clicked: Назад.');
-    SetInputStatus('Кнопка интерфейса «Назад» нажата мышью.');
-    Result := True;
-    Exit;
-  end
-  else if Id = 'game-cancel' then
-  begin
-    AddEventLog('UI button clicked: Отмена.');
-    SetInputStatus('Кнопка интерфейса «Отмена» нажата мышью.');
     Result := True;
     Exit;
   end;
@@ -1116,25 +940,25 @@ begin
     Exit;
   end;
 
-  if Id = 'refresh-devices' then
-    RefreshInputDevices
-  else if Id = 'capture-next' then
+  if Id = 'custom-assign-next' then
     StartCapture(ACTION_NEXT)
-  else if Id = 'capture-back' then
+  else if Id = 'custom-assign-back' then
     StartCapture(ACTION_BACK)
-  else if Id = 'capture-cancel' then
+  else if Id = 'custom-assign-cancel' then
     StartCapture(ACTION_CANCEL)
-  else if Id = 'cancel-capture' then
-    CancelCurrentCapture
-  else if Id = 'clear-bindings' then
-    ClearAllBindings
-  else if Id = 'save-profile' then
-    SaveInputProfile
-  else if Id = 'load-profile' then
-    LoadInputProfile
-  else if Id = 'rumble' then
-    TestRumble
-  else if Id = 'toggle-input' then
+  else if Id = 'title-close' then
+  begin
+    WizardForm.Close;
+    Result := True;
+    Exit;
+  end
+  else if Id = 'title-minimize' then
+  begin
+    FMXForm.Minimize;
+    Result := True;
+    Exit;
+  end
+  else if Id = 'refresh-devices' then
   begin
     if Input <> nil then
     begin
@@ -1253,9 +1077,9 @@ begin
   ActionBackDown := False;
   ActionCancelDown := False;
 
-  BindingTextNext := 'Not assigned';
-  BindingTextBack := 'Not assigned';
-  BindingTextCancel := 'Not assigned';
+  BindingTextNext := 'Не назначено';
+  BindingTextBack := 'Не назначено';
+  BindingTextCancel := 'Не назначено';
 
   SelectedDeviceID := '';
   DeviceIDs := TStringList.Create;
@@ -1303,9 +1127,9 @@ begin
     begin
       PopulateDevices;
       if DefaultXboxBindingsApplied then
-        SetInputStatus('Xbox controller found. Default A / B / X controls are ready.')
+        SetInputStatus('Xbox-контроллер подключен. Стандартные кнопки готовы.')
       else
-        SetInputStatus('FMXInput initialized. Connect an Xbox controller or assign input manually.');
+        SetInputStatus('Ввод готов. Подключите Xbox или назначьте свои кнопки справа.');
     end
     else
       SetInputStatus('Initial device refresh failed: ' + Input.LastError);
