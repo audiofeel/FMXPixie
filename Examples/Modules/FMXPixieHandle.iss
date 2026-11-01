@@ -191,6 +191,8 @@ type
     procedure SaveAsPdf(const FileName: WideString);
     procedure SaveAsPng(const FileName: WideString;
       FWidth, FHeight: Integer);
+    procedure SaveAsBmp(const FileName: WideString;
+      FWidth, FHeight: Integer);
     function RegisterImageFromFile(
       const FName, FFileName: WideString): Boolean;
     procedure UnregisterImage(const FName: WideString);
@@ -368,6 +370,8 @@ type
     procedure CheckersSize(FValue: Integer);
     procedure SaveAsPng(const FileName: WideString;
       FWidth, FHeight: Integer);
+    procedure SaveAsBmp(const FileName: WideString;
+      FWidth, FHeight: Integer);
     procedure Opacity(FOpacity: Single);
     procedure Enabled(FEnabled: Boolean);
     procedure Visible(FVisible: Boolean);
@@ -426,6 +430,8 @@ type
     procedure UserCss(const FCss: WideString);
     procedure Zoom(FValue: Double);
     procedure SetUseDefaultStyles(FValue: Boolean);
+    procedure SaveAsBmp(const FileName: WideString;
+      FWidth, FHeight: Integer);
     procedure Opacity(FOpacity: Single);
     procedure Enabled(FEnabled: Boolean);
     procedure Visible(FVisible: Boolean);
@@ -464,6 +470,13 @@ type
   TPixieTagBarScrollMode = (smNone, smVertical, smHorizontal, smAuto);
   TPixieTagCheckedEvent = procedure(Sender: TObject; ID: Integer;
     Checked: Boolean);
+  TPixieTagAddingCallback = procedure(Sender: TObject;
+    const Text: WideString; Color: TAlphaColor; var Allow: Boolean);
+  TPixieTagDeletingCallback = procedure(Sender: TObject;
+    ID: Integer; var Allow: Boolean);
+  TPixieTagChangingCallback = procedure(Sender: TObject;
+    ID: Integer; const NewText: WideString;
+    NewColor: TAlphaColor; var Allow: Boolean);
 
   FPixieTagBar = interface(IUnknown)
     '{4EDC2B7F-57A8-4C72-8CB2-21F3E5B7626B}'
@@ -514,9 +527,14 @@ type
     function GetTagText(FTagText: Integer): WideString;
     function GetTagColor(FTagColor: Integer): TAlphaColor;
     function IsChecked(ID: Integer): Boolean;
+    function GetCheckedCount: Integer;
+    function GetCheckedID(Index: Integer): Integer;
+    function GetObject: TFmxObject;
     procedure OnTagChecked(Event: TPixieTagCheckedEvent);
     procedure OnChanged(Event: TNotifyEvent);
-    function GetObject: TFmxObject;
+    procedure OnTagAdding(Event: TPixieTagAddingCallback);
+    procedure OnTagDeleting(Event: TPixieTagDeletingCallback);
+    procedure OnTagChanging(Event: TPixieTagChangingCallback);
     function Handle: TFmxObject;
   end;
 
