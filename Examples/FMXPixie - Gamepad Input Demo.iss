@@ -52,6 +52,10 @@ const
   ACTION_BACK = 102;
   ACTION_CANCEL = 103;
 
+  ACTION_XBOX_NEXT = 111;
+  ACTION_XBOX_BACK = 112;
+  ACTION_XBOX_CANCEL = 113;
+
   XINPUT_BUTTON_A_CODE = 12;
   XINPUT_BUTTON_B_CODE = 13;
   XINPUT_BUTTON_X_CODE = 14;
@@ -81,6 +85,14 @@ var
   ActionNextDown: Boolean;
   ActionBackDown: Boolean;
   ActionCancelDown: Boolean;
+
+  XboxNextDown: Boolean;
+  XboxBackDown: Boolean;
+  XboxCancelDown: Boolean;
+
+  CustomNextAssigned: Boolean;
+  CustomBackAssigned: Boolean;
+  CustomCancelAssigned: Boolean;
 
   BindingTextNext: String;
   BindingTextBack: String;
@@ -136,12 +148,12 @@ end;
 
 function InputActionName(Action: Integer): String;
 begin
-  if Action = ACTION_NEXT then
-    Result := 'Next'
-  else if Action = ACTION_BACK then
-    Result := 'Back'
-  else if Action = ACTION_CANCEL then
-    Result := 'Cancel'
+  if (Action = ACTION_NEXT) or (Action = ACTION_XBOX_NEXT) then
+    Result := 'Далее'
+  else if (Action = ACTION_BACK) or (Action = ACTION_XBOX_BACK) then
+    Result := 'Назад'
+  else if (Action = ACTION_CANCEL) or (Action = ACTION_XBOX_CANCEL) then
+    Result := 'Отмена'
   else
     Result := 'Unknown';
 end;
@@ -223,6 +235,10 @@ begin
     '.custom-title{font-size:13px;font-weight:600;color:#e5edf8;}' +
     '.custom-binding{font-size:10px;color:#8292a8;white-space:nowrap;' +
     'overflow:hidden;text-overflow:ellipsis;max-width:265px;}' +
+    '.custom-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}' +
+    '.custom-state{font-size:9px;color:#71839b;font-weight:700;letter-spacing:.4px;}' +
+    '.custom-state.is-down{color:#9af0c8;}' +
+    '.custom-row.is-down{background:#173d36;border-color:#38b78a;}' +
     'button{font:11px "Segoe UI",Arial,sans-serif;cursor:pointer;}' +
     '.assign-btn{flex-shrink:0;min-width:94px;height:31px;padding:0 11px;' +
     'border:1px solid #3b6da0;border-radius:5px;background:#1d4d78;color:#e4f1ff;}' +
@@ -250,15 +266,15 @@ begin
 
     '<div id="xbox-row-next" class="xbox-row">' +
     '<div class="xbox-copy"><span class="xbox-title">Далее</span><span class="xbox-hint">Продолжить / подтвердить</span></div>' +
-    '<div class="xbox-right"><span id="state-next" class="xbox-state">RELEASED</span><span class="xbox-key xbox-a">A</span></div></div>' +
+    '<div class="xbox-right"><span id="xbox-state-next" class="xbox-state">RELEASED</span><span class="xbox-key xbox-a">A</span></div></div>' +
 
     '<div id="xbox-row-back" class="xbox-row">' +
     '<div class="xbox-copy"><span class="xbox-title">Назад</span><span class="xbox-hint">Вернуться к предыдущему шагу</span></div>' +
-    '<div class="xbox-right"><span id="state-back" class="xbox-state">RELEASED</span><span class="xbox-key xbox-b">B</span></div></div>' +
+    '<div class="xbox-right"><span id="xbox-state-back" class="xbox-state">RELEASED</span><span class="xbox-key xbox-b">B</span></div></div>' +
 
     '<div id="xbox-row-cancel" class="xbox-row">' +
     '<div class="xbox-copy"><span class="xbox-title">Отмена</span><span class="xbox-hint">Закрыть / отменить действие</span></div>' +
-    '<div class="xbox-right"><span id="state-cancel" class="xbox-state">RELEASED</span><span class="xbox-key xbox-x">X</span></div></div>' +
+    '<div class="xbox-right"><span id="xbox-state-cancel" class="xbox-state">RELEASED</span><span class="xbox-key xbox-x">X</span></div></div>' +
 
     '<div id="xbox-status" class="xbox-status">Ожидание Xbox-контроллера. Раскладка: A — Далее, B — Назад, X — Отмена.</div>' +
     '</div>' +
@@ -267,17 +283,20 @@ begin
     '<div class="panel-head"><span>СВОИ НАЗНАЧЕНИЯ</span><span class="panel-caption">ЛЮБОЙ ВВОД</span></div>' +
     '<div class="panel-note">Здесь можно добавить свои клавиши или кнопки. Нажми «Назначить», затем нажми нужную кнопку на клавиатуре, мыши или контроллере.</div>' +
 
-    '<div class="custom-row"><div class="custom-copy"><span class="custom-title">Далее</span>' +
+    '<div id="custom-row-next" class="custom-row"><div class="custom-copy"><span class="custom-title">Далее</span>' +
     '<span id="custom-binding-next" class="custom-binding">Не назначено</span></div>' +
-    '<button id="custom-assign-next" class="assign-btn" type="button">Назначить</button></div>' +
+    '<div class="custom-right"><span id="custom-state-next" class="custom-state">NOT SET</span>' +
+    '<button id="custom-assign-next" class="assign-btn" type="button">Назначить</button></div></div>' +
 
-    '<div class="custom-row"><div class="custom-copy"><span class="custom-title">Назад</span>' +
+    '<div id="custom-row-back" class="custom-row"><div class="custom-copy"><span class="custom-title">Назад</span>' +
     '<span id="custom-binding-back" class="custom-binding">Не назначено</span></div>' +
-    '<button id="custom-assign-back" class="assign-btn" type="button">Назначить</button></div>' +
+    '<div class="custom-right"><span id="custom-state-back" class="custom-state">NOT SET</span>' +
+    '<button id="custom-assign-back" class="assign-btn" type="button">Назначить</button></div></div>' +
 
-    '<div class="custom-row"><div class="custom-copy"><span class="custom-title">Отмена</span>' +
+    '<div id="custom-row-cancel" class="custom-row"><div class="custom-copy"><span class="custom-title">Отмена</span>' +
     '<span id="custom-binding-cancel" class="custom-binding">Не назначено</span></div>' +
-    '<button id="custom-assign-cancel" class="assign-btn" type="button">Назначить</button></div>' +
+    '<div class="custom-right"><span id="custom-state-cancel" class="custom-state">NOT SET</span>' +
+    '<button id="custom-assign-cancel" class="assign-btn" type="button">Назначить</button></div></div>' +
 
     '<div id="capture-status" class="capture-status">Свои назначения добавляются к готовой раскладке Xbox. Например, можно оставить A/B/X и дополнительно назначить Enter, Esc или пробел.</div>' +
     '</div>' +
@@ -361,50 +380,94 @@ begin
   if Action = ACTION_NEXT then
   begin
     BindingTextNext := S;
+    CustomNextAssigned := True;
     SetTextById('custom-binding-next', S);
+    SetClassById('custom-state-next', 'custom-state');
+    SetTextById('custom-state-next', 'RELEASED');
   end
   else if Action = ACTION_BACK then
   begin
     BindingTextBack := S;
+    CustomBackAssigned := True;
     SetTextById('custom-binding-back', S);
+    SetClassById('custom-state-back', 'custom-state');
+    SetTextById('custom-state-back', 'RELEASED');
   end
   else if Action = ACTION_CANCEL then
   begin
     BindingTextCancel := S;
+    CustomCancelAssigned := True;
     SetTextById('custom-binding-cancel', S);
+    SetClassById('custom-state-cancel', 'custom-state');
+    SetTextById('custom-state-cancel', 'RELEASED');
   end;
 end;
 
 procedure SetActionStateVisual(Action: Integer; Down: Boolean);
 var
-  Id, ButtonId, TextValue: String;
+  Id, RowId, TextValue: String;
 begin
-  if Action = ACTION_NEXT then
+  if Action = ACTION_XBOX_NEXT then
   begin
-    Id := 'state-next';
-    ButtonId := 'xbox-row-next';
+    Id := 'xbox-state-next';
+    RowId := 'xbox-row-next';
   end
-  else if Action = ACTION_BACK then
+  else if Action = ACTION_XBOX_BACK then
   begin
-    Id := 'state-back';
-    ButtonId := 'xbox-row-back';
+    Id := 'xbox-state-back';
+    RowId := 'xbox-row-back';
   end
   else
   begin
-    Id := 'state-cancel';
-    ButtonId := 'xbox-row-cancel';
+    Id := 'xbox-state-cancel';
+    RowId := 'xbox-row-cancel';
   end;
 
   if Down then
   begin
     SetClassById(Id, 'xbox-state is-down');
-    SetClassById(ButtonId, 'xbox-row is-down');
+    SetClassById(RowId, 'xbox-row is-down');
     TextValue := 'PRESSED';
   end
   else
   begin
     SetClassById(Id, 'xbox-state');
-    SetClassById(ButtonId, 'xbox-row');
+    SetClassById(RowId, 'xbox-row');
+    TextValue := 'RELEASED';
+  end;
+  SetTextById(Id, TextValue);
+end;
+
+procedure SetCustomActionStateVisual(Action: Integer; Down: Boolean);
+var
+  Id, RowId, TextValue: String;
+begin
+  if Action = ACTION_NEXT then
+  begin
+    Id := 'custom-state-next';
+    RowId := 'custom-row-next';
+  end
+  else if Action = ACTION_BACK then
+  begin
+    Id := 'custom-state-back';
+    RowId := 'custom-row-back';
+  end
+  else
+  begin
+    Id := 'custom-state-cancel';
+    RowId := 'custom-row-cancel';
+  end;
+
+  if Down then
+  begin
+    SetClassById(Id, 'custom-state is-down');
+    SetClassById(RowId, 'custom-row is-down');
+    TextValue := 'PRESSED';
+  end
+  else
+  begin
+    SetClassById(Id, 'custom-state');
+    SetClassById(RowId, 'custom-row');
     TextValue := 'RELEASED';
   end;
   SetTextById(Id, TextValue);
@@ -536,21 +599,21 @@ begin
       begin
         DeviceName := Input.DeviceName(I);
 
-        if not Input.Bind(ACTION_NEXT, DeviceID, Ord(Button),
+        if not Input.Bind(ACTION_XBOX_NEXT, DeviceID, Ord(Button),
           XINPUT_BUTTON_A_CODE, 0) then
           ErrorText := Input.LastError
-        else if not Input.Bind(ACTION_BACK, DeviceID, Ord(Button),
+        else if not Input.Bind(ACTION_XBOX_BACK, DeviceID, Ord(Button),
           XINPUT_BUTTON_B_CODE, 0) then
         begin
           ErrorText := Input.LastError;
-          Input.RemoveBindings(ACTION_NEXT);
+          Input.RemoveBindings(ACTION_XBOX_NEXT);
         end
-        else if not Input.Bind(ACTION_CANCEL, DeviceID, Ord(Button),
+        else if not Input.Bind(ACTION_XBOX_CANCEL, DeviceID, Ord(Button),
           XINPUT_BUTTON_X_CODE, 0) then
         begin
           ErrorText := Input.LastError;
-          Input.RemoveBindings(ACTION_NEXT);
-          Input.RemoveBindings(ACTION_BACK);
+          Input.RemoveBindings(ACTION_XBOX_NEXT);
+          Input.RemoveBindings(ACTION_XBOX_BACK);
         end;
 
         if ErrorText <> '' then
@@ -780,17 +843,56 @@ begin
   Changed := False;
   Doc.BeginUpdate;
   try
+    Down := Input.IsEnabled and Input.IsPressed(ACTION_XBOX_NEXT);
+    if Down <> XboxNextDown then
+    begin
+      XboxNextDown := Down;
+      SetActionStateVisual(ACTION_XBOX_NEXT, Down);
+      Changed := True;
+    end;
+    if Input.WasPressed(ACTION_XBOX_NEXT) then
+    begin
+      SetInputStatus('Xbox A — Далее');
+      Changed := True;
+    end;
+
+    Down := Input.IsEnabled and Input.IsPressed(ACTION_XBOX_BACK);
+    if Down <> XboxBackDown then
+    begin
+      XboxBackDown := Down;
+      SetActionStateVisual(ACTION_XBOX_BACK, Down);
+      Changed := True;
+    end;
+    if Input.WasPressed(ACTION_XBOX_BACK) then
+    begin
+      SetInputStatus('Xbox B — Назад');
+      Changed := True;
+    end;
+
+    Down := Input.IsEnabled and Input.IsPressed(ACTION_XBOX_CANCEL);
+    if Down <> XboxCancelDown then
+    begin
+      XboxCancelDown := Down;
+      SetActionStateVisual(ACTION_XBOX_CANCEL, Down);
+      Changed := True;
+    end;
+    if Input.WasPressed(ACTION_XBOX_CANCEL) then
+    begin
+      SetInputStatus('Xbox X — Отмена');
+      Changed := True;
+    end;
+
     Down := Input.IsEnabled and Input.IsPressed(ACTION_NEXT);
     if Down <> ActionNextDown then
     begin
       ActionNextDown := Down;
-      SetActionStateVisual(ACTION_NEXT, Down);
+      if CustomNextAssigned then
+        SetCustomActionStateVisual(ACTION_NEXT, Down);
       Changed := True;
     end;
     if Input.WasPressed(ACTION_NEXT) then
     begin
-      AddEventLog('NEXT action pressed.');
-      SetInputStatus('NEXT action received from its assigned control.');
+      SetInputStatus('Своя кнопка — Далее');
       Changed := True;
     end;
 
@@ -798,13 +900,13 @@ begin
     if Down <> ActionBackDown then
     begin
       ActionBackDown := Down;
-      SetActionStateVisual(ACTION_BACK, Down);
+      if CustomBackAssigned then
+        SetCustomActionStateVisual(ACTION_BACK, Down);
       Changed := True;
     end;
     if Input.WasPressed(ACTION_BACK) then
     begin
-      AddEventLog('BACK action pressed.');
-      SetInputStatus('BACK action received from its assigned control.');
+      SetInputStatus('Своя кнопка — Назад');
       Changed := True;
     end;
 
@@ -812,13 +914,13 @@ begin
     if Down <> ActionCancelDown then
     begin
       ActionCancelDown := Down;
-      SetActionStateVisual(ACTION_CANCEL, Down);
+      if CustomCancelAssigned then
+        SetCustomActionStateVisual(ACTION_CANCEL, Down);
       Changed := True;
     end;
     if Input.WasPressed(ACTION_CANCEL) then
     begin
-      AddEventLog('CANCEL action pressed.');
-      SetInputStatus('CANCEL action received from its assigned control.');
+      SetInputStatus('Своя кнопка — Отмена');
       Changed := True;
     end;
   finally
@@ -1043,6 +1145,14 @@ begin
   ActionNextDown := False;
   ActionBackDown := False;
   ActionCancelDown := False;
+
+  XboxNextDown := False;
+  XboxBackDown := False;
+  XboxCancelDown := False;
+
+  CustomNextAssigned := False;
+  CustomBackAssigned := False;
+  CustomCancelAssigned := False;
 
   BindingTextNext := 'Не назначено';
   BindingTextBack := 'Не назначено';
