@@ -215,7 +215,7 @@ begin
     else
     begin
       RumbleButton.Enabled := Input.DeviceRumbleSupported(DeviceIndex);
-      CaptureButton.Enabled := Input.IsEnabled and not Input.Capturing;
+      CaptureButton.Enabled := Input.Capturing or Input.IsEnabled;
     end;
 
     for I := 0 to Input.ElementCount(DeviceIndex) - 1 do
@@ -346,6 +346,18 @@ begin
     Exit;
   end;
 
+  if Input.Capturing then
+  begin
+    Input.CancelCapture;
+    ActionCombo.Enabled := True;
+    CaptureButton.Caption := 'Capture';
+    CaptureButton.Enabled := (DeviceCombo.ItemIndex >= 0) and
+      Input.DeviceAvailable(DeviceCombo.ItemIndex);
+    CaptureStatusLabel.Caption := 'Capture cancelled.';
+    AddEventLog('Capture cancelled.');
+    Exit;
+  end;
+
   if not Input.DeviceAvailable(DeviceCombo.ItemIndex) then
   begin
     CaptureStatusLabel.Caption := 'The selected device is unavailable.';
@@ -353,21 +365,9 @@ begin
   end;
 
   Action := InputActionFromIndex(ActionCombo.ItemIndex);
-  if Input.Capturing then
-  begin
-    Input.CancelCapture;
-    DeviceCombo.Enabled := True;
-    ActionCombo.Enabled := True;
-    CaptureButton.Caption := 'Capture';
-    CaptureButton.Enabled := Input.DeviceAvailable(DeviceCombo.ItemIndex);
-    CaptureStatusLabel.Caption := 'Capture cancelled.';
-    AddEventLog('Capture cancelled.');
-    Exit;
-  end;
 
   if Input.BeginCapture(Action, DeviceID, False) then
   begin
-    DeviceCombo.Enabled := False;
     ActionCombo.Enabled := False;
     CaptureStatusLabel.Caption := 'Press a button, move an axis or press the D-Pad...';
     AddEventLog('Capture started for "' + InputActionName(Action) +
@@ -386,11 +386,11 @@ begin
 
   Input.CancelCapture;
   Input.ClearBindings;
-  DeviceCombo.Enabled := True;
   ActionCombo.Enabled := True;
   CaptureButton.Caption := 'Capture';
-  CaptureButton.Enabled := InputAvailable and (DeviceCombo.ItemIndex >= 0) and
-    Input.DeviceAvailable(DeviceCombo.ItemIndex);
+  CaptureButton.Enabled := InputAvailable and
+    ((Input.Capturing) or ((DeviceCombo.ItemIndex >= 0) and
+    Input.DeviceAvailable(DeviceCombo.ItemIndex)));
   CaptureStatusLabel.Caption := 'All bindings cleared.';
   ActionStateLabel.Caption := 'NEXT: up   BACK: up   CANCEL: up';
   AddEventLog('All action bindings cleared.');
