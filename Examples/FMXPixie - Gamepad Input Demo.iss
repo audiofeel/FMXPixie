@@ -262,7 +262,7 @@ begin
     '</style></head><body><div class="app">' +
 
     '<div class="header"><div><div class="brand">Input device monitor</div>' +
-    '<div class="sub">1. Select a device  &gt;  2. Assign an action  &gt;  3. Press it to test</div></div>' +
+    '<div class="sub">Connect an Xbox controller  &gt;  Press A / B / X  &gt;  Watch the prompts react</div></div>' +
     '<div><button id="refresh-devices" class="btn small">Refresh devices</button></div></div>' +
 
     '<div class="status"><span id="status-dot" class="status-dot"></span>' +
@@ -289,7 +289,7 @@ begin
 
     '<div class="panel actions">' +
     '<div class="panel-head"><span>GAME UI PREVIEW</span><span class="panel-caption">Xbox layout</span></div>' +
-    '<div class="action-help">Готовые игровые подсказки. Нажми кнопку на контроллере — соответствующая строка подсветится.</div>' +
+    '<div class="action-help">A — Далее, B — Назад, X — Отмена. При нажатии действие подсветится; этот экран демонстрирует ввод, но не переключает страницы.</div>' +
     '<div class="game-action-list">' +
     '<button id="game-next" class="game-action" type="button">' +
     '<span class="game-action-copy"><span class="game-action-label">Далее</span><span id="binding-next" class="game-action-binding">Не назначено</span></span>' +
@@ -564,56 +564,57 @@ var
   DeviceName: String;
   ErrorText: String;
 begin
+  ErrorText := '';
   if (Input = nil) or not InputAvailable or DefaultXboxBindingsApplied then
     Exit;
 
   for I := 0 to Input.DeviceCount - 1 do
   begin
-    if (Input.DeviceKind(I) <> Ord(Controller)) or
-       not Input.DeviceAvailable(I) then
-      Continue;
-
-    DeviceID := Input.DeviceID(I);
-    if Copy(DeviceID, 1, Length(XINPUT_DEVICE_ID_PREFIX)) <>
-       XINPUT_DEVICE_ID_PREFIX then
-      Continue;
-
-    DeviceName := Input.DeviceName(I);
-
-    if not Input.Bind(ACTION_NEXT, DeviceID, Ord(Button),
-      XINPUT_BUTTON_A_CODE, 0) then
-      ErrorText := Input.LastError
-    else if not Input.Bind(ACTION_BACK, DeviceID, Ord(Button),
-      XINPUT_BUTTON_B_CODE, 0) then
+    if (Input.DeviceKind(I) = Ord(Controller)) and
+       Input.DeviceAvailable(I) then
     begin
-      ErrorText := Input.LastError;
-      Input.RemoveBindings(ACTION_NEXT);
-    end
-    else if not Input.Bind(ACTION_CANCEL, DeviceID, Ord(Button),
-      XINPUT_BUTTON_X_CODE, 0) then
-    begin
-      ErrorText := Input.LastError;
-      Input.RemoveBindings(ACTION_NEXT);
-      Input.RemoveBindings(ACTION_BACK);
+      DeviceID := Input.DeviceID(I);
+      if Copy(DeviceID, 1, Length(XINPUT_DEVICE_ID_PREFIX)) =
+         XINPUT_DEVICE_ID_PREFIX then
+      begin
+        DeviceName := Input.DeviceName(I);
+
+        if not Input.Bind(ACTION_NEXT, DeviceID, Ord(Button),
+          XINPUT_BUTTON_A_CODE, 0) then
+          ErrorText := Input.LastError
+        else if not Input.Bind(ACTION_BACK, DeviceID, Ord(Button),
+          XINPUT_BUTTON_B_CODE, 0) then
+        begin
+          ErrorText := Input.LastError;
+          Input.RemoveBindings(ACTION_NEXT);
+        end
+        else if not Input.Bind(ACTION_CANCEL, DeviceID, Ord(Button),
+          XINPUT_BUTTON_X_CODE, 0) then
+        begin
+          ErrorText := Input.LastError;
+          Input.RemoveBindings(ACTION_NEXT);
+          Input.RemoveBindings(ACTION_BACK);
+        end;
+
+        if ErrorText <> '' then
+        begin
+          SetTextById('gamepad-map-info',
+            'Не удалось назначить кнопки Xbox: ' + ErrorText);
+          SetInputStatus('Default Xbox assignment failed: ' + ErrorText);
+          Exit;
+        end;
+
+        DefaultXboxBindingsApplied := True;
+        SetBindingText(ACTION_NEXT, DeviceName + ' / A');
+        SetBindingText(ACTION_BACK, DeviceName + ' / B');
+        SetBindingText(ACTION_CANCEL, DeviceName + ' / X');
+        SetTextById('gamepad-map-info',
+          'Назначено автоматически: A — Далее, B — Назад, X — Отмена. Нажми кнопки на контроллере для проверки.');
+        SetInputStatus('Xbox controller found. Default A / B / X controls are ready.');
+        AddEventLog('Default Xbox A / B / X controls assigned.');
+        Exit;
+      end;
     end;
-
-    if ErrorText <> '' then
-    begin
-      SetTextById('gamepad-map-info',
-        'Не удалось назначить кнопки Xbox: ' + ErrorText);
-      SetInputStatus('Default Xbox assignment failed: ' + ErrorText);
-      Exit;
-    end;
-
-    DefaultXboxBindingsApplied := True;
-    SetBindingText(ACTION_NEXT, DeviceName + ' / A');
-    SetBindingText(ACTION_BACK, DeviceName + ' / B');
-    SetBindingText(ACTION_CANCEL, DeviceName + ' / X');
-    SetTextById('gamepad-map-info',
-      'Назначено автоматически: A — Далее, B — Назад, X — Отмена. Нажми кнопки на контроллере для проверки.');
-    SetInputStatus('Xbox controller found. Default A / B / X controls are ready.');
-    AddEventLog('Default Xbox A / B / X controls assigned.');
-    Exit;
   end;
 
   SetTextById('gamepad-map-info',
@@ -1301,7 +1302,10 @@ begin
     if Input.Refresh then
     begin
       PopulateDevices;
-      SetInputStatus('FMXInput initialized and device enumeration completed.');
+      if DefaultXboxBindingsApplied then
+        SetInputStatus('Xbox controller found. Default A / B / X controls are ready.')
+      else
+        SetInputStatus('FMXInput initialized. Connect an Xbox controller or assign input manually.');
     end
     else
       SetInputStatus('Initial device refresh failed: ' + Input.LastError);
