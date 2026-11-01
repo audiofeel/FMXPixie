@@ -1,7 +1,7 @@
 
 // ########################################################################## \\
 // #    FMXPixie Handle - v2.0.0.0                                          # \\
-// #    Last Updated: 31.Oct.2026                                           # \\
+// #    Last Updated: 01.Nov.2026                                           # \\
 // #    RAD Studio 13.2 Build: 37.0.60952.8797 RTM Update 2                 # \\
 // ########################################################################## \\
 
@@ -288,13 +288,16 @@ type
     function RemoveChild(FChild: NativeInt): Boolean;
     function GetId: Integer;
     function GetTag: Integer;
-    function GetTagName: WideString;
     procedure SetTagName(const FTagName: WideString);
+    function GetTagName: WideString;
     procedure SetAttr(const FName, FValue: WideString);
     function GetAttr(const FName, FDefault: WideString): WideString;
-    function GetTextContent: WideString;
     procedure SetTextContent(const FText: WideString);
+    function GetTextContent: WideString;
     procedure SetValue(const FValue: WideString);
+    function GetValue: WideString;
+    procedure SetChecked(FValue: Boolean);
+    function GetChecked: Boolean;
   end;
 
 function InitPixieElement: FPixieElement;
