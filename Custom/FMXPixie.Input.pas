@@ -613,7 +613,7 @@ begin
       raise EArgumentException.Create('BindAxis requires an analog axis');
 
     if InputKind in [TInputElementKind.Axis, TInputElementKind.RelativeAxis] then
-      if not (Direction in [-1, 1]) then
+      if (Direction <> -1) and (Direction <> 1) then
         raise EArgumentException.Create('Axis direction must be -1 or +1');
 
     if (InputKind = TInputElementKind.Hat) and
