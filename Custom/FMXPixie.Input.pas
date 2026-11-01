@@ -459,6 +459,15 @@ begin
 
   try
     FManager.Enabled := Value;
+
+    if not Value then
+    begin
+      FHasCaptured := False;
+      FCaptured := Default(TInputBinding);
+      for var Action in FActionIDs do
+        FActionPressed.AddOrSetValue(Action, False);
+    end;
+
     UpdateActionEdges;
     FLastError := '';
   except
