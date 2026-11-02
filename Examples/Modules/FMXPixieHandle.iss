@@ -644,6 +644,67 @@ function InitPixieAudioPlayer: FPixieAudioPlayer;
   external 'InitPixieAudioPlayer@files:FMXPixie.dll stdcall delayload';
 
 // =============================================================================
+// FInput
+// =============================================================================
+type
+  TInputDeviceKind = (Keyboard, Controller, Mouse);
+  TInputElementKind = (Key, Button, Axis, Hat, RelativeAxis);
+  TInputDeviceListMode = (Gaming, AllInterfaces);
+
+  FInput = interface(IUnknown)
+    '{3FAF5B3C-4B97-4F2A-9C3D-BA0AD938A7C1}'
+    function StartPolling(Interval: Cardinal; Event: TNotifyEvent): Boolean;
+    procedure StopPolling;
+    procedure Shutdown;
+    function Poll: Boolean;
+    function Refresh: Boolean;
+    procedure Enabled(Value: Boolean);
+    function IsEnabled: Boolean;
+    function IsPolling: Boolean;
+    function DeviceCount: Integer;
+    function DeviceID(Index: Integer): WideString;
+    function DeviceName(Index: Integer): WideString;
+    function DeviceKind(Index: Integer): Integer;
+    function DeviceAvailable(Index: Integer): Boolean;
+    function DeviceError(Index: Integer): WideString;
+    function DeviceRumbleSupported(Index: Integer): Boolean;
+    function ElementCount(DeviceIndex: Integer): Integer;
+    function ElementName(DeviceIndex, ElementIndex: Integer): WideString;
+    function ElementKind(DeviceIndex, ElementIndex: Integer): Integer;
+    function ElementCode(DeviceIndex, ElementIndex: Integer): Integer;
+    function Bind(Action: Integer; const DeviceID: WideString;
+      Kind, Code, Direction: Integer): Boolean;
+    function BindAxis(Action: Integer; const DeviceID: WideString;
+      Code, Direction: Integer; AxisOrigin, PressThreshold, ReleaseThreshold
+      : Single): Boolean;
+    function BeginCapture(Action: Integer; const DeviceID: WideString;
+      IncludePointerMotion: Boolean): Boolean;
+    procedure CancelCapture;
+    function Capturing: Boolean;
+    function HasCaptured: Boolean;
+    function CapturedDeviceID: WideString;
+    function CapturedDeviceName: WideString;
+    function CapturedKind: Integer;
+    function CapturedCode: Integer;
+    function CapturedDirection: Integer;
+    function AcceptCaptured: Boolean;
+    function IsPressed(Action: Integer): Boolean;
+    function WasPressed(Action: Integer): Boolean;
+    procedure ClearBindings;
+    procedure RemoveBindings(Action: Integer);
+    function SaveProfile(const FileName: WideString): Boolean;
+    function LoadProfile(const FileName: WideString): Boolean;
+    function SetRumble(const DeviceID: WideString;
+      LowFrequency, HighFrequency, DurationMs: Word): Boolean;
+    procedure StopRumble(const DeviceID: WideString);
+    function LastError: WideString;
+    procedure ClearError;
+  end;
+
+function InitInput: FInput;
+  external 'InitInput@files:FMXPixie.dll stdcall delayload';
+
+// =============================================================================
 // System
 // =============================================================================
 type
