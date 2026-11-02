@@ -1,11 +1,3 @@
-{*******************************************************}
-{                                                       }
-{                        FMXPixie                       }
-{                                                       }
-{              Copyright(c) 2026 Audiofeel              }
-{                  All rights reserved                  }
-{                                                       }
-{*******************************************************}
 
 library FMXPixie;
 
@@ -28,6 +20,7 @@ uses
   FMXPixie.TagBar in 'Pixie\FMXPixie.TagBar.pas',
   FMXPixie.PaintBox in 'Pixie\FMXPixie.PaintBox.pas',
   FMXPixie.AudioPlayer in 'Custom\AudioPlayer\FMXPixie.AudioPlayer.pas',
+  FMXPixie.Input in 'Custom\FMXPixie.Input.pas',
   FMXPixie.SystemInfo in 'Custom\FMXPixie.SystemInfo.pas',
   FMXPixie.System in 'FMX\FMXPixie.System.pas';
 
