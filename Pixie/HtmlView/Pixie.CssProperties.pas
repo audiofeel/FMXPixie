@@ -35,11 +35,11 @@ type
     ComputedValue: TPixiePixel;
   end;
 
+  TPixieObjectFit = (pofFill, pofContain, pofCover, pofNone, pofScaleDown);
+
   // One parsed CSS transform function. Translate keeps lengths (resolved
   // against the element box at layout/paint); the others carry resolved
   // numbers: scale=(sx,sy), rotate=(deg), skew=(axDeg,ayDeg), matrix=(a..f).
-  TPixieObjectFit = (pofFill, pofContain, pofCover, pofNone, pofScaleDown);
-
   TPixieTransformFunc = (ptfTranslate, ptfScale, ptfRotate, ptfSkew, ptfMatrix);
   TPixieTransformOp = record
     Func: TPixieTransformFunc;
