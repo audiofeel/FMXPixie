@@ -356,7 +356,8 @@ implementation
 
 uses
   System.SysUtils, System.IOUtils,
-  Pixie.PdfExport, Pixie.WebColor, Pixie.ElTextInput, Pixie.ElInput;
+  Pixie.PdfExport, Pixie.WebColor, Pixie.ElTextInput, Pixie.ElInput,
+  Pixie.ElSelect;
 
 function AlphaColorToPixieColor(AColor: TAlphaColor): TPixieWebColor;
 begin
@@ -1115,7 +1116,9 @@ end;
 procedure TFPixieElement.SetValue(const FValue: WideString);
 begin
   if ControlElement is TPixieElTextInput then
-    TPixieElTextInput(ControlElement).SetValue(string(FValue));
+    TPixieElTextInput(ControlElement).SetValue(string(FValue))
+  else if ControlElement is TPixieElSelect then
+    TPixieElSelect(ControlElement).Value := string(FValue);
 end;
 
 function TFPixieElement.GetChecked: Boolean;
@@ -1143,7 +1146,9 @@ begin
   Result := '';
 
   if ControlElement is TPixieElTextBase then
-    Result := TPixieElTextBase(ControlElement).Value;
+    Result := TPixieElTextBase(ControlElement).Value
+  else if ControlElement is TPixieElSelect then
+    Result := TPixieElSelect(ControlElement).Value;
 end;
 
 // =============================================================================
