@@ -124,7 +124,7 @@ begin
     '<div class="panel">' +
     '<div class="section-title">01 / GetValue и SetValue</div>' +
     '<div class="field"><label class="field-label" for="install-path">Text — путь установки</label>' +
-    '<input id="install-path" type="text" value="C:\\Program Files\\NOVA"></div>' +
+    '<input id="install-path" type="text" value="C:\Program Files\NOVA"></div>' +
     '<div class="field"><label class="field-label" for="install-channel">Select — канал выпуска</label>' +
     '<select id="install-channel"><option value="stable" selected>Stable</option><option value="beta">Beta</option><option value="nightly">Nightly</option></select></div>' +
     '<div class="field"><label class="field-label" for="install-notes">Textarea — заметки конфигурации</label>' +
@@ -199,6 +199,14 @@ begin
   Elem.SetChecked(Value);
 end;
 
+function BoolText(Value: Boolean): String;
+begin
+  if Value then
+    Result := 'True'
+  else
+    Result := 'False';
+end;
+
 function GetCheckedById(const Id: String): Boolean;
 var
   H: NativeInt;
@@ -236,7 +244,7 @@ begin
   else
   begin
     PackageValue := GetValueById('package-full');
-    PackageChecked := 'Full (checked=' + BoolToStr(GetCheckedById('package-full'), True) + ')';
+    PackageChecked := 'Full (checked=' + BoolText(GetCheckedById('package-full')) + ')';
   end;
 
   if GetCheckedById('desktop-shortcut') then
@@ -265,7 +273,7 @@ procedure FillDemoValues;
 begin
   Doc.BeginUpdate;
   try
-    SetValueById('install-path', 'D:\\Apps\\NOVA Studio');
+    SetValueById('install-path', 'D:\Apps\NOVA Studio');
     SetValueById('install-notes',
       'Install for all users.' + #13#10 + 'Create shortcuts and file associations.');
     SetValueById('install-channel', 'beta');
@@ -289,7 +297,7 @@ procedure ResetDemoValues;
 begin
   Doc.BeginUpdate;
   try
-    SetValueById('install-path', 'C:\\Program Files\\NOVA');
+    SetValueById('install-path', 'C:\Program Files\NOVA');
     SetValueById('install-notes',
       'Install for the current user. Keep existing settings.');
     SetValueById('install-channel', 'stable');
@@ -424,9 +432,9 @@ begin
   View.Height(DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT);
   View.ColorScheme(pcsDark);
   View.SetScrollbarVisibility(svAuto);
-  View.BaseUrl(TempDir + '\\');
+  View.BaseUrl(TempDir + '\');
   View.OnElementClick(@ElementClick);
-  View.LoadFromStringUrl(BuildDemoHtml, TempDir + '\\');
+  View.LoadFromStringUrl(BuildDemoHtml, TempDir + '\');
 
   Doc.FCreate(View.GetDocument);
   ReadAndDisplayValues;
