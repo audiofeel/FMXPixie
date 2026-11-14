@@ -367,6 +367,8 @@ type
     psid_order,
 
     psid_opacity,
+    psid_object_fit,
+    psid_object_position,
     psid_transition,
     psid_transition_property,
     psid_transition_duration,
