@@ -197,6 +197,9 @@ uses
 
 { Valid values map: maps property string_id -> keyword strings }
 
+const
+  ObjectFitStrings = 'fill;contain;cover;none;scale-down';
+
 type
   TValidValuesMap = TDictionary<Integer, string>;
   TPixieShorthandMap = TDictionary<Integer, TPixieIntVector>;
@@ -205,9 +208,6 @@ type
 var
   ValidValues: TValidValuesMap;
   ShorthandMap: TPixieShorthandMap;
-
-const
-  ObjectFitStrings = 'fill;contain;cover;none;scale-down';
 
 procedure InitValidValues;
 begin
