@@ -1818,6 +1818,8 @@ begin
     begin
       SelectPopup.ScrollPopup(WheelDelta,
         OnHostGetViewWidth / Scale, OnHostGetViewHeight / Scale, FScrollY);
+      SelectPopup.PopupMouseMove(MouseX / Scale, MouseY / Scale,
+        OnHostGetViewWidth / Scale, OnHostGetViewHeight / Scale, FScrollY);
       Invalidate;
       Exit(True);
     end;
