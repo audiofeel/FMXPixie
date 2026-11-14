@@ -856,9 +856,7 @@ var
   P: TPixiePosition;
   Cv: TPixieCanvas;
   LabelText: string;
-  FillColor, TextColor: TPixieWebColor;
-  Rad: TPixieBorderRadiuses;
-  Borders: TPixieBorders;
+  TextColor: TPixieWebColor;
   ArrowX, ArrowY: Single;
 begin
   inherited Draw(Hdc, X, Y, Clip, Ri);
@@ -877,20 +875,8 @@ begin
   if (P.Width <= 0) or (P.Height <= 0) then
     Exit;
 
-  // The closed control uses the element's computed CSS background,
-  // border and border-radius. No hard-coded white fill or square outline.
-  Rad := FCss.CssBorders.Radius.CalcPercents(P.Width, P.Height);
-  FillColor := FCss.Bg.Color;
-  if FillColor.Alpha > 0 then
-    Cv.FillRoundedRect(P.X, P.Y, P.Width, P.Height, Rad, FillColor);
-
-  if FCss.CssBorders.IsVisible then
-  begin
-    Borders.InitFromCss(FCss.CssBorders);
-    Borders.Radius := Rad;
-    Cv.DrawBorders(Borders, P, False);
-  end;
-
+  // inherited Draw already paints the CSS background, border, radius,
+  // shadow and outline. Draw only the select's text and dropdown arrow here.
   TextColor := FCss.Color;
   LabelText := GetSelectedText;
   if (LabelText = '') then
