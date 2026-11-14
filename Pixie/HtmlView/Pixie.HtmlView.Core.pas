@@ -103,6 +103,7 @@ type
     FMouseDragThresholdPassed: Boolean;
     FWordDragging: Boolean;
     FScrollDragging: Boolean;
+    FSelectPopupMouseDown: Boolean;
     FScrollDragOffset: TPixiePixel;
     FAutoScrollTimer: TTimer;
     FAutoScrollDY: TPixiePixel;
@@ -273,7 +274,7 @@ type
 implementation
 
 uses
-  Pixie.Element, Pixie.RenderItem;
+  Pixie.Element, Pixie.RenderItem, Pixie.ElSelect;
 
 // ---------------------------------------------------------------------------
 // TPixieScrollbarSettings
@@ -600,6 +601,7 @@ begin
   FMouseDragThresholdPassed := False;
   FWordDragging := False;
   FScrollDragging := False;
+  FSelectPopupMouseDown := False;
   FAutoScrollSpeed := 20;
   FAutoScrollEdge := 10;
   FAutoScrollAccelThreshold := 3;
@@ -1189,6 +1191,9 @@ var
   BarW, BarMargin, TrackH, ThumbH, ThumbX, ThumbY, MaxScroll: TPixiePixel;
   IndicatorRadius: TPixieBorderRadiuses;
   FadedColor: TPixieWebColor;
+  SelectPopup: TPixieElSelect;
+  PopupRect: TPixiePosition;
+  PopupFirst, PopupVisible: Integer;
 begin
   if Assigned(FOnBeforePaint) then
     FOnBeforePaint(Owner);
@@ -1275,6 +1280,18 @@ begin
             FCanvas.FillRoundedRect(ThumbX, ThumbY, BarW, ThumbH,
               IndicatorRadius, FadedColor);
           end;
+        end;
+
+        // The select popup is a viewport overlay, painted after the document
+        // and scrollbars so ancestor overflow does not clip the dropdown.
+        if FDocument.FocusedElement is TPixieElSelect then
+        begin
+          SelectPopup := TPixieElSelect(FDocument.FocusedElement);
+          if SelectPopup.GetPopupRect(ViewW, ViewH, FScrollY,
+            PopupRect, PopupFirst, PopupVisible) and
+            PopupRect.DoesIntersect(UpdCss) then
+            SelectPopup.DrawPopup(FCanvas, PopupRect,
+              PopupFirst, PopupVisible);
         end;
       end;
     end;
@@ -1464,6 +1481,8 @@ var
   InputFocused: Boolean;
   ViewH, ViewW, BarMargin, TrackH, ThumbH, ThumbY, MaxScroll,
     NewScroll: TPixiePixel;
+  SelectPopup: TPixieElSelect;
+  PopupItemIndex: Integer;
 begin
   if Assigned(OnHostSetFocus) then OnHostSetFocus;
   if not IsLeft or (FDocument = nil) then Exit;
@@ -1480,9 +1499,24 @@ begin
   FLastDragVy := Vy;
   { - }
 
-  // Scrollbar interaction
+  // The select popup has priority over the document hit-test and scrollbar.
+  // All coordinates here are viewport CSS pixels.
+  FSelectPopupMouseDown := False;
   ViewW := OnHostGetViewWidth / Scale;
   ViewH := OnHostGetViewHeight / Scale;
+  if FDocument.FocusedElement is TPixieElSelect then
+  begin
+    SelectPopup := TPixieElSelect(FDocument.FocusedElement);
+    if SelectPopup.PopupHitTest(Vx, Vy, ViewW, ViewH,
+      FScrollY, PopupItemIndex) then
+    begin
+      if PopupItemIndex >= 0 then
+        SelectPopup.SelectPopupItem(PopupItemIndex);
+      FSelectPopupMouseDown := True;
+      Invalidate;
+      Exit;
+    end;
+  end;
   BarMargin := FScrollbar.Margin;
   if ShouldDrawScrollbar and (FContentHeight > ViewH) and
      (Vx >= Round(ViewW) - FScrollbar.Width - BarMargin * 2) then
@@ -1577,6 +1611,8 @@ var
   Scale: Double;
   ViewW, ViewH, TrackH, ThumbH, MaxScroll, NewThumbY, NewScroll: TPixiePixel;
   InGutter: Boolean;
+  SelectPopup: TPixieElSelect;
+  PopupItemIndex: Integer;
 begin
   Scale := GetEffectiveScale;
   if FScrollDragging then
@@ -1610,6 +1646,21 @@ begin
   begin
     Vx := Round(X / Scale);
     Vy := Round(Y / Scale);
+
+    // Do not send hover to the HTML elements underneath an open popup.
+    if FDocument.FocusedElement is TPixieElSelect then
+    begin
+      SelectPopup := TPixieElSelect(FDocument.FocusedElement);
+      ViewW := OnHostGetViewWidth / Scale;
+      ViewH := OnHostGetViewHeight / Scale;
+      if SelectPopup.PopupHitTest(Vx, Vy, ViewW, ViewH,
+        FScrollY, PopupItemIndex) then
+      begin
+        if SelectPopup.PopupMouseMove(Vx, Vy, ViewW, ViewH, FScrollY) then
+          Invalidate;
+        Exit;
+      end;
+    end;
 
     // Gutter hover detection for svAuto
     if FScrollbar.Visibility = svAuto then
@@ -1676,6 +1727,11 @@ var
   Vx, Vy: Integer;
   Scale: Double;
 begin
+  if IsLeft and FSelectPopupMouseDown then
+  begin
+    FSelectPopupMouseDown := False;
+    Exit;
+  end;
   if IsLeft and FScrollDragging then
   begin
     FScrollDragging := False;
@@ -1729,6 +1785,8 @@ var
   NewScroll, MaxScroll: TPixiePixel;
   NewZoom, Scale: Double;
   Tick: UInt64;
+  SelectPopup: TPixieElSelect;
+  PopupItemIndex: Integer;
 begin
   // Suppress wheel inertia after anchor scroll
   if FAnchorScrollTick > 0 then
@@ -1740,6 +1798,23 @@ begin
       Exit(True);
     end;
     FAnchorScrollTick := 0;
+  end;
+
+  // The open select list consumes the wheel while the pointer is over it.
+  if (FDocument <> nil) and
+     (FDocument.FocusedElement is TPixieElSelect) then
+  begin
+    Scale := GetEffectiveScale;
+    SelectPopup := TPixieElSelect(FDocument.FocusedElement);
+    if SelectPopup.PopupHitTest(MouseX / Scale, MouseY / Scale,
+      OnHostGetViewWidth / Scale, OnHostGetViewHeight / Scale,
+      FScrollY, PopupItemIndex) then
+    begin
+      SelectPopup.ScrollPopup(WheelDelta,
+        OnHostGetViewWidth / Scale, OnHostGetViewHeight / Scale, FScrollY);
+      Invalidate;
+      Exit(True);
+    end;
   end;
 
   // Ctrl+wheel zooms
