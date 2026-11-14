@@ -15,7 +15,9 @@ type
   TPixieElOption = class(TPixieHtmlTag)
   private
     FSelected: Boolean;
+    FAttributesParsed: Boolean;
   public
+    procedure ResetStyle; override;
     procedure ParseAttributes; override;
     procedure ComputeStyles(Recursive: Boolean = True); override;
     function GetLabel: string;
@@ -27,6 +29,7 @@ type
 
   TPixieElOptGroup = class(TPixieHtmlTag)
   public
+    procedure ParseAttributes; override;
     procedure ComputeStyles(Recursive: Boolean = True); override;
   end;
 
@@ -34,6 +37,7 @@ type
   TPixieSelectItem = record
     Kind: TPixieSelectItemKind;
     Option: TPixieElOption;
+    Node: TPixieHtmlTag;
     Text: string;
     Disabled: Boolean;
   end;
@@ -46,6 +50,8 @@ type
     FOpen: Boolean;
     FPopupScrollIndex: Integer;
     FPopupHoverIndex: Integer;
+    FPopupHoverStyleIndex: Integer;
+    procedure SetPopupItemHover(Index: Integer; Hovered: Boolean);
     procedure AddOptionNodes(Node: TPixieElement;
       const GroupLabel: string; GroupDisabled: Boolean);
     procedure BuildItems;
@@ -94,6 +100,7 @@ type
     function PopupHitTest(X, Y, ViewW, ViewH, ScrollY: Single;
       out ItemIndex: Integer): Boolean;
     function PopupMouseMove(X, Y, ViewW, ViewH, ScrollY: Single): Boolean;
+    function ClearPopupHover: Boolean;
     function ScrollPopup(Delta: Integer; ViewW, ViewH, ScrollY: Single): Boolean;
     procedure SelectPopupItem(ItemIndex: Integer);
   end;
@@ -142,12 +149,23 @@ begin
   end;
 end;
 
+procedure TPixieElOption.ResetStyle;
+begin
+  inherited ResetStyle;
+  FAttributesParsed := False;
+end;
+
 procedure TPixieElOption.ParseAttributes;
 begin
-  FSelected := GetAttr('selected', #1) <> #1;
+  // RefreshStyles calls ParseAttributes when a pseudo-class changes. Do not
+  // overwrite the live selection with the original HTML selected attribute.
+  if not FAttributesParsed then
+  begin
+    FSelected := GetAttr('selected', #1) <> #1;
+    FAttributesParsed := True;
+  end;
   SetPseudoClass(Ord(psid_checked), FSelected);
-  if GetAttr('disabled', #1) <> #1 then
-    SetPseudoClass(Ord(psid_disabled), True);
+  SetPseudoClass(Ord(psid_disabled), IsOptionDisabled);
   inherited ParseAttributes;
 end;
 
@@ -163,7 +181,8 @@ begin
   if FSelected = Value then
     Exit;
   FSelected := Value;
-  SetPseudoClass(Ord(psid_checked), FSelected);
+  if SetPseudoClass(Ord(psid_checked), FSelected) then
+    FindStylesChanges(nil);
 end;
 
 function TPixieElOption.IsOptionDisabled: Boolean;
@@ -184,6 +203,13 @@ begin
   end;
 end;
 
+procedure TPixieElOptGroup.ParseAttributes;
+begin
+  SetPseudoClass(Ord(psid_disabled),
+    GetAttr('disabled', #1) <> #1);
+  inherited ParseAttributes;
+end;
+
 procedure TPixieElOptGroup.ComputeStyles(Recursive: Boolean);
 begin
   inherited ComputeStyles(Recursive);
@@ -200,6 +226,7 @@ begin
   FOpen := False;
   FPopupScrollIndex := 0;
   FPopupHoverIndex := -1;
+  FPopupHoverStyleIndex := -1;
 end;
 
 destructor TPixieElSelect.Destroy;
@@ -228,6 +255,7 @@ begin
       Item := Default(TPixieSelectItem);
       Item.Kind := sikOption;
       Item.Option := TPixieElOption(Child);
+      Item.Node := TPixieElOption(Child);
       Item.Text := TPixieElOption(Child).GetLabel;
       Item.Disabled := GroupDisabled or
         TPixieElOption(Child).IsOptionDisabled;
@@ -245,6 +273,7 @@ begin
         Item := Default(TPixieSelectItem);
         Item.Kind := sikGroup;
         Item.Option := nil;
+        Item.Node := TPixieElOptGroup(Child);
         Item.Text := NewGroupLabel;
         Item.Disabled := NewGroupDisabled;
         FItems.Add(Item);
@@ -354,8 +383,10 @@ var
   Item: TPixieSelectItem;
 begin
   PreviousOption := FSelectedOption;
+  ClearPopupHover;
   inherited ParseAttributes;
   BuildItems;
+  FPopupHoverStyleIndex := -1;
 
   InitialOption := nil;
   if (PreviousOption <> nil) and (FindItemIndex(PreviousOption) >= 0) then
@@ -450,6 +481,7 @@ begin
   if IsEffectivelyDisabled or FOpen then
     Exit;
 
+  ClearPopupHover;
   BuildItems;
   FOpen := True;
   FOpenSelectedOption := FSelectedOption;
@@ -471,6 +503,7 @@ procedure TPixieElSelect.ClosePopup(Cancel: Boolean);
 begin
   if not FOpen then
     Exit;
+  ClearPopupHover;
   FOpen := False;
   FPopupHoverIndex := -1;
   if Cancel and (FSelectedOption <> FOpenSelectedOption) then
@@ -879,17 +912,17 @@ var
   RowY, RowHeight, TextX: Single;
   Item: TPixieSelectItem;
   FillColor, TextColor: TPixieWebColor;
-  Rad: TPixieBorderRadiuses;
+  Rad, ItemRad: TPixieBorderRadiuses;
   Borders: TPixieBorders;
   Shadow: TPixieBoxShadow;
+  RowRect: TPixiePosition;
 begin
   if (Cv = nil) or (VisibleCount <= 0) then
     Exit;
 
   RowHeight := PopupRowHeight;
 
-  // The popup shares the select's CSS surface, text colour and corner radius.
-  // A dark fallback is used only when the select has no CSS background colour.
+  // Popup surface follows the select's CSS background, border and radius.
   FillColor := FCss.Bg.Color;
   if FillColor.Alpha = 0 then
     FillColor := TPixieWebColor.Create(31, 41, 55);
@@ -918,43 +951,74 @@ begin
       Break;
     Item := FItems[ItemIndex];
     RowY := Rect.Y + I * RowHeight;
+    if Item.Node = nil then
+      Continue;
+
+    RowRect := TPixiePosition.Create(Rect.X + 4, RowY + 2,
+      Rect.Width - 8, RowHeight - 4);
+    FillColor := Item.Node.Css.Bg.Color;
+    TextColor := Item.Node.Css.Color;
+    ItemRad := Item.Node.Css.CssBorders.Radius.CalcPercents(
+      RowRect.Width, RowRect.Height);
 
     if Item.Kind = sikOption then
     begin
-      if Item.Option = FSelectedOption then
-      begin
-        FillColor := TPixieWebColor.Create(37, 99, 235);
-        TextColor := TPixieWebColor.Create(255, 255, 255);
-        Cv.FillRoundedRect(Rect.X + 4, RowY + 2,
-          Rect.Width - 8, RowHeight - 4, 5, FillColor);
-      end
-      else if ItemIndex = FPopupHoverIndex then
-      begin
-        FillColor := TPixieWebColor.Create(51, 65, 85);
-        TextColor := TPixieWebColor.Create(241, 245, 249);
-        Cv.FillRoundedRect(Rect.X + 4, RowY + 2,
-          Rect.Width - 8, RowHeight - 4, 5, FillColor);
-      end
-      else
-        TextColor := FCss.Color;
+      // CSS on the option wins. The built-in colors remain only as a fallback
+      // for documents that do not define a background for the current state.
+      if FillColor.Alpha > 0 then
+        Cv.FillRoundedRect(RowRect.X, RowRect.Y, RowRect.Width,
+          RowRect.Height, ItemRad, FillColor)
+      else if Item.Option = FSelectedOption then
+        Cv.FillRoundedRect(RowRect.X, RowRect.Y, RowRect.Width,
+          RowRect.Height, 5, TPixieWebColor.Create(37, 99, 235))
+      else if (ItemIndex = FPopupHoverIndex) or
+              (ItemIndex = FPopupHoverStyleIndex) then
+        Cv.FillRoundedRect(RowRect.X, RowRect.Y, RowRect.Width,
+          RowRect.Height, 5, TPixieWebColor.Create(51, 65, 85));
 
-      if Item.Disabled then
+      if Item.Disabled and
+         (TextColor.Red = FCss.Color.Red) and
+         (TextColor.Green = FCss.Color.Green) and
+         (TextColor.Blue = FCss.Color.Blue) then
         TextColor := TPixieWebColor.Create(100, 116, 139);
+
       TextX := Rect.X + 18;
     end
     else
     begin
-      FillColor := TPixieWebColor.Create(38, 52, 73);
-      Cv.FillRoundedRect(Rect.X + 4, RowY + 2,
-        Rect.Width - 8, RowHeight - 4, 5, FillColor);
-      if Item.Disabled then
-        TextColor := TPixieWebColor.Create(100, 116, 139)
+      if FillColor.Alpha > 0 then
+        Cv.FillRoundedRect(RowRect.X, RowRect.Y, RowRect.Width,
+          RowRect.Height, ItemRad, FillColor)
       else
+        Cv.FillRoundedRect(RowRect.X, RowRect.Y, RowRect.Width,
+          RowRect.Height, 5, TPixieWebColor.Create(38, 52, 73));
+
+      if Item.Disabled and
+         (TextColor.Red = FCss.Color.Red) and
+         (TextColor.Green = FCss.Color.Green) and
+         (TextColor.Blue = FCss.Color.Blue) then
+        TextColor := TPixieWebColor.Create(100, 116, 139)
+      else if (TextColor.Red = FCss.Color.Red) and
+              (TextColor.Green = FCss.Color.Green) and
+              (TextColor.Blue = FCss.Color.Blue) then
         TextColor := TPixieWebColor.Create(148, 163, 184);
+
       TextX := Rect.X + 10;
     end;
 
-    if (FCss.Font <> 0) and (Item.Text <> '') then
+    if Item.Node.Css.CssBorders.IsVisible then
+    begin
+      Borders.InitFromCss(Item.Node.Css.CssBorders);
+      Borders.Radius := ItemRad;
+      Cv.DrawBorders(Borders, RowRect, False);
+    end;
+
+    if (Item.Node.Css.Font <> 0) and (Item.Text <> '') then
+      Cv.TextRect(Item.Text, Item.Node.Css.Font,
+        Item.Node.Css.FontMetrics, TextColor, TextX, RowY,
+        Max(0, Rect.X + Rect.Width - TextX - 6),
+        RowHeight, taLeft, vaMiddle)
+    else if (FCss.Font <> 0) and (Item.Text <> '') then
       Cv.TextRect(Item.Text, FCss.Font, FCss.FontMetrics, TextColor,
         TextX, RowY, Max(0, Rect.X + Rect.Width - TextX - 6),
         RowHeight, taLeft, vaMiddle);
@@ -987,22 +1051,64 @@ begin
   end;
 end;
 
+procedure TPixieElSelect.SetPopupItemHover(Index: Integer;
+  Hovered: Boolean);
+var
+  El: TPixieElement;
+begin
+  if (Index < 0) or (Index >= FItems.Count) then
+    Exit;
+
+  El := FItems[Index].Node;
+  while (El <> nil) and (El <> Self) do
+  begin
+    if El.SetPseudoClass(Ord(psid_hover), Hovered) then
+      El.FindStylesChanges(nil);
+    El := El.Parent;
+  end;
+end;
+
+function TPixieElSelect.ClearPopupHover: Boolean;
+begin
+  Result := FPopupHoverStyleIndex >= 0;
+  if Result then
+    SetPopupItemHover(FPopupHoverStyleIndex, False);
+  FPopupHoverStyleIndex := -1;
+  if FPopupHoverIndex >= 0 then
+    Result := True;
+  FPopupHoverIndex := -1;
+end;
+
 function TPixieElSelect.PopupMouseMove(X, Y, ViewW, ViewH,
   ScrollY: Single): Boolean;
 var
   ItemIndex: Integer;
-  OldIndex: Integer;
+  OldIndex, OldStyleIndex: Integer;
 begin
   Result := False;
   if not PopupHitTest(X, Y, ViewW, ViewH, ScrollY, ItemIndex) then
     Exit;
+
   OldIndex := FPopupHoverIndex;
+  OldStyleIndex := FPopupHoverStyleIndex;
+
+  if ItemIndex <> FPopupHoverStyleIndex then
+  begin
+    if FPopupHoverStyleIndex >= 0 then
+      SetPopupItemHover(FPopupHoverStyleIndex, False);
+    FPopupHoverStyleIndex := ItemIndex;
+    if FPopupHoverStyleIndex >= 0 then
+      SetPopupItemHover(FPopupHoverStyleIndex, True);
+  end;
+
   if (ItemIndex >= 0) and (FItems[ItemIndex].Kind = sikOption) and
      not FItems[ItemIndex].Disabled then
     FPopupHoverIndex := ItemIndex
   else
     FPopupHoverIndex := -1;
-  Result := OldIndex <> FPopupHoverIndex;
+
+  Result := (OldIndex <> FPopupHoverIndex) or
+            (OldStyleIndex <> FPopupHoverStyleIndex);
 end;
 
 function TPixieElSelect.ScrollPopup(Delta: Integer;
