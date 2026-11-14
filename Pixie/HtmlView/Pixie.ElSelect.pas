@@ -481,13 +481,25 @@ end;
 procedure TPixieElSelect.EnsurePopupSelectionVisible;
 var
   SelectedItem, VisibleCount: Integer;
+  Cont: TPixieContainer;
+  Viewport: TPixiePosition;
+  PopupHeight: Single;
 begin
   if not FOpen then
     Exit;
   SelectedItem := FindItemIndex(FSelectedOption);
   if SelectedItem < 0 then
     Exit;
-  VisibleCount := Max(1, Trunc(SelectMaxPopupHeight / PopupRowHeight));
+
+  PopupHeight := SelectMaxPopupHeight;
+  Cont := GetDocContainer;
+  if Cont <> nil then
+  begin
+    Cont.GetViewport(Viewport);
+    if Viewport.Height > 0 then
+      PopupHeight := Min(PopupHeight, Viewport.Height);
+  end;
+  VisibleCount := Max(1, Trunc(PopupHeight / PopupRowHeight));
   if SelectedItem < FPopupScrollIndex then
     FPopupScrollIndex := SelectedItem
   else if SelectedItem >= FPopupScrollIndex + VisibleCount then
