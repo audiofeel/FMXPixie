@@ -684,11 +684,6 @@ begin
   SetSelectedOption(Found, True);
 end;
 
-procedure TPixieElSelect.SetValue(const Value: string); overload;
-begin
-  SetValue(Value);
-end;
-
 function TPixieElSelect.PopupRowHeight: Single;
 begin
   Result := Max(24, FCss.FontMetrics.Height + 8);
