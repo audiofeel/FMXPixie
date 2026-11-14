@@ -845,6 +845,12 @@ begin
       El := TPixieElLabel.Create(Self)
     else if TagName = 'button' then
       El := TPixieElButton.Create(Self)
+    else if TagName = 'select' then
+      El := TPixieElSelect.Create(Self)
+    else if TagName = 'option' then
+      El := TPixieElOption.Create(Self)
+    else if TagName = 'optgroup' then
+      El := TPixieElOptGroup.Create(Self)
     else if TagName = 'textarea' then
       El := TPixieElTextArea.Create(Self)
     else if TagName = 'progress' then
