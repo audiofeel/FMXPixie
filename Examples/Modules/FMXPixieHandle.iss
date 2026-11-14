@@ -296,6 +296,8 @@ type
     function GetAttr(const FName, FDefault: WideString): WideString;
     procedure SetTextContent(const FText: WideString);
     function GetTextContent: WideString;
+    // GetValue/SetValue: text, textarea, range, select and the submitted
+    // value attribute of checkbox/radio. Checked state is separate.
     procedure SetValue(const FValue: WideString);
     function GetValue: WideString;
     procedure SetChecked(FValue: Boolean);
