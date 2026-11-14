@@ -109,15 +109,16 @@ type
     function IsFocusable: Boolean; override;
 
     function GetCaretDocPos(out X, Y, H: TPixiePixel): Boolean;
+    procedure SetValue(const AValue: string); virtual;
 
-    property Value: string read FValue write FValue;
+    property Value: string read FValue write SetValue;
   end;
 
   { TPixieElTextInput — <input type="text|password"> }
 
   TPixieElTextInput = class(TPixieElTextBase)
   public
-    procedure SetValue(const AValue: string);
+    procedure SetValue(const AValue: string); override;
     procedure ParseAttributes; override;
     procedure GetContentSize(var Sz: TPixieSize;
       MaxWidth: TPixiePixel); override;
@@ -1606,20 +1607,19 @@ begin
   inherited ParseAttributes;
 end;
 
-procedure TPixieElTextInput.SetValue(const AValue: string);
+procedure TPixieElTextBase.SetValue(const AValue: string);
 var
   Doc: TPixieDocument;
 begin
   if FValue = AValue then
     Exit;
 
-  SetAttr('value', AValue);
-
   FValue := AValue;
   FCaretPos := Length(FValue);
   ClearSelection;
 
   FScrollX := 0;
+  FScrollY := 0;
   FCaretMoved := True;
   FUndoSaved := False;
 
@@ -1629,6 +1629,14 @@ begin
     if Assigned(Doc.OnChange) then
       Doc.OnChange(Doc);
   end;
+end;
+
+procedure TPixieElTextInput.SetValue(const AValue: string);
+begin
+  if FValue = AValue then
+    Exit;
+  SetAttr('value', AValue);
+  inherited SetValue(AValue);
 end;
 
 procedure TPixieElTextInput.GetContentSize(var Sz: TPixieSize;
