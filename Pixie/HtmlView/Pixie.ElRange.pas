@@ -22,6 +22,7 @@ type
     FMin, FMax, FStep, FValue: Single;
     FStepAny: Boolean;
     procedure ClampValue;
+    procedure SetValue(AValue: Single);
     function ArrowStep: Single;
     procedure SetValueFromLocalX(LocalX: TPixiePixel);
     function LocalMouseX(DocX: TPixiePixel): TPixiePixel;
@@ -38,6 +39,7 @@ type
     function OnKeyDown(Key: Word; Shift: TShiftState): Boolean; override;
     function CreateRenderItem(ParentRi: Pointer): Pointer; override;
     function DumpGetName: string; override;
+    property Value: Single read FValue write SetValue;
   end;
 
 implementation
@@ -123,6 +125,25 @@ begin
     FValue := FMin + Round((FValue - FMin) / FStep) * FStep;
   if FValue < FMin then FValue := FMin;
   if FValue > FMax then FValue := FMax;
+end;
+
+procedure TPixieElRange.SetValue(AValue: Single);
+var
+  Doc: TPixieDocument;
+  OldValue: Single;
+begin
+  OldValue := FValue;
+  FValue := AValue;
+  ClampValue;
+  if FValue = OldValue then
+    Exit;
+
+  if FDoc is TPixieDocument then
+  begin
+    Doc := TPixieDocument(FDoc);
+    if Assigned(Doc.OnChange) then
+      Doc.OnChange(Doc);
+  end;
 end;
 
 // Per-keypress increment: the step for a stepped slider, else a 1/100 nudge.
