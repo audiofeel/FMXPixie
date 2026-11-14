@@ -810,9 +810,9 @@ var
   P: TPixiePosition;
   Cv: TPixieCanvas;
   LabelText: string;
-  FillColor, BorderColor, TextColor: TPixieWebColor;
+  FillColor, TextColor: TPixieWebColor;
   Rad: TPixieBorderRadiuses;
-  HasCssBg, HasCssBorder: Boolean;
+  Borders: TPixieBorders;
   ArrowX, ArrowY: Single;
 begin
   inherited Draw(Hdc, X, Y, Clip, Ri);
@@ -831,25 +831,18 @@ begin
   if (P.Width <= 0) or (P.Height <= 0) then
     Exit;
 
-  HasCssBg := FCss.Bg.Color.Alpha > 0;
-  HasCssBorder := FCss.CssBorders.Left.Style > bsHidden;
-
-  if not HasCssBg then
-  begin
-    FillColor := TPixieWebColor.Create(255, 255, 255);
-    Rad.Init;
-    Rad.TopLeftX := 3; Rad.TopLeftY := 3;
-    Rad.TopRightX := 3; Rad.TopRightY := 3;
-    Rad.BottomRightX := 3; Rad.BottomRightY := 3;
-    Rad.BottomLeftX := 3; Rad.BottomLeftY := 3;
+  // The closed control uses the element's computed CSS background,
+  // border and border-radius. No hard-coded white fill or square outline.
+  Rad := FCss.CssBorders.Radius.CalcPercents(P.Width, P.Height);
+  FillColor := FCss.Bg.Color;
+  if FillColor.Alpha > 0 then
     Cv.FillRoundedRect(P.X, P.Y, P.Width, P.Height, Rad, FillColor);
-  end;
 
-  if not HasCssBorder then
+  if FCss.CssBorders.IsVisible then
   begin
-    BorderColor := TPixieWebColor.Create(150, 150, 150);
-    Cv.DrawRect(P.X + 0.5, P.Y + 0.5,
-      P.Width - 1, P.Height - 1, BorderColor, 1);
+    Borders.InitFromCss(FCss.CssBorders);
+    Borders.Radius := Rad;
+    Cv.DrawBorders(Borders, P, False);
   end;
 
   TextColor := FCss.Color;
@@ -885,19 +878,38 @@ var
   I, ItemIndex: Integer;
   RowY, RowHeight, TextX: Single;
   Item: TPixieSelectItem;
-  FillColor, TextColor, BorderColor: TPixieWebColor;
+  FillColor, TextColor: TPixieWebColor;
+  Rad: TPixieBorderRadiuses;
+  Borders: TPixieBorders;
+  Shadow: TPixieBoxShadow;
 begin
   if (Cv = nil) or (VisibleCount <= 0) then
     Exit;
 
   RowHeight := PopupRowHeight;
-  Cv.FillRect(Rect.X + 2, Rect.Y + 2, Rect.Width, Rect.Height,
-    TPixieWebColor.Create(0, 0, 0, 45));
-  Cv.FillRect(Rect.X, Rect.Y, Rect.Width, Rect.Height,
-    TPixieWebColor.Create(255, 255, 255));
-  BorderColor := TPixieWebColor.Create(145, 145, 145);
-  Cv.DrawRect(Rect.X + 0.5, Rect.Y + 0.5,
-    Rect.Width - 1, Rect.Height - 1, BorderColor, 1);
+
+  // The popup shares the select's CSS surface, text colour and corner radius.
+  // A dark fallback is used only when the select has no CSS background colour.
+  FillColor := FCss.Bg.Color;
+  if FillColor.Alpha = 0 then
+    FillColor := TPixieWebColor.Create(31, 41, 55);
+
+  Rad := FCss.CssBorders.Radius.CalcPercents(Rect.Width, Rect.Height);
+
+  Shadow := Default(TPixieBoxShadow);
+  Shadow.OffsetY := 3;
+  Shadow.BlurRadius := 12;
+  Shadow.Color := TPixieWebColor.Create(0, 0, 0, 100);
+  Cv.DrawBoxShadow(Rect.X, Rect.Y, Rect.Width, Rect.Height, Rad, Shadow);
+
+  Cv.FillRoundedRect(Rect.X, Rect.Y, Rect.Width, Rect.Height, Rad, FillColor);
+
+  if FCss.CssBorders.IsVisible then
+    Borders.InitFromCss(FCss.CssBorders)
+  else
+    Borders.InitUniform(1, bsSolid, TPixieWebColor.Create(71, 85, 105));
+  Borders.Radius := Rad;
+  Cv.DrawBorders(Borders, Rect, False);
 
   for I := 0 to VisibleCount - 1 do
   begin
@@ -910,25 +922,36 @@ begin
     if Item.Kind = sikOption then
     begin
       if Item.Option = FSelectedOption then
-        FillColor := TPixieWebColor.Create(220, 235, 250)
+      begin
+        FillColor := TPixieWebColor.Create(37, 99, 235);
+        TextColor := TPixieWebColor.Create(255, 255, 255);
+        Cv.FillRoundedRect(Rect.X + 4, RowY + 2,
+          Rect.Width - 8, RowHeight - 4, 5, FillColor);
+      end
       else if ItemIndex = FPopupHoverIndex then
-        FillColor := TPixieWebColor.Create(235, 243, 251)
+      begin
+        FillColor := TPixieWebColor.Create(51, 65, 85);
+        TextColor := TPixieWebColor.Create(241, 245, 249);
+        Cv.FillRoundedRect(Rect.X + 4, RowY + 2,
+          Rect.Width - 8, RowHeight - 4, 5, FillColor);
+      end
       else
-        FillColor := TPixieWebColor.Create(255, 255, 255);
+        TextColor := FCss.Color;
 
-      Cv.FillRect(Rect.X + 1, RowY, Rect.Width - 2, RowHeight, FillColor);
       if Item.Disabled then
-        TextColor := TPixieWebColor.Create(155, 155, 155)
-      else
-        TextColor := TPixieWebColor.Create(35, 35, 35);
+        TextColor := TPixieWebColor.Create(100, 116, 139);
       TextX := Rect.X + 18;
     end
     else
     begin
-      Cv.FillRect(Rect.X + 1, RowY, Rect.Width - 2, RowHeight,
-        TPixieWebColor.Create(245, 245, 245));
-      TextColor := TPixieWebColor.Create(100, 100, 100);
-      TextX := Rect.X + 8;
+      FillColor := TPixieWebColor.Create(38, 52, 73);
+      Cv.FillRoundedRect(Rect.X + 4, RowY + 2,
+        Rect.Width - 8, RowHeight - 4, 5, FillColor);
+      if Item.Disabled then
+        TextColor := TPixieWebColor.Create(100, 116, 139)
+      else
+        TextColor := TPixieWebColor.Create(148, 163, 184);
+      TextX := Rect.X + 10;
     end;
 
     if (FCss.Font <> 0) and (Item.Text <> '') then
