@@ -14,8 +14,8 @@
 ;     - object-fit: fill / contain / cover / none / scale-down
 ;     - object-position: keyword and percentage positions
 ;
-; The range control is disabled intentionally: this demo tests programmatic
-; SetValue / GetValue, not pointer dragging of the slider.
+; The range control is interactive. Drag it or use the keyboard arrows; the
+; Fill button also changes it programmatically through SetValue.
 ; ============================================================================
 
 #define DemoAppName "FMXPixie - HTML Value and Object Fit Demo"
@@ -130,8 +130,8 @@ begin
     '<div class="field"><label class="field-label" for="install-notes">Textarea — заметки конфигурации</label>' +
     '<textarea id="install-notes" rows="3">Install for the current user. Keep existing settings.</textarea></div>' +
     '<div class="field"><div class="field-label">Range — размер кэша (программное значение)</div>' +
-    '<div class="range-line"><input id="cache-size" type="range" min="0" max="100" step="5" value="40" disabled><span id="cache-size-label">40%</span></div>' +
-    '<div class="hint">Ползунок отключён: здесь проверяется именно SetValue / GetValue для числового значения.</div></div>' +
+    '<div class="range-line"><input id="cache-size" type="range" min="0" max="100" step="5" value="40"><span id="cache-size-label">40%</span></div>' +
+    '<div class="hint">Ползунок можно перетаскивать мышью или менять стрелками клавиатуры. Кнопка «Заполнить» также задаёт его через SetValue.</div></div>' +
 
     '<div class="field-label">Checkbox — значение и состояние разделены</div>' +
     '<label class="choice"><input id="desktop-shortcut" type="checkbox" value="desktop-shortcut">Создать ярлык</label>' +
