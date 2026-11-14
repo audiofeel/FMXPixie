@@ -29,6 +29,7 @@ type
 
   TPixieElOptGroup = class(TPixieHtmlTag)
   public
+    procedure ResetStyle; override;
     procedure ParseAttributes; override;
     procedure ComputeStyles(Recursive: Boolean = True); override;
   end;
@@ -71,6 +72,7 @@ type
     constructor Create(ADoc: TObject);
     destructor Destroy; override;
 
+    procedure ResetStyle; override;
     procedure ParseAttributes; override;
     procedure GetContentSize(var Sz: TPixieSize;
       MaxWidth: TPixiePixel); override;
@@ -153,6 +155,7 @@ procedure TPixieElOption.ResetStyle;
 begin
   inherited ResetStyle;
   FAttributesParsed := False;
+  SetPseudoClass(Ord(psid_hover), False);
 end;
 
 procedure TPixieElOption.ParseAttributes;
@@ -203,6 +206,12 @@ begin
   end;
 end;
 
+procedure TPixieElOptGroup.ResetStyle;
+begin
+  inherited ResetStyle;
+  SetPseudoClass(Ord(psid_hover), False);
+end;
+
 procedure TPixieElOptGroup.ParseAttributes;
 begin
   SetPseudoClass(Ord(psid_disabled),
@@ -233,6 +242,12 @@ destructor TPixieElSelect.Destroy;
 begin
   FItems.Free;
   inherited Destroy;
+end;
+
+procedure TPixieElSelect.ResetStyle;
+begin
+  inherited ResetStyle;
+  FPopupHoverStyleIndex := -1;
 end;
 
 procedure TPixieElSelect.AddOptionNodes(Node: TPixieElement;
@@ -383,10 +398,8 @@ var
   Item: TPixieSelectItem;
 begin
   PreviousOption := FSelectedOption;
-  ClearPopupHover;
   inherited ParseAttributes;
   BuildItems;
-  FPopupHoverStyleIndex := -1;
 
   InitialOption := nil;
   if (PreviousOption <> nil) and (FindItemIndex(PreviousOption) >= 0) then
