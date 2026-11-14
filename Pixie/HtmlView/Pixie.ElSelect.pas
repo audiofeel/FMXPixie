@@ -497,11 +497,18 @@ begin
 end;
 
 function TPixieElSelect.OnLButtonDown: Boolean;
+var
+  Doc: TPixieDocument;
 begin
   if IsEffectivelyDisabled then
     Exit(False);
+  if not (FDoc is TPixieDocument) then
+    Exit(False);
 
   inherited OnLButtonDown;
+  Doc := TPixieDocument(FDoc);
+  Doc.SetFocus(Self);
+
   if FOpen then
     ClosePopup(False)
   else
