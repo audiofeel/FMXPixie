@@ -232,7 +232,6 @@ var
   PackageValue: String;
   PackageChecked: String;
   DesktopState: String;
-  H: NativeInt;
 begin
   PackageValue := '';
   PackageChecked := '';
