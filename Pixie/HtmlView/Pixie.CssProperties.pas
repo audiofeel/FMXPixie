@@ -38,6 +38,8 @@ type
   // One parsed CSS transform function. Translate keeps lengths (resolved
   // against the element box at layout/paint); the others carry resolved
   // numbers: scale=(sx,sy), rotate=(deg), skew=(axDeg,ayDeg), matrix=(a..f).
+  TPixieObjectFit = (pofFill, pofContain, pofCover, pofNone, pofScaleDown);
+
   TPixieTransformFunc = (ptfTranslate, ptfScale, ptfRotate, ptfSkew, ptfMatrix);
   TPixieTransformOp = record
     Func: TPixieTransformFunc;
@@ -123,6 +125,9 @@ type
     FTextDecorationColor: TPixieWebColor;
     FTextEmphasisColor: TPixieWebColor;
     FBoxShadow: TPixieBoxShadow;
+    FObjectFit: TPixieObjectFit;
+    FObjectPositionX: TPixieCssLength;
+    FObjectPositionY: TPixieCssLength;
 
     // Float/integer fields
     FOpacity: Single; // Computed target
@@ -300,6 +305,9 @@ type
     property CssWidth: TPixieCssLength read GetCssWidth write FCssWidth;
     property CssHeight: TPixieCssLength read GetCssHeight write FCssHeight;
     property BoxShadow: TPixieBoxShadow read GetBoxShadow;
+    property ObjectFit: TPixieObjectFit read FObjectFit;
+    property ObjectPositionX: TPixieCssLength read FObjectPositionX;
+    property ObjectPositionY: TPixieCssLength read FObjectPositionY;
     property CssMinWidth: TPixieCssLength read FCssMinWidth write FCssMinWidth;
     property CssMinHeight: TPixieCssLength read FCssMinHeight write FCssMinHeight;
     property CssMaxWidth: TPixieCssLength read FCssMaxWidth write FCssMaxWidth;
@@ -1480,6 +1488,9 @@ begin
   FBoxShadowDelayMs := 0;
   FBoxShadowTimingFunction := 'ease';
   FBoxShadow := Default(TPixieBoxShadow);
+  FObjectFit := pofFill;
+  FObjectPositionX := TPixieCssLength.Create(50, cssUnitsPercentage);
+  FObjectPositionY := TPixieCssLength.Create(50, cssUnitsPercentage);
   FBgColorTarget := TPixieWebColor.Transparent;
   FBgColorFrom := TPixieWebColor.Transparent;
   FBgColorTo := TPixieWebColor.Transparent;
@@ -2484,6 +2495,10 @@ var
   BoxShadowTimingFunction: string;
   BgColorTimingFunction: string;
   BoxShadowValue: string;
+  ObjectPositionValue: string;
+  ObjectPositionTokens: TPixieCssTokenList;
+  ObjectPositionIndex: Integer;
+  ObjectPositionX, ObjectPositionY: TPixieCssLength;
   PreviousBoxShadow, PreviousBoxShadowTarget, NewBoxShadow: TPixieBoxShadow;
   PreviousWidth, PreviousWidthTarget: TPixieCssLength;
   PreviousHeight, PreviousHeightTarget: TPixieCssLength;
@@ -2538,6 +2553,32 @@ begin
   FColor := Tag.GetPropertyColor(Ord(psid_color), True,
     TPixieWebColor.Black,
     PtrUInt(@FColor) - PtrUInt(Self));
+
+  // Replaced-element image presentation.
+  FObjectFit := TPixieObjectFit(Tag.GetPropertyInt(
+    Ord(psid_object_fit), False, Ord(pofFill),
+    PtrUInt(@FObjectFit) - PtrUInt(Self)));
+
+  FObjectPositionX := TPixieCssLength.Create(50, cssUnitsPercentage);
+  FObjectPositionY := TPixieCssLength.Create(50, cssUnitsPercentage);
+  ObjectPositionValue := Tag.GetPropertyString(
+    Ord(psid_object_position), False, '50% 50%', 0);
+  ObjectPositionTokens := PixieCssNormalizeStr(ObjectPositionValue,
+    cssCssNormComponentize or cssCssNormRemoveWhitespace);
+  try
+    ObjectPositionIndex := 0;
+    if PixieParseBgPosition(ObjectPositionTokens, ObjectPositionIndex,
+      ObjectPositionX, ObjectPositionY, True) and
+      (ObjectPositionIndex = ObjectPositionTokens.Count) then
+    begin
+      CtxCvtUnits(ObjectPositionX, FFontMetrics, Ctx);
+      CtxCvtUnits(ObjectPositionY, FFontMetrics, Ctx);
+      FObjectPositionX := ObjectPositionX;
+      FObjectPositionY := ObjectPositionY;
+    end;
+  finally
+    ObjectPositionTokens.Free;
+  end;
 
   // 2. Enum properties
   FElPosition := TPixieElementPosition(Tag.GetPropertyInt(
