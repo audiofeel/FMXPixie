@@ -281,7 +281,7 @@ begin
     // SetValue changes the submitted value attribute; SetChecked controls
     // whether the checkbox/radio is selected.
     SetValueById('desktop-shortcut', 'desktop-link');
-    SetCheckedById('desktop-shortcut', False);
+    SetCheckedById('desktop-shortcut', True);
     SetValueById('package-full', 'full');
     SetValueById('package-portable', 'portable');
     SetCheckedById('package-full', False);
@@ -302,7 +302,7 @@ begin
     SetValueById('install-channel', 'stable');
     SetValueById('cache-size', '40');
     SetValueById('desktop-shortcut', 'desktop-shortcut');
-    SetCheckedById('desktop-shortcut', True);
+    SetCheckedById('desktop-shortcut', False);
     SetValueById('package-full', 'full');
     SetValueById('package-portable', 'portable');
     SetCheckedById('package-full', True);
