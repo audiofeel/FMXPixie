@@ -1659,7 +1659,9 @@ begin
         if SelectPopup.PopupMouseMove(Vx, Vy, ViewW, ViewH, FScrollY) then
           Invalidate;
         Exit;
-      end;
+      end
+      else if SelectPopup.ClearPopupHover then
+        Invalidate;
     end;
 
     // Gutter hover detection for svAuto
@@ -1771,6 +1773,10 @@ begin
   end;
   if FDocument <> nil then
   begin
+    if FDocument.FocusedElement is TPixieElSelect then
+      if TPixieElSelect(FDocument.FocusedElement).ClearPopupHover then
+        Invalidate;
+
     FRedrawBoxes.Clear;
     if FDocument.OnMouseLeave(FRedrawBoxes) then
       Invalidate;
