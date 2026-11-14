@@ -10,6 +10,8 @@ library FMXPixie;
   {$LIBSUFFIX '_x64'}
 {$ENDIF}
 
+{$R FMXPixie.res}
+
 uses
   FMXPixie.Forms in 'Forms\FMXPixie.Forms.pas',
   FMXPixie.BrushHelpers in 'Helpers\FMXPixie.BrushHelpers.pas',
@@ -19,12 +21,11 @@ uses
   FMXPixie.MarkdownView in 'Pixie\FMXPixie.MarkdownView.pas',
   FMXPixie.TagBar in 'Pixie\FMXPixie.TagBar.pas',
   FMXPixie.PaintBox in 'Pixie\FMXPixie.PaintBox.pas',
-  FMXPixie.AudioPlayer in 'Custom\AudioPlayer\FMXPixie.AudioPlayer.pas',
-  FMXPixie.Input in 'Custom\FMXPixie.Input.pas',
   FMXPixie.SystemInfo in 'Custom\FMXPixie.SystemInfo.pas',
-  FMXPixie.System in 'FMX\FMXPixie.System.pas';
+  FMXPixie.System in 'FMX\FMXPixie.System.pas',
+  FMXPixie.AudioPlayer in 'ThirdParty\FMXPixie.AudioPlayer.pas',
+  FMXPixie.Input in 'ThirdParty\FMXPixie.Input.pas';
 
-{$R *.res}
 begin
 //
 end.
