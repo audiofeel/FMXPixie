@@ -235,7 +235,7 @@ uses
   Pixie.CssTokenizer, Pixie.CssParser, Pixie.CssSelector,
   Pixie.HtmlTag,
   Pixie.ElText, Pixie.ElImage, Pixie.ElSvg,
-  Pixie.ElInput, Pixie.ElTextInput, Pixie.ElProgress, Pixie.ElRange,
+  Pixie.ElInput, Pixie.ElTextInput, Pixie.ElSelect, Pixie.ElProgress, Pixie.ElRange,
   Pixie.ElTable, Pixie.ElAnchor, Pixie.ElMisc, Pixie.ElDetails,
   Pixie.ElBeforeAfter,
   Pixie.RenderItem, Pixie.RenderBlock,
