@@ -56,7 +56,8 @@ type
 implementation
 
 uses
-  Pixie.StringId, Pixie.RenderItem, Pixie.RenderImage;
+  Math, Pixie.StringId, Pixie.RenderItem, Pixie.RenderImage,
+  Pixie.CssProperties;
 
 { TPixieElImage }
 
@@ -223,6 +224,7 @@ var
   Cont: TPixieContainer;
   Sz: TPixieSize;
   FrameHandle: PtrUInt;
+  ScaleX, ScaleY, Scale, DestW, DestH: Single;
 begin
   inherited Draw(Hdc, X, Y, Clip, Ri);
 
@@ -252,6 +254,42 @@ begin
     Layer.Init;
     Layer.ClipBox := P;
     Layer.OriginBox := P;
+
+    // object-fit controls the image's concrete destination size. ClipBox
+    // remains the element content box, so cover/none can crop naturally.
+    if (Sz.Width > 0) and (Sz.Height > 0) then
+    begin
+      DestW := P.Width;
+      DestH := P.Height;
+      case FCss.ObjectFit of
+        pofContain, pofCover, pofScaleDown:
+          begin
+            ScaleX := P.Width / Sz.Width;
+            ScaleY := P.Height / Sz.Height;
+            if FCss.ObjectFit = pofCover then
+              Scale := Max(ScaleX, ScaleY)
+            else
+              Scale := Min(ScaleX, ScaleY);
+            if FCss.ObjectFit = pofScaleDown then
+              Scale := Min(1, Scale);
+            DestW := Sz.Width * Scale;
+            DestH := Sz.Height * Scale;
+          end;
+        pofNone:
+          begin
+            DestW := Sz.Width;
+            DestH := Sz.Height;
+          end;
+      end;
+
+      Layer.OriginBox.X := P.X +
+        FCss.ObjectPositionX.CalcPercent(P.Width - DestW);
+      Layer.OriginBox.Y := P.Y +
+        FCss.ObjectPositionY.CalcPercent(P.Height - DestH);
+      Layer.OriginBox.Width := DestW;
+      Layer.OriginBox.Height := DestH;
+    end;
+
     Layer.BorderBox := P;
     Layer.BorderBox.X := Layer.BorderBox.X - RenderIt.GetPaddings.Left - RenderIt.GetBorders.Left;
     Layer.BorderBox.Y := Layer.BorderBox.Y - RenderIt.GetPaddings.Top - RenderIt.GetBorders.Top;
