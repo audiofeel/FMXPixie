@@ -8,7 +8,7 @@ interface
 
 uses
   SysUtils, Classes, Math, Generics.Collections,
-  Pixie.Types, Pixie.WebColor,
+  Pixie.Types, Pixie.WebColor, Pixie.Borders,
   Pixie.Element, Pixie.HtmlTag, Pixie.Canvas;
 
 type
@@ -56,6 +56,7 @@ type
     procedure SetSelectedIndex(Value: Integer);
     procedure OpenPopup;
     procedure ClosePopup(Cancel: Boolean);
+    procedure EnsurePopupSelectionVisible;
     function MoveSelection(Direction: Integer): Boolean;
     function SelectBoundary(Last: Boolean): Boolean;
     function PopupRowHeight: Single;
@@ -101,7 +102,7 @@ implementation
 
 uses
   Pixie.Document, Pixie.StringId, Pixie.RenderItem,
-  Pixie.RenderInput, Pixie.NativeContainer;
+  Pixie.RenderInput, Pixie.NativeContainer, Pixie.Container;
 
 const
   SelectDefaultWidth = 150;
@@ -283,6 +284,12 @@ begin
       Item.Option.SetSelected(Item.Option = FSelectedOption);
   end;
 
+  if FOpen then
+  begin
+    FPopupHoverIndex := FindItemIndex(FSelectedOption);
+    EnsurePopupSelectionVisible;
+  end;
+
   if Changed and NotifyHost and (FDoc is TPixieDocument) then
   begin
     Doc := TPixieDocument(FDoc);
@@ -438,7 +445,7 @@ end;
 
 procedure TPixieElSelect.OpenPopup;
 var
-  I, VisibleCount, SelectedItem: Integer;
+  VisibleCount, SelectedItem: Integer;
 begin
   if IsEffectivelyDisabled or FOpen then
     Exit;
@@ -457,10 +464,7 @@ begin
 
   if FPopupScrollIndex > FItems.Count - VisibleCount then
     FPopupScrollIndex := Max(0, FItems.Count - VisibleCount);
-
-  I := FPopupScrollIndex;
-  if I < 0 then
-    FPopupScrollIndex := 0;
+  EnsurePopupSelectionVisible;
 end;
 
 procedure TPixieElSelect.ClosePopup(Cancel: Boolean);
@@ -472,6 +476,24 @@ begin
   if Cancel and (FSelectedOption <> FOpenSelectedOption) then
     SetSelectedOption(FOpenSelectedOption, True);
   FOpenSelectedOption := nil;
+end;
+
+procedure TPixieElSelect.EnsurePopupSelectionVisible;
+var
+  SelectedItem, VisibleCount: Integer;
+begin
+  if not FOpen then
+    Exit;
+  SelectedItem := FindItemIndex(FSelectedOption);
+  if SelectedItem < 0 then
+    Exit;
+  VisibleCount := Max(1, Trunc(SelectMaxPopupHeight / PopupRowHeight));
+  if SelectedItem < FPopupScrollIndex then
+    FPopupScrollIndex := SelectedItem
+  else if SelectedItem >= FPopupScrollIndex + VisibleCount then
+    FPopupScrollIndex := SelectedItem - VisibleCount + 1;
+  FPopupScrollIndex := EnsureRange(FPopupScrollIndex, 0,
+    Max(0, FItems.Count - VisibleCount));
 end;
 
 function TPixieElSelect.OnLButtonDown: Boolean;
@@ -495,49 +517,56 @@ end;
 
 function TPixieElSelect.MoveSelection(Direction: Integer): Boolean;
 var
-  I, StartIndex, Step: Integer;
+  I, StartIndex, Step, N, TargetIndex, Steps: Integer;
   Item: TPixieSelectItem;
+  TargetOption: TPixieElOption;
 begin
   Result := False;
-  if FItems.Count = 0 then
+  if (FItems.Count = 0) or (Direction = 0) then
     Exit;
 
-  StartIndex := FindItemIndex(FSelectedOption);
   if Direction > 0 then
-  begin
-    Step := 1;
-    I := StartIndex + 1;
-    if StartIndex < 0 then
-      I := 0;
-    while I < FItems.Count do
-    begin
-      Item := FItems[I];
-      if (Item.Kind = sikOption) and not Item.Disabled then
-      begin
-        SetSelectedOption(Item.Option, True);
-        FPopupHoverIndex := I;
-        Exit(True);
-      end;
-      Inc(I, Step);
-    end;
-  end
+    Step := 1
   else
-  begin
     Step := -1;
-    I := StartIndex - 1;
-    if StartIndex < 0 then
-      I := FItems.Count - 1;
-    while I >= 0 do
+  Steps := Abs(Direction);
+  StartIndex := FindItemIndex(FSelectedOption);
+  TargetIndex := StartIndex;
+  TargetOption := FSelectedOption;
+
+  for N := 1 to Steps do
+  begin
+    I := TargetIndex + Step;
+    if TargetIndex < 0 then
+    begin
+      if Step > 0 then
+        I := 0
+      else
+        I := FItems.Count - 1;
+    end;
+
+    while (I >= 0) and (I < FItems.Count) do
     begin
       Item := FItems[I];
       if (Item.Kind = sikOption) and not Item.Disabled then
       begin
-        SetSelectedOption(Item.Option, True);
-        FPopupHoverIndex := I;
-        Exit(True);
+        TargetIndex := I;
+        TargetOption := Item.Option;
+        Break;
       end;
       Inc(I, Step);
     end;
+
+    if (I < 0) or (I >= FItems.Count) then
+      Break;
+  end;
+
+  if TargetOption <> FSelectedOption then
+  begin
+    SetSelectedOption(TargetOption, True);
+    FPopupHoverIndex := TargetIndex;
+    EnsurePopupSelectionVisible;
+    Result := True;
   end;
 end;
 
