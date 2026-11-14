@@ -95,6 +95,13 @@ begin
     '.muted{color:#9ca3af;}' +
     '.field-label{display:block;color:#cbd5e1;margin-top:9px;margin-bottom:5px;}' +
     'select{width:290px;height:34px;margin:2px 0 8px;background:#1f2937;color:#e5e7eb;border:1px solid #475569;border-radius:8px;}' +
+    'option{background:#1f2937;color:#e5e7eb;}' +
+    'option:hover{background:#334155;color:#fff;border-radius:5px;}' +
+    'option:checked{background:#2563eb;color:#fff;border-radius:5px;}' +
+    'option:disabled{color:#64748b;}' +
+    'optgroup{background:#263449;color:#93c5fd;border-radius:5px;}' +
+    'optgroup:hover{background:#334155;}' +
+    'optgroup:disabled{color:#64748b;}' +
     'button{background:#25344b;color:#f9fafb;border:1px solid #40516b;padding:8px 12px;margin:4px 5px 4px 0;cursor:pointer;}' +
     'button:hover{background:#2563a6;border-color:#60a5fa;}' +
     'button:active{background:#174477;}' +
