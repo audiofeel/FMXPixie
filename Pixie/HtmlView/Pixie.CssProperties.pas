@@ -126,6 +126,7 @@ type
     FTextEmphasisColor: TPixieWebColor;
     FBoxShadow: TPixieBoxShadow;
     FObjectFit: TPixieObjectFit;
+    FObjectPosition: string;
     FObjectPositionX: TPixieCssLength;
     FObjectPositionY: TPixieCssLength;
 
@@ -1489,6 +1490,7 @@ begin
   FBoxShadowTimingFunction := 'ease';
   FBoxShadow := Default(TPixieBoxShadow);
   FObjectFit := pofFill;
+  FObjectPosition := '50% 50%';
   FObjectPositionX := TPixieCssLength.Create(50, cssUnitsPercentage);
   FObjectPositionY := TPixieCssLength.Create(50, cssUnitsPercentage);
   FBgColorTarget := TPixieWebColor.Transparent;
@@ -2668,8 +2670,10 @@ begin
 
   FObjectPositionX := TPixieCssLength.Create(50, cssUnitsPercentage);
   FObjectPositionY := TPixieCssLength.Create(50, cssUnitsPercentage);
-  ObjectPositionValue := Tag.GetPropertyString(
-    Ord(psid_object_position), False, '50% 50%', 0);
+  FObjectPosition := Tag.GetPropertyString(
+    Ord(psid_object_position), False, '50% 50%',
+    PtrUInt(@FObjectPosition) - PtrUInt(Self));
+  ObjectPositionValue := FObjectPosition;
   ObjectPositionTokens := PixieCssNormalizeStr(ObjectPositionValue,
     cssCssNormComponentize or cssCssNormRemoveWhitespace);
   try
