@@ -206,11 +206,15 @@ var
   ValidValues: TValidValuesMap;
   ShorthandMap: TPixieShorthandMap;
 
+const
+  ObjectFitStrings = 'fill;contain;cover;none;scale-down';
+
 procedure InitValidValues;
 begin
   ValidValues := TValidValuesMap.Create;
 
   ValidValues.Add(Ord(psid_display), StyleDisplayStrings);
+  ValidValues.Add(Ord(psid_object_fit), ObjectFitStrings);
   ValidValues.Add(Ord(psid_visibility), VisibilityStrings);
   ValidValues.Add(Ord(psid_user_select), UserSelectStrings);
   ValidValues.Add(Ord(psid_position), ElementPositionStrings);
@@ -1898,7 +1902,8 @@ begin
   end;
 
   // Check for calc() with context-dependent units (em/rem/vw/vh) - delay
-  if (GCalcCtx = nil) and HasDeferredCalc(Tokens) then
+  if (GCalcCtx = nil) and HasDeferredCalc(Tokens) and
+     (Name <> Ord(psid_object_position)) then
   begin
     TokensCopy := TPixieCssTokenList.Create;
     PixieCssTokenListCopy(Tokens, TokensCopy);
@@ -1929,7 +1934,8 @@ begin
      (Name = Ord(psid_transition_duration)) or
      (Name = Ord(psid_transition_timing_function)) or
      (Name = Ord(psid_transition_delay)) or
-     (Name = Ord(psid_box_shadow)) then
+     (Name = Ord(psid_box_shadow)) or
+     (Name = Ord(psid_object_position)) then
   begin
     S := PixieCssGetRepr(Tokens, 0, -1, True);
     AddParsedProperty(Name, TPixiePropertyValue.FromString(S, Important));
@@ -1962,6 +1968,7 @@ begin
      (Name = Ord(psid_position)) or (Name = Ord(psid_float)) or
      (Name = Ord(psid_clear)) or (Name = Ord(psid_appearance)) or
      (Name = Ord(psid_box_sizing)) or (Name = Ord(psid_overflow)) or
+     (Name = Ord(psid_object_fit)) or
      (Name = Ord(psid_overflow_x)) or
      (Name = Ord(psid_text_align)) or (Name = Ord(psid_vertical_align)) or
      (Name = Ord(psid_text_transform)) or (Name = Ord(psid_white_space)) or
@@ -1991,7 +1998,9 @@ begin
         if Name = Ord(psid_display) then
           Idx := PixieValueIndex('inline', ValidStr)
         else if Name = Ord(psid_visibility) then
-          Idx := PixieValueIndex('visible', ValidStr);
+          Idx := PixieValueIndex('visible', ValidStr)
+        else if Name = Ord(psid_object_fit) then
+          Idx := PixieValueIndex('fill', ValidStr);
       end;
       // 'oblique' has no separate representation — render it as italic.
       if (Name = Ord(psid_font_style)) and (Idx < 0) and (Ident = 'oblique') then
