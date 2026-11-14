@@ -94,7 +94,7 @@ begin
     '.section-title{color:#93c5fd;font-weight:bold;margin-bottom:10px;}' +
     '.muted{color:#9ca3af;}' +
     '.field-label{display:block;color:#cbd5e1;margin-top:9px;margin-bottom:5px;}' +
-    'select{width:290px;height:30px;margin:2px 0 8px;}' +
+    'select{width:290px;height:34px;margin:2px 0 8px;background:#1f2937;color:#e5e7eb;border:1px solid #475569;border-radius:8px;}' +
     'button{background:#25344b;color:#f9fafb;border:1px solid #40516b;padding:8px 12px;margin:4px 5px 4px 0;cursor:pointer;}' +
     'button:hover{background:#2563a6;border-color:#60a5fa;}' +
     'button:active{background:#174477;}' +
