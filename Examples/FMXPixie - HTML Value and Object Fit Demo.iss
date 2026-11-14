@@ -134,7 +134,7 @@ begin
     '<div class="hint">Ползунок отключён: здесь проверяется именно SetValue / GetValue для числового значения.</div></div>' +
 
     '<div class="field-label">Checkbox — значение и состояние разделены</div>' +
-    '<label class="choice"><input id="desktop-shortcut" type="checkbox" value="desktop-shortcut" checked>Создать ярлык</label>' +
+    '<label class="choice"><input id="desktop-shortcut" type="checkbox" value="desktop-shortcut">Создать ярлык</label>' +
     '<div class="hint">GetValue читает value="desktop-shortcut". GetChecked отдельно сообщает, установлена ли галочка.</div>' +
 
     '<div class="field-label" style="margin-top:7px">Radio — значение выбранного варианта и checked</div>' +
@@ -281,7 +281,7 @@ begin
     // SetValue changes the submitted value attribute; SetChecked controls
     // whether the checkbox/radio is selected.
     SetValueById('desktop-shortcut', 'desktop-link');
-    SetCheckedById('desktop-shortcut', True);
+    SetCheckedById('desktop-shortcut', False);
     SetValueById('package-full', 'full');
     SetValueById('package-portable', 'portable');
     SetCheckedById('package-full', False);
