@@ -103,26 +103,26 @@ begin
     '.select-amber{background:#422006;color:#ffedd5;border:1px solid #d97706;border-radius:16px;}' +
     '.select-amber:hover{background:#78350f;color:#fff7ed;border-color:#fbbf24;}' +
     '.select-disabled{background:#202936;color:#94a3b8;border:1px solid #475569;border-radius:6px;}' +
-    'option{background:#1f2937;color:#e5e7eb;border:1px solid #344256;border-radius:5px;}' +
-    'option:hover{background:#334155;color:#fff;border-color:#60a5fa;border-radius:5px;}' +
-    'option:checked{background:#2563eb;color:#fff;border-color:#60a5fa;border-radius:5px;}' +
+    'option{background:#1f2937;color:#e5e7eb;border-radius:5px;}' +
+    'option:hover{background:#334155;color:#fff;border-radius:5px;}' +
+    'option:checked{background:#2563eb;color:#fff;border-radius:5px;}' +
     'option:disabled{color:#64748b;}' +
-    '.blue-option{background:#172554;color:#dbeafe;border:1px solid #1e40af;border-radius:7px;}' +
-    '.blue-option:hover{background:#1d4ed8;color:#fff;border-color:#93c5fd;}' +
-    '.blue-option:checked{background:#2563eb;color:#fff;border-color:#bfdbfe;}' +
+    '.blue-option{background:#172554;color:#dbeafe;border-radius:7px;}' +
+    '.blue-option:hover{background:#1d4ed8;color:#fff;}' +
+    '.blue-option:checked{background:#2563eb;color:#fff;}' +
     '.blue-option:disabled{color:#64748b;}' +
-    '.green-option{background:#064e3b;color:#d1fae5;border:1px solid #047857;border-radius:3px;}' +
-    '.green-option:hover{background:#047857;color:#fff;border-color:#6ee7b7;}' +
-    '.green-option:checked{background:#059669;color:#fff;border-color:#a7f3d0;}' +
-    '.green-option:disabled{background:#1f2937;color:#64748b;border-color:#374151;}' +
-    '.green-group{background:#064e3b;color:#6ee7b7;border:1px solid #10b981;border-radius:4px;}' +
+    '.green-option{background:#064e3b;color:#d1fae5;border-radius:3px;}' +
+    '.green-option:hover{background:#047857;color:#fff;}' +
+    '.green-option:checked{background:#059669;color:#fff;}' +
+    '.green-option:disabled{background:#1f2937;color:#64748b;}' +
+    '.green-group{background:#064e3b;color:#6ee7b7;border-radius:4px;}' +
     '.green-group:hover{background:#065f46;color:#a7f3d0;}' +
     '.green-group:disabled{color:#64748b;}' +
-    '.amber-option{background:#451a03;color:#ffedd5;border:1px solid #92400e;border-radius:10px;}' +
-    '.amber-option:hover{background:#92400e;color:#fff7ed;border-color:#fbbf24;}' +
-    '.amber-option:checked{background:#b45309;color:#fff;border-color:#fcd34d;}' +
+    '.amber-option{background:#451a03;color:#ffedd5;border-radius:10px;}' +
+    '.amber-option:hover{background:#92400e;color:#fff7ed;}' +
+    '.amber-option:checked{background:#b45309;color:#fff;}' +
     '.amber-option:disabled{color:#78716c;}' +
-    '.disabled-option{background:#202936;color:#64748b;border:1px solid #374151;border-radius:6px;}' +
+    '.disabled-option{background:#202936;color:#64748b;border-radius:6px;}' +
     '.field-theme{display:inline-block;margin:0 0 4px;padding:3px 7px;font-size:10px;font-weight:bold;letter-spacing:1px;border:1px solid;}' +
     '.theme-blue{color:#93c5fd;border-color:#3b82f6;background:#172554;}' +
     '.theme-green{color:#6ee7b7;border-color:#10b981;background:#052e2b;}' +
