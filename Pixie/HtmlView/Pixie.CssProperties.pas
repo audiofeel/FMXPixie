@@ -2554,32 +2554,6 @@ begin
     TPixieWebColor.Black,
     PtrUInt(@FColor) - PtrUInt(Self));
 
-  // Replaced-element image presentation.
-  FObjectFit := TPixieObjectFit(Tag.GetPropertyInt(
-    Ord(psid_object_fit), False, Ord(pofFill),
-    PtrUInt(@FObjectFit) - PtrUInt(Self)));
-
-  FObjectPositionX := TPixieCssLength.Create(50, cssUnitsPercentage);
-  FObjectPositionY := TPixieCssLength.Create(50, cssUnitsPercentage);
-  ObjectPositionValue := Tag.GetPropertyString(
-    Ord(psid_object_position), False, '50% 50%', 0);
-  ObjectPositionTokens := PixieCssNormalizeStr(ObjectPositionValue,
-    cssCssNormComponentize or cssCssNormRemoveWhitespace);
-  try
-    ObjectPositionIndex := 0;
-    if PixieParseBgPosition(ObjectPositionTokens, ObjectPositionIndex,
-      ObjectPositionX, ObjectPositionY, True) and
-      (ObjectPositionIndex = ObjectPositionTokens.Count) then
-    begin
-      CtxCvtUnits(ObjectPositionX, FFontMetrics, Ctx);
-      CtxCvtUnits(ObjectPositionY, FFontMetrics, Ctx);
-      FObjectPositionX := ObjectPositionX;
-      FObjectPositionY := ObjectPositionY;
-    end;
-  finally
-    ObjectPositionTokens.Free;
-  end;
-
   // 2. Enum properties
   FElPosition := TPixieElementPosition(Tag.GetPropertyInt(
     Ord(psid_position), False, Ord(epStatic),
@@ -2686,6 +2660,33 @@ begin
   CalcCtx.VwPx := Ctx.Media.Width;
   CalcCtx.VhPx := Ctx.Media.Height;
   Tag.Style.ResolveCalc(CalcCtx);
+
+  // Replaced-element image presentation.
+  FObjectFit := TPixieObjectFit(Tag.GetPropertyInt(
+    Ord(psid_object_fit), False, Ord(pofFill),
+    PtrUInt(@FObjectFit) - PtrUInt(Self)));
+
+  FObjectPositionX := TPixieCssLength.Create(50, cssUnitsPercentage);
+  FObjectPositionY := TPixieCssLength.Create(50, cssUnitsPercentage);
+  ObjectPositionValue := Tag.GetPropertyString(
+    Ord(psid_object_position), False, '50% 50%', 0);
+  ObjectPositionTokens := PixieCssNormalizeStr(ObjectPositionValue,
+    cssCssNormComponentize or cssCssNormRemoveWhitespace);
+  try
+    ObjectPositionIndex := 0;
+    if PixieParseBgPosition(ObjectPositionTokens, ObjectPositionIndex,
+      ObjectPositionX, ObjectPositionY, True) and
+      (ObjectPositionIndex = ObjectPositionTokens.Count) then
+    begin
+      CtxCvtUnits(ObjectPositionX, FFontMetrics, Ctx);
+      CtxCvtUnits(ObjectPositionY, FFontMetrics, Ctx);
+      FObjectPositionX := ObjectPositionX;
+      FObjectPositionY := ObjectPositionY;
+    end;
+  finally
+    ObjectPositionTokens.Free;
+  end;
+
 
   // 5. Box model dimensions
   FCssWidth := Tag.GetPropertyLength(Ord(psid_width), False, AutoLen,
