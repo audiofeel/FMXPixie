@@ -357,7 +357,7 @@ implementation
 uses
   System.SysUtils, System.IOUtils,
   Pixie.PdfExport, Pixie.WebColor, Pixie.ElTextInput, Pixie.ElInput,
-  Pixie.ElSelect;
+  Pixie.ElSelect, Pixie.ElRange;
 
 function AlphaColorToPixieColor(AColor: TAlphaColor): TPixieWebColor;
 begin
@@ -1113,12 +1113,44 @@ begin
     ControlElement.SetTextContent(string(FText));
 end;
 
-procedure TFPixieElement.SetValue(const FValue: WideString);
+function TryStrToHtmlFloat(const S: string; out Value: Single): Boolean;
+var
+  FormatSettings: TFormatSettings;
 begin
-  if ControlElement is TPixieElTextInput then
-    TPixieElTextInput(ControlElement).SetValue(string(FValue))
+  FormatSettings := TFormatSettings.Create;
+  FormatSettings.DecimalSeparator := '.';
+  FormatSettings.ThousandSeparator := #0;
+  Result := TryStrToFloat(Trim(S), Value, FormatSettings) and
+    (Value = Value);
+end;
+
+function HtmlFloatToStr(Value: Single): string;
+var
+  FormatSettings: TFormatSettings;
+begin
+  FormatSettings := TFormatSettings.Create;
+  FormatSettings.DecimalSeparator := '.';
+  FormatSettings.ThousandSeparator := #0;
+  Result := FloatToStr(Value, FormatSettings);
+end;
+
+procedure TFPixieElement.SetValue(const FValue: WideString);
+var
+  RangeValue: Single;
+begin
+  if ControlElement is TPixieElTextBase then
+    TPixieElTextBase(ControlElement).SetValue(string(FValue))
   else if ControlElement is TPixieElSelect then
-    TPixieElSelect(ControlElement).Value := string(FValue);
+    TPixieElSelect(ControlElement).Value := string(FValue)
+  else if ControlElement is TPixieElRange then
+  begin
+    if TryStrToHtmlFloat(string(FValue), RangeValue) then
+      TPixieElRange(ControlElement).Value := RangeValue;
+  end
+  else if (ControlElement is TPixieElCheckbox) or
+          (ControlElement is TPixieElRadio) then
+    // HTML value is the submitted value; checked state stays in SetChecked.
+    ControlElement.SetAttr('value', string(FValue));
 end;
 
 function TFPixieElement.GetChecked: Boolean;
@@ -1148,7 +1180,12 @@ begin
   if ControlElement is TPixieElTextBase then
     Result := TPixieElTextBase(ControlElement).Value
   else if ControlElement is TPixieElSelect then
-    Result := TPixieElSelect(ControlElement).Value;
+    Result := TPixieElSelect(ControlElement).Value
+  else if ControlElement is TPixieElRange then
+    Result := HtmlFloatToStr(TPixieElRange(ControlElement).Value)
+  else if (ControlElement is TPixieElCheckbox) or
+          (ControlElement is TPixieElRadio) then
+    Result := ControlElement.GetAttr('value', 'on');
 end;
 
 // =============================================================================
