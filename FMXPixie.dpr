@@ -16,6 +16,7 @@ uses
   FMXPixie.Utils in 'Custom\FMXPixie.Utils.pas',
   FMXPixie.HtmlView in 'Pixie\FMXPixie.HtmlView.pas',
   Pixie.ElSelect in 'Pixie\HtmlView\Pixie.ElSelect.pas',
+  Pixie.ElRange in 'Pixie\HtmlView\Pixie.ElRange.pas',
   FMXPixie.SvgView in 'Pixie\FMXPixie.SvgView.pas',
   FMXPixie.MarkdownView in 'Pixie\FMXPixie.MarkdownView.pas',
   FMXPixie.TagBar in 'Pixie\FMXPixie.TagBar.pas',
