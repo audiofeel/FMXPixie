@@ -1,5 +1,5 @@
 ﻿
-#define DemoAppName "FMXPixie - CSS Background Image Gradient Test"
+#define DemoAppName "PIXIE Setup - Welcome Page"
 #define DemoAppVersion "1.1"
 
 [Setup]
@@ -7,7 +7,7 @@ AppName={#DemoAppName}
 AppVersion={#DemoAppVersion}
 CreateAppDir=no
 Uninstallable=no
-OutputBaseFilename=FMXPixie - CSS Background Image Gradient Test
+OutputBaseFilename=PIXIE Setup - Welcome Page
 //SetupArchitecture=x64
 SetupIconFile=Files\setup.ico
 
@@ -62,6 +62,8 @@ begin
     '.chips{margin-top:22px;font-size:0;}' +
     '.chip{display:inline-block;margin-right:7px;padding:6px 9px;border:1px solid rgba(135,195,230,.32);' +
       'border-radius:5px;background:rgba(15,38,58,.72);color:#b9e8f7;font-size:9px;letter-spacing:.6px;}' +
+    '.continue{margin-top:24px;padding:11px 22px;background:#176b78;border:1px solid #70cbd1;border-radius:5px;color:#fff;font:12px "Segoe UI",Arial,sans-serif;font-weight:bold;cursor:pointer;}' +
+    '.continue:hover{background:#238b97;}' +
     '.footnote{position:absolute;right:24px;bottom:20px;color:rgba(225,237,248,.72);font-size:9px;letter-spacing:.7px;}' +
     '</style></head><body>' +
     '<div class="titlebar">' +
@@ -79,14 +81,37 @@ begin
       '<div class="ramp"></div>' +
       '<div class="ramp-labels"><span class="ramp-left">98% / DARK</span><span class="ramp-right">0% / CLEAR</span></div>' +
       '<div class="chips">' +
-        '<span class="chip">LINEAR-GRADIENT()</span>' +
-        '<span class="chip">URL IMAGE</span>' +
-        '<span class="chip">BACKGROUND-SIZE: COVER</span>' +
-        '<span class="chip">BACKGROUND-POSITION: CENTER</span>' +
+        '<span class="chip">ТЁМНАЯ ТЕМА</span>' +
+        '<span class="chip">ФОНОВАЯ ИЛЛЮСТРАЦИЯ</span>' +
+        '<span class="chip">АККУРАТНОЕ РАЗМЕЩЕНИЕ</span>' +
+        '<span class="chip">ПЛАВНОЕ ЗАТЕМНЕНИЕ</span>' +
       '</div>' +
     '</div>' +
-    '<div class="footnote">OVERLAY ALPHA: 98%  →  0% / IMAGE: COVER</div>' +
+    '<button id="btn-continue" class="continue">Продолжить</button>' +
+    '<div class="footnote">PIXIE SETUP · ШАГ 1 ИЗ 2</div>' +
     '</body></html>';
+end;
+
+function BuildFinishHtml: String;
+begin
+  Result :=
+    '<!doctype html><html><head><meta charset="utf-8"><style>' +
+    '*{box-sizing:border-box;}html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;}' +
+    'body{background:#07101d;color:#f0f5fa;font-family:"Segoe UI",Arial,sans-serif;' +
+    'background-image:linear-gradient(90deg,rgba(4,10,22,.98) 0%,rgba(4,10,22,.82) 45%,rgba(4,10,22,.2) 100%),url("FMXPixie_SvgView_Demo.svg");background-size:cover;background-position:center;}' +
+    '.titlebar{height:42px;line-height:41px;background:rgba(5,11,22,.58);border-bottom:1px solid rgba(190,220,255,.18);}' +
+    '.brand{margin-left:17px;color:#a5e8ff;font-size:10px;font-weight:bold;letter-spacing:1.5px;}' +
+    '.hero{position:absolute;left:55px;top:190px;width:560px;}' +
+    '.eyebrow{color:#72d9ed;font-size:10px;font-weight:bold;letter-spacing:2px;}' +
+    '.headline{margin-top:15px;color:#f7fbff;font-size:32px;font-weight:600;}' +
+    '.copy{margin-top:15px;color:#d0dbe7;font-size:13px;line-height:1.6;}' +
+    'button{margin-top:23px;padding:11px 22px;background:#176b78;border:1px solid #70cbd1;border-radius:5px;color:#fff;font:12px "Segoe UI",Arial,sans-serif;font-weight:bold;cursor:pointer;}' +
+    'button:hover{background:#238b97;}' +
+    '</style></head><body><div class="titlebar"><span class="brand">PIXIE SETUP</span></div>' +
+    '<div class="hero"><div class="eyebrow">PIXIE SETUP · ШАГ 2 ИЗ 2</div>' +
+    '<div class="headline">Всё готово к настройке</div>' +
+    '<div class="copy">Приветственная страница использует фоновую иллюстрацию и затемнение, чтобы текст оставался читаемым. Это пример оформления первого экрана установщика.</div>' +
+    '<button id="btn-finish">Завершить</button></div></body></html>';
 end;
 
 procedure CloseSetup;
@@ -122,6 +147,16 @@ begin
     Result := True;
   end
   else if Id = 'title-close' then
+  begin
+    CloseSetup;
+    Result := True;
+  end
+  else if Id = 'btn-continue' then
+  begin
+    View.LoadFromString(BuildFinishHtml);
+    Result := True;
+  end
+  else if Id = 'btn-finish' then
   begin
     CloseSetup;
     Result := True;
