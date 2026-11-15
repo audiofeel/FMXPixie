@@ -1,5 +1,5 @@
 ﻿
-#define DemoAppName "PIXIE Setup - Sound Settings"
+#define DemoAppName "FMXPixie - Volume Slider Demo"
 #define DemoAppVersion "1.0"
 
 [Setup]
@@ -8,7 +8,7 @@ AppVersion={#DemoAppVersion}
 CreateAppDir=no
 Uninstallable=no
 ; SetupArchitecture=x64
-OutputBaseFilename=PIXIE Setup - Sound Settings
+OutputBaseFilename=FMXPixie - Volume Slider Demo
 SetupIconFile=Files\setup.ico
 
 [Files]
@@ -81,7 +81,7 @@ begin
     '.button:hover{background:#29384b;color:#fff;}' +
     '.close:hover{background:#d74747;}' +
     '</style></head><body><div class="bar">' +
-    '<span class="caption">PIXIE SETUP</span><span class="sub">/ НАСТРОЙКА ЗВУКА</span>' +
+    '<span class="caption">FMXPixie</span><span class="sub">/ simulated volume control</span>' +
     '<div class="buttons"><div id="title-minimize" class="button">−</div>' +
     '<div id="title-close" class="button close">×</div></div></div></body></html>';
 end;
@@ -99,10 +99,10 @@ begin
     '.note strong{color:#74d8d0;font-weight:600;}' +
     '.small{color:#6f839d;font-size:11px;margin-top:3px;}' +
     '</style></head><body>' +
-    '<div class="heading">Громкость звука установщика</div>' +
-    '<div class="description">Передвиньте ползунок, чтобы выбрать комфортную громкость приветственной музыки.</div>' +
-    '<div class="note"><strong>Демонстрационный режим:</strong> громкость меняется, но звуковой файл здесь не воспроизводится.' +
-    '<div class="small">В настоящем установщике выбранный уровень будет применён к фоновой музыке.</div></div>' +
+    '<div class="heading">A simple volume slider</div>' +
+    '<div class="description">FPixiePaintBox draws the control; FPixieHtmlView receives mouse input.</div>' +
+    '<div class="note"><strong>Demo only:</strong> the value changes here, but no audio is played and BASS is not loaded.' +
+    '<div class="small">For a real player, pass the resulting value (0.00–1.00) to BASS_ChannelSetAttribute using BASS_ATTRIB_VOL.</div></div>' +
     '</body></html>';
 end;
 
