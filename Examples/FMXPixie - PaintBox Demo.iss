@@ -1,5 +1,5 @@
 
-#define DemoAppName "FMXPixie - PaintBox Demo"
+#define DemoAppName "PIXIE Setup - Appearance Preview"
 #define DemoAppVersion "1.0"
 
 [Setup]
@@ -7,7 +7,7 @@ AppName={#DemoAppName}
 AppVersion={#DemoAppVersion}
 CreateAppDir=no
 Uninstallable=no
-OutputBaseFilename=FMXPixie - PaintBox Demo
+OutputBaseFilename=PIXIE Setup - Appearance Preview
 ; SetupArchitecture=x64
 SetupIconFile=Files\setup.ico
 
@@ -61,7 +61,7 @@ begin
     'text-align:center;color:#cbd5e1;font-size:22px;cursor:pointer;}' +
     '.tb:hover{background:#25344b;color:#fff;}.close:hover{background:#dc2626;}' +
     '</style></head><body><div class="titlebar">' +
-    '<span class="caption">FMXPixie</span><span class="subtitle">/ PaintBox component lab</span>' +
+    '<span class="caption">PIXIE</span><span class="subtitle">/ НАСТРОЙКА ОФОРМЛЕНИЯ</span>' +
     '<div class="controls"><div id="title-minimize" class="tb" title="Свернуть">−</div>' +
     '<div id="title-close" class="tb close" title="Закрыть">×</div></div></div></body></html>';
 end;
@@ -95,25 +95,25 @@ begin
     '#footer{position:absolute;left:24px;right:24px;top:646px;color:#64748b;font-size:11px;line-height:17px;}' +
     'a{color:#67e8f9;text-decoration:none;}' +
     '</style></head><body>' +
-    '<div class="hero"><div class="eyebrow">NATIVE FMX GRAPHICS / DRAWING API</div>' +
-    '<h1>PaintBox <span style="color:#67e8f9">/</span> component lab</h1>' +
-    '<div class="hero-sub">Drawing primitives and text are rendered by Pixie; the callback is implemented in Inno Setup Pascal Script.</div></div>' +
-    '<div id="canvas-label" class="label">01 / LIVE DRAWING SURFACE</div>' +
+    '<div class="hero"><div class="eyebrow">ПРЕДПРОСМОТР ВНЕШНЕГО ВИДА</div>' +
+    '<h1>Настройте внешний вид установщика</h1>' +
+    '<div class="hero-sub">Меняйте палитру, фон и прозрачность. Изображение обновляется прямо в окне установщика.</div></div>' +
+    '<div id="canvas-label" class="label">01 / ПРЕДПРОСМОТР</div>' +
     '<div id="canvas-surface" class="surface">' +
-    '<div class="hint">Shapes, state changes, text metrics, repaint and canvas background</div>' +
-    '<div id="metrics">SIZE / REPAINT COUNTER SHOWN ON CANVAS</div></div>' +
-    '<div id="tools-label" class="label">02 / INTERACTIVE API TESTS</div>' +
+    '<div class="hint">Здесь отображается оформление окна. Выберите параметры ниже.</div>' +
+    '<div id="metrics">ПРЕДПРОСМОТР ОБНОВЛЯЕТСЯ СРАЗУ</div></div>' +
+    '<div id="tools-label" class="label">02 / НАСТРОЙКИ ОФОРМЛЕНИЯ</div>' +
     '<div id="tools-surface" class="surface"><div class="tools">' +
-    '<div class="row"><button id="btn-redraw" class="primary">Repaint</button>' +
-    '<button id="btn-grid">Toggle grid</button><button id="btn-palette">Cycle palette</button>' +
-    '<button id="btn-background">Disable background fill</button></div>' +
-    '<div class="row"><button id="btn-visible">Hide PaintBox</button>' +
-    '<button id="btn-opacity">Opacity: 100%</button><button id="btn-enabled">Enabled: true</button>' +
-    '<button id="btn-hittest">HitTest: off</button><button id="btn-layer">Send to back</button>' +
-    '<button id="btn-reset" class="danger">Reset</button></div>' +
-    '</div><div id="status">Starting PaintBox test…</div></div>' +
-    '<div id="footer">FMXPixie · PaintBox Demo / Test · no installation is performed. ' +
-    'The source and drawing API are based on the <a href="https://gitlab.com/retrofoxed/pixie">Pixie project</a>.</div>' +
+    '<div class="row"><button id="btn-redraw" class="primary">Обновить вид</button>' +
+    '<button id="btn-grid">Сетка</button><button id="btn-palette">Сменить палитру</button>' +
+    '<button id="btn-background">Фон: вкл / выкл</button></div>' +
+    '<div class="row"><button id="btn-visible">Скрыть иллюстрацию</button>' +
+    '<button id="btn-opacity">Прозрачность: 100%</button><button id="btn-enabled">Элемент активен</button>' +
+    '<button id="btn-hittest">Принимать нажатия: выкл</button><button id="btn-layer">На задний план</button>' +
+    '<button id="btn-reset" class="danger">Восстановить</button></div>' +
+    '</div><div id="status">Выберите параметры оформления.</div></div>' +
+    '<div id="footer">PIXIE SETUP · ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР · ' +
+    'В этом примере файлы на компьютер не копируются.</div>' +
     '</body></html>';
 end;
 
@@ -141,32 +141,32 @@ end;
 procedure UpdateButtonLabels;
 begin
   if PaintVisible then
-    SetTextById('btn-visible', 'Hide PaintBox')
+    SetTextById('btn-visible', 'Скрыть иллюстрацию')
   else
     SetTextById('btn-visible', 'Show PaintBox');
 
   if PaintControlEnabled then
-    SetTextById('btn-enabled', 'Enabled: true')
+    SetTextById('btn-enabled', 'Элемент активен')
   else
     SetTextById('btn-enabled', 'Enabled: false');
 
   if PaintHitTestEnabled then
     SetTextById('btn-hittest', 'HitTest: on')
   else
-    SetTextById('btn-hittest', 'HitTest: off');
+    SetTextById('btn-hittest', 'Принимать нажатия: выкл');
 
   if FillCanvasBackground then
-    SetTextById('btn-background', 'Disable background fill')
+    SetTextById('btn-background', 'Фон: вкл / выкл')
   else
     SetTextById('btn-background', 'Enable background fill');
 
   if ReducedOpacity then
     SetTextById('btn-opacity', 'Opacity: 62%')
   else
-    SetTextById('btn-opacity', 'Opacity: 100%');
+    SetTextById('btn-opacity', 'Прозрачность: 100%');
 
   if PaintFront then
-    SetTextById('btn-layer', 'Send to back')
+    SetTextById('btn-layer', 'На задний план')
   else
     SetTextById('btn-layer', 'Bring to front');
 end;
@@ -315,22 +315,22 @@ begin
   PaintBox.FontSize(12);
   PaintBox.FontColor($FFE6F2FF);
   PaintBox.FontStyle([pfsBold]);
-  PaintBox.TextOut(20, 191, 'TextOut: measured sample');
+  PaintBox.TextOut(20, 191, 'Выберите цветовую тему');
   PaintBox.FontStyle([]);
 
   PaintBox.FontColor($FF9AB3CE);
-  PaintBox.TextOut(20, 217, 'TextWidth: underline = measured width');
-  TextW := PaintBox.TextWidth('TextWidth: underline = measured width');
+  PaintBox.TextOut(20, 217, 'Темы оформления PIXIE');
+  TextW := PaintBox.TextWidth('Темы оформления PIXIE');
   PaintBox.Line(20, 226, 20 + TextW, 226);
 
   TextH := PaintBox.TextHeight;
   PaintBox.Line(390, 198, 390, 198 + TextH);
   PaintBox.Line(384, 198, 396, 198);
   PaintBox.Line(384, 198 + TextH, 396, 198 + TextH);
-  PaintBox.TextOut(405, 217, 'TextHeight = ' + IntToStr(Round(TextH)) + ' px');
+  PaintBox.TextOut(405, 217, 'Удобный просмотр вариантов');
 
   PaintBox.TextRect(565, 181, 332, 48,
-    'TextRect: centered text', ptaCenter, pvaMiddle);
+    'Подберите подходящую палитру', ptaCenter, pvaMiddle);
   PaintBox.PenColor(PrimaryColor);
   PaintBox.PenWidth(1);
   PaintBox.BrushStyle(pbsClear);
@@ -350,15 +350,15 @@ begin
   PaintBox.FontSize(10);
   PaintBox.FontColor($FF9AB3CE);
   PaintBox.TextOut(20, 293,
-    'Paint callback count: ' + IntToStr(PaintCount));
+    'Предпросмотр обновлён);
 
   PaintBox.FontColor($FFB7C8DD);
   PaintBox.TextOut(360, 293,
-    'Control size: ' + IntToStr(Round(W)) + ' x ' + IntToStr(Round(H)));
+    'Параметры можно изменить ниже');
 
   PaintBox.FontColor($FF64748B);
   PaintBox.TextOut(20, 316,
-    'Change palette, toggle the grid/background, hide the control or request a new paint from the buttons below.');
+    'Выберите палитру и прозрачность. Все изменения сразу видны в этом окне.');
 end;
 
 // -----------------------------------------------------------------------------
@@ -404,8 +404,8 @@ begin
 
   if Id = 'btn-redraw' then
   begin
-    PaintBox.Repaint;
-    SetStatus('Repaint requested. Paint callback count: ' + IntToStr(PaintCount));
+    PaintBox.Обновить вид;
+    SetStatus('Обновить вид requested. Предпросмотр обновлён);
     Result := True;
     Exit;
   end;
@@ -413,11 +413,11 @@ begin
   if Id = 'btn-grid' then
   begin
     DrawGrid := not DrawGrid;
-    PaintBox.Repaint;
+    PaintBox.Обновить вид;
     if DrawGrid then
-      SetStatus('Grid enabled.')
+      SetStatus('Сетка включена.');
     else
-      SetStatus('Grid disabled.');
+      SetStatus('Сетка отключена.');
     Result := True;
     Exit;
   end;
@@ -426,8 +426,8 @@ begin
   begin
     PaletteIndex := (PaletteIndex + 1) mod 3;
     PaintBox.BackgroundColor(DeepColor);
-    PaintBox.Repaint;
-    SetStatus('Palette changed. Accent colors and PaintBox background updated.');
+    PaintBox.Обновить вид;
+    SetStatus('Цветовая палитра изменена.');
     Result := True;
     Exit;
   end;
@@ -437,11 +437,11 @@ begin
     FillCanvasBackground := not FillCanvasBackground;
     PaintBox.FillBackground(FillCanvasBackground);
     UpdateButtonLabels;
-    PaintBox.Repaint;
+    PaintBox.Обновить вид;
     if FillCanvasBackground then
-      SetStatus('FillBackground enabled. PaintBox paints its own background.')
+      SetStatus('Фон включён.');
     else
-      SetStatus('FillBackground disabled. The parent surface should show through.');
+      SetStatus('Фон отключён. Видна подложка окна.');
     Result := True;
     Exit;
   end;
@@ -452,9 +452,9 @@ begin
     PaintBox.Visible(PaintVisible);
     UpdateButtonLabels;
     if PaintVisible then
-      SetStatus('PaintBox is visible.')
+      SetStatus('Иллюстрация показана.');
     else
-      SetStatus('PaintBox hidden. Use Show PaintBox to restore it.');
+      SetStatus('Иллюстрация скрыта. Нажмите кнопку ещё раз, чтобы вернуть её.');
     Result := True;
     Exit;
   end;
@@ -468,9 +468,9 @@ begin
       PaintBox.Opacity(1.0);
     UpdateButtonLabels;
     if ReducedOpacity then
-      SetStatus('PaintBox opacity set to 62%.')
+      SetStatus('Прозрачность установлена на 62%.');
     else
-      SetStatus('PaintBox opacity restored to 100%.');
+      SetStatus('Прозрачность восстановлена.');
     Result := True;
     Exit;
   end;
@@ -481,9 +481,9 @@ begin
     PaintBox.Enabled(PaintControlEnabled);
     UpdateButtonLabels;
     if PaintControlEnabled then
-      SetStatus('Enabled=True. PaintBox is enabled.')
+      SetStatus('Иллюстрация активна.');
     else
-      SetStatus('Enabled=False. PaintBox is disabled; hit testing is controlled separately.');
+      SetStatus('Иллюстрация отключена.');
     Result := True;
     Exit;
   end;
@@ -494,9 +494,9 @@ begin
     PaintBox.HitTest(PaintHitTestEnabled);
     UpdateButtonLabels;
     if PaintHitTestEnabled then
-      SetStatus('HitTest=True. PaintBox can receive mouse input over its area.')
+      SetStatus('Область иллюстрации принимает нажатия.');
     else
-      SetStatus('HitTest=False. Mouse input can pass through to controls underneath.');
+      SetStatus('Нажатия проходят к элементам под иллюстрацией.');
     Result := True;
     Exit;
   end;
@@ -510,9 +510,9 @@ begin
       PaintBox.SendToBack;
     UpdateButtonLabels;
     if PaintFront then
-      SetStatus('PaintBox brought to front.')
+      SetStatus('Иллюстрация перемещена вперёд.');
     else
-      SetStatus('PaintBox sent behind the HTML view. Use Bring to front to restore it.');
+      SetStatus('Иллюстрация перемещена на задний план.');
     Result := True;
     Exit;
   end;
@@ -537,8 +537,8 @@ begin
     PaintBox.BringToFront;
 
     UpdateButtonLabels;
-    PaintBox.Repaint;
-    SetStatus('Reset complete. All drawing primitives and common PaintBox options are active.');
+    PaintBox.Обновить вид;
+    SetStatus('Восстановить complete. All drawing primitives and common PaintBox options are active.');
     Result := True;
     Exit;
   end;
@@ -636,8 +636,8 @@ begin
   PaintBox.BringToFront;
 
   UpdateButtonLabels;
-  PaintBox.Repaint;
-  SetStatus('Ready. PaintBox handle=' + IntToStr(PaintBox.Handle) +
+  PaintBox.Обновить вид;
+  SetStatus('Предварительный просмотр готов.');
     '; size=' + IntToStr(Round(PaintBox.GetWidth)) + ' x ' +
     IntToStr(Round(PaintBox.GetHeight)) + '.');
   FMXForm.Show;
