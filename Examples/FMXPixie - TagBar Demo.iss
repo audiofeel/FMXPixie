@@ -220,8 +220,7 @@ begin
   Allow := ID <> ProtectedTagID;
 
   if Allow then
-    SetStatus('Удалён компонент: "' + TagName +
-      '" (ID ' + IntToStr(ID) + ').')
+    SetStatus('Компонент удалён: ' + TagName + '.')
   else
     SetStatus('Основные файлы входят в установку обязательно.');
 end;
