@@ -1,5 +1,5 @@
 ﻿
-#define DemoAppName "FMXPixie - Wrapper Integration Lab"
+#define DemoAppName "PIXIE Setup - Installation Options"
 #define DemoAppVersion "1.0"
 
 [Setup]
@@ -7,7 +7,7 @@ AppName={#DemoAppName}
 AppVersion={#DemoAppVersion}
 CreateAppDir=no
 Uninstallable=no
-OutputBaseFilename=FMXPixie - Wrapper Integration Lab
+OutputBaseFilename=PIXIE Setup - Installation Options
 ; SetupArchitecture=x64
 SetupIconFile=Files\setup.ico
 
@@ -79,7 +79,7 @@ begin
     '.tb{display:inline-block;vertical-align:top;width:46px;height:31px;line-height:30px;text-align:center;color:#d6e0ec;font-size:19px;cursor:pointer;}' +
     '.tb:hover{background:#2a3c52;color:#fff;}.close:hover{background:#c73c4a;color:#fff;}' +
     '</style></head><body><div class="bar">' +
-    '<span class="brand">FMXPIXIE</span><span class="caption">/ WRAPPER INTEGRATION LAB</span>' +
+    '<span class="brand">FMXPIXIE</span><span class="caption">/ НАСТРОЙКА УСТАНОВКИ</span>' +
     '<div class="controls"><div id="title-minimize" class="tb" title="Minimize">−</div>' +
     '<div id="title-close" class="tb close" title="Close">×</div></div></div>' +
     '</body></html>';
@@ -129,48 +129,48 @@ begin
     '#footer-note{position:absolute;left:14px;right:14px;top:119px;color:#5f748e;font-size:10px;}' +
     'a{color:#79d7df;text-decoration:none;}a:hover{color:#fff;text-decoration:underline;}' +
     '</style></head><body>' +
-    '<div class="hero"><div class="eyebrow">FMX CONTROLS / HTML RENDERING / VECTOR DRAWING</div>' +
-    '<h1>One surface. All wrappers.</h1>' +
-    '<div class="hero-note">Interactive integration demo · no install payload</div></div>' +
+    '<div class="hero"><div class="eyebrow">ПАРАМЕТРЫ И ОФОРМЛЕНИЕ</div>' +
+    '<h1>Настройте установку PIXIE</h1>' +
+    '<div class="hero-note">Выберите компоненты, настройте внешний вид и проверьте параметры перед продолжением.</div></div>' +
 
-    '<div id="svg-panel" class="card query-target"><div class="card-title">01 / SVG VIEW</div>' +
-    '<div class="card-sub">Inline vector / zoom / background</div>' +
-    '<div class="actions mini-actions"><button id="btn-svg-zoom" class="btn">SVG zoom 100%</button>' +
-    '<button id="btn-svg-bg" class="btn">Toggle background</button></div></div>' +
+    '<div id="svg-panel" class="card query-target"><div class="card-title">01 / ЛОГОТИП И ОФОРМЛЕНИЕ</div>' +
+    '<div class="card-sub">Размер и фон изображения</div>' +
+    '<div class="actions mini-actions"><button id="btn-svg-zoom" class="btn">Размер логотипа: 100%</button>' +
+    '<button id="btn-svg-bg" class="btn">Фон изображения</button></div></div>' +
 
-    '<div id="markdown-panel" class="card query-target"><div class="card-title">02 / MARKDOWN VIEW</div>' +
-    '<div class="card-sub">Rendered from a string / style and zoom controls</div>' +
-    '<div class="actions mini-actions"><button id="btn-md-zoom" class="btn">MD zoom 100%</button>' +
-    '<button id="btn-md-styles" class="btn">Default CSS: ON</button>' +
-    '<button id="btn-md-visible" class="btn">Hide Markdown</button></div></div>' +
+    '<div id="markdown-panel" class="card query-target"><div class="card-title">02 / ОПИСАНИЕ И ЛИЦЕНЗИЯ</div>' +
+    '<div class="card-sub">Текст условий и дополнительные сведения</div>' +
+    '<div class="actions mini-actions"><button id="btn-md-zoom" class="btn">Размер текста: 100%</button>' +
+    '<button id="btn-md-styles" class="btn">Оформление текста: вкл</button>' +
+    '<button id="btn-md-visible" class="btn">Скрыть описание</button></div></div>' +
 
-    '<div id="tag-panel" class="card query-target"><div class="card-title">03 / TAG BAR</div>' +
-    '<div class="card-sub">Check tags to send events back to Pascal Script</div>' +
-    '<div class="actions mini-actions" id="tag-actions"><button id="btn-tags-all" class="btn">Check all</button>' +
-    '<button id="btn-tags-none" class="btn">Uncheck all</button></div></div>' +
+    '<div id="tag-panel" class="card query-target"><div class="card-title">03 / ДОПОЛНИТЕЛЬНЫЕ КОМПОНЕНТЫ</div>' +
+    '<div class="card-sub">Отметьте компоненты, которые хотите добавить в установку</div>' +
+    '<div class="actions mini-actions" id="tag-actions"><button id="btn-tags-all" class="btn">Выбрать все</button>' +
+    '<button id="btn-tags-none" class="btn">Снять выбор</button></div></div>' +
 
-    '<div id="paint-panel" class="card query-target"><div class="card-title">04 / PAINT BOX</div>' +
-    '<div class="actions paint-actions"><button id="btn-paint-grid" class="btn">Grid: ON</button>' +
-    '<button id="btn-paint-color" class="btn">Change palette</button>' +
-    '<button id="btn-paint-repaint" class="btn">Repaint</button>' +
-    '<button id="btn-paint-layer" class="btn">Send to back</button></div></div>' +
+    '<div id="paint-panel" class="card query-target"><div class="card-title">04 / ПРЕДПРОСМОТР ОФОРМЛЕНИЯ</div>' +
+    '<div class="actions paint-actions"><button id="btn-paint-grid" class="btn">Сетка: вкл</button>' +
+    '<button id="btn-paint-color" class="btn">Сменить палитру</button>' +
+    '<button id="btn-paint-repaint" class="btn">Обновить изображение</button>' +
+    '<button id="btn-paint-layer" class="btn">На задний план</button></div></div>' +
 
-    '<div id="api-panel" class="card query-target"><div class="card-title">05 / HTML + DOM API</div>' +
-    '<div class="metric-row"><span class="metric">HTML clicks <b id="click-count">0</b></span>' +
-    '<span class="metric">DOM targets <b id="query-count">?</b></span></div>' +
+    '<div id="api-panel" class="card query-target"><div class="card-title">05 / ДОПОЛНИТЕЛЬНЫЕ ПАРАМЕТРЫ</div>' +
+    '<div class="metric-row"><span class="metric">Изменений <b id="click-count">0</b></span>' +
+    '<span class="metric">Найдено элементов <b id="query-count">?</b></span></div>' +
     '<div id="state-card" class="state-card is-on">Runtime setting <span id="state-value" class="state-value">ENABLED</span></div>' +
-    '<div id="api-actions1"><button id="btn-count" class="btn primary">Increment</button>' +
-    '<button id="btn-state" class="btn">Toggle setting</button></div>' +
-    '<div id="api-actions2"><button id="btn-query" class="btn">QuerySelectorAll</button>' +
-    '<button id="btn-message" class="btn">Open FMsgForm</button></div>' +
+    '<div id="api-actions1"><button id="btn-count" class="btn primary">Добавить действие</button>' +
+    '<button id="btn-state" class="btn">Рекомендации: вкл / выкл</button></div>' +
+    '<div id="api-actions2"><button id="btn-query" class="btn">Показать выбранное</button>' +
+    '<button id="btn-message" class="btn">Дополнительная информация</button></div>' +
     '<div id="query-result">Ready. Use the controls to exercise the wrappers.</div></div>' +
 
-    '<div id="footer-panel" class="card query-target"><div class="card-title">06 / SHARED STATUS AND HTML VIEW CONTROLS</div>' +
+    '<div id="footer-panel" class="card query-target"><div class="card-title">06 / ДЕЙСТВИЯ С ТЕКСТОМ</div>' +
     '<div id="footer-info">Document updates are batched through FPixieDocument; element attributes are changed through FPixieElement.</div>' +
     '<div id="status">Initialising FMXPixie components…</div>' +
-    '<div id="footer-actions"><button id="btn-select" class="btn">Select HTML text</button>' +
-    '<button id="btn-clear-select" class="btn">Clear selection</button>' +
-    '<button id="btn-reset" class="btn danger">Reset demo state</button>' +
+    '<div id="footer-actions"><button id="btn-select" class="btn">Выделить текст</button>' +
+    '<button id="btn-clear-select" class="btn">Снять выделение</button>' +
+    '<button id="btn-reset" class="btn danger">Восстановить настройки</button>' +
     '<a id="demo-anchor" href="https://example.com/fmxpixie">Test OnAnchorClick</a></div>' +
     '<div id="footer-note">The five visual areas above are controls hosted by the same FMX form; only the optional message test opens a second form.</div></div>' +
     '</body></html>';
@@ -194,11 +194,11 @@ begin
     '.accent{color:#8fe0dc;font-weight:bold;}' +
     '.btn{display:inline-block;margin-top:15px;padding:7px 12px;background:#164e63;border:1px solid #0e7490;color:#d7fbfc;cursor:pointer;}' +
     '.btn:hover{background:#1c7084;}' +
-    '</style></head><body><div class="bar"><span class="title">FMXPixie / FMsgForm</span>' +
+    '</style></head><body><div class="bar"><span class="title">PIXIE · Дополнительная информация</span>' +
     '<div id="msg-close" class="close" title="Close">×</div></div>' +
-    '<div class="content"><h2>Every wrapper is alive.</h2>' +
-    'This small owned form is created through <span class="accent">FMsgForm</span>.' +
-    '<br>The content itself is another <span class="accent">FPixieHtmlView</span>.' +
+    '<div class="content"><h2>Дополнительная информация</h2>' +
+    'Это отдельное окно с дополнительными сведениями об установке.' +
+    '<br>Его можно закрыть, не закрывая основное окно.' +
     '<br><br>Close this window to return to the integrated workspace.' +
     '<div id="msg-close-button" class="btn">Close message</div></div></body></html>';
 end;
@@ -453,22 +453,22 @@ end;
 
 procedure SvgViewClicked(Sender: TObject);
 begin
-  SetStatus('FPixieSvgView.OnClick fired. SVG is a separate FMX wrapper on this surface.');
+  SetStatus('Открыт предварительный просмотр логотипа.');
 end;
 
 procedure MarkdownViewClicked(Sender: TObject);
 begin
-  SetStatus('FPixieMarkdownView.OnClick fired.');
+  SetStatus('Открыто описание установки.');
 end;
 
 procedure MarkdownAnchorClick(Sender, El: TObject; const Url: String);
 begin
-  SetStatus('Markdown anchor callback: ' + Url);
+  SetStatus('Выбрана ссылка в описании: ' + Url);
 end;
 
 procedure MainAnchorClick(Sender, El: TObject; const Url: String);
 begin
-  SetStatus('HTML OnAnchorClick callback: ' + Url + ' (not opened automatically).');
+  SetStatus('Ссылка выбрана: ' + Url);
 end;
 
 procedure AfterParse(Sender: TObject);
@@ -480,9 +480,9 @@ procedure TagChecked(Sender: TObject; ID: Integer; Checked: Boolean);
 begin
   if TagBatching then Exit;
   if Checked then
-    SetStatus('FPixieTagBar.OnTagChecked: ID ' + IntToStr(ID) + ' checked.')
+    SetStatus('Компонент добавлен в установку.')
   else
-    SetStatus('FPixieTagBar.OnTagChecked: ID ' + IntToStr(ID) + ' unchecked.');
+    SetStatus('Компонент исключён из установки.');
 end;
 
 function ElementClick(Sender, El: TObject): Boolean; forward;
@@ -559,7 +559,7 @@ begin
     try
       SetTextById('click-count', IntToStr(ClickCount));
       SetTextById('query-result', 'The HTML click was dispatched to Inno Pascal Script.');
-      SetStatus('FPixieHtmlView.OnElementClick + FPixieDocument.SetElementText executed.');
+      SetStatus('Параметр обновлён.');
     finally
       Doc.EndUpdate;
     end;
@@ -576,13 +576,13 @@ begin
       begin
         SetClassById('state-card', 'state-card is-on');
         SetTextById('state-value', 'ENABLED');
-        SetStatus('Runtime state set to ENABLED; FPixieElement changed the CSS class.');
+        SetStatus('Рекомендации включены.');
       end
       else
       begin
         SetClassById('state-card', 'state-card is-off');
         SetTextById('state-value', 'DISABLED');
-        SetStatus('Runtime state set to DISABLED; FPixieElement changed the CSS class.');
+        SetStatus('Рекомендации отключены.');
       end;
     finally
       Doc.EndUpdate;
@@ -593,18 +593,18 @@ begin
 
   if Id = 'btn-query' then
   begin
-    FoundList.FCreate(Doc.QuerySelectorAll('.query-target'));
+    FoundList.FCreate(Doc.Показать выбранное('.query-target'));
     TargetCount := FoundList.Count;
     SetTextById('query-count', IntToStr(TargetCount));
     if TargetCount > 0 then
     begin
       Elem.FCreate(FoundList.Item(0));
-      SetTextById('query-result', 'QuerySelectorAll found ' + IntToStr(TargetCount) +
+      SetTextById('query-result', 'Показать выбранное found ' + IntToStr(TargetCount) +
         ' panels. First target: ' + Elem.GetAttr('id', '(no id)') + '.');
     end
     else
-      SetTextById('query-result', 'QuerySelectorAll found no targets.');
-    SetStatus('FPixieDocument.QuerySelectorAll + FPixieElementList.Count/Item executed.');
+      SetTextById('query-result', 'Показать выбранное found no targets.');
+    SetStatus('FPixieDocument.Показать выбранное + FPixieElementList.Count/Item executed.');
     Result := True;
     Exit;
   end;
@@ -612,7 +612,7 @@ begin
   if Id = 'btn-message' then
   begin
     ShowMessageForm;
-    SetStatus('FMsgForm opened. Its client area is another FPixieHtmlView.');
+    SetStatus('Открыто окно с дополнительной информацией.');
     Result := True;
     Exit;
   end;
@@ -624,7 +624,7 @@ begin
     else SvgZoomFactor := 1.0;
     SvgView.Zoom(SvgZoomFactor);
     SetTextById('btn-svg-zoom', 'SVG zoom ' + IntToStr(Round(SvgZoomFactor * 100)) + '%');
-    SetStatus('FPixieSvgView.Zoom set to ' + IntToStr(Round(SvgZoomFactor * 100)) + '%.');
+    SetStatus('Размер логотипа: ' + IntToStr(Round(SvgZoomFactor * 100)) + '%.');
     Result := True;
     Exit;
   end;
@@ -644,7 +644,7 @@ begin
       SvgView.ColorInnerBorder($FF62C8CC);
       SvgView.ColorCheckers($FF243B4D);
     end;
-    SetStatus('FPixieSvgView background, border and checker colors changed.');
+    SetStatus('Фон изображения изменён.');
     Result := True;
     Exit;
   end;
@@ -656,7 +656,7 @@ begin
     else MarkdownZoomFactor := 1.0;
     MarkdownView.Zoom(MarkdownZoomFactor);
     SetTextById('btn-md-zoom', 'MD zoom ' + IntToStr(Round(MarkdownZoomFactor * 100)) + '%');
-    SetStatus('FPixieMarkdownView.Zoom set to ' + IntToStr(Round(MarkdownZoomFactor * 100)) + '%.');
+    SetStatus('Размер текста: ' + IntToStr(Round(MarkdownZoomFactor * 100)) + '%.');
     Result := True;
     Exit;
   end;
@@ -666,13 +666,13 @@ begin
     MarkdownDefaults := not MarkdownDefaults;
     MarkdownView.SetUseDefaultStyles(MarkdownDefaults);
     if MarkdownDefaults then
-      SetTextById('btn-md-styles', 'Default CSS: ON')
+      SetTextById('btn-md-styles', 'Оформление текста: вкл')
     else
       SetTextById('btn-md-styles', 'Default CSS: OFF');
     if MarkdownDefaults then
-      SetStatus('FPixieMarkdownView.SetUseDefaultStyles changed to ON.')
+      SetStatus('Стандартное оформление текста включено.')
     else
-      SetStatus('FPixieMarkdownView.SetUseDefaultStyles changed to OFF.');
+      SetStatus('Стандартное оформление текста отключено.');
     Result := True;
     Exit;
   end;
@@ -682,10 +682,10 @@ begin
     MarkdownVisible := not MarkdownVisible;
     MarkdownView.Visible(MarkdownVisible);
     if MarkdownVisible then
-      SetTextById('btn-md-visible', 'Hide Markdown')
+      SetTextById('btn-md-visible', 'Скрыть описание')
     else
       SetTextById('btn-md-visible', 'Show Markdown');
-    SetStatus('FPixieMarkdownView.Visible changed.');
+    SetStatus('Отображение описания изменено.');
     Result := True;
     Exit;
   end;
@@ -698,7 +698,7 @@ begin
     finally
       TagBatching := False;
     end;
-    SetStatus('FPixieTagBar.CheckAll called; individual callbacks were batched by the demo.');
+    SetStatus('Все дополнительные компоненты выбраны.');
     Result := True;
     Exit;
   end;
@@ -711,7 +711,7 @@ begin
     finally
       TagBatching := False;
     end;
-    SetStatus('FPixieTagBar.UncheckAll called; individual callbacks were batched by the demo.');
+    SetStatus('Выбор дополнительных компонентов снят.');
     Result := True;
     Exit;
   end;
@@ -719,10 +719,10 @@ begin
   if Id = 'btn-paint-grid' then
   begin
     DrawGrid := not DrawGrid;
-    PaintBox.Repaint;
-    if DrawGrid then SetTextById('btn-paint-grid', 'Grid: ON')
+    PaintBox.Обновить изображение;
+    if DrawGrid then SetTextById('btn-paint-grid', 'Сетка: вкл')
     else SetTextById('btn-paint-grid', 'Grid: OFF');
-    SetStatus('FPixiePaintBox.Repaint requested after grid option changed.');
+    SetStatus('FPixiePaintBox.Обновить изображение requested after grid option changed.');
     Result := True;
     Exit;
   end;
@@ -731,8 +731,8 @@ begin
   begin
     PaletteIndex := (PaletteIndex + 1) mod 3;
     PaintBox.BackgroundColor($FF0B1422);
-    PaintBox.Repaint;
-    SetStatus('PaintBox palette changed. Drawing primitives use a new accent palette.');
+    PaintBox.Обновить изображение;
+    SetStatus('Палитра предпросмотра изменена.');
     Result := True;
     Exit;
   end;
@@ -740,8 +740,8 @@ begin
   if Id = 'btn-paint-repaint' then
   begin
     PaintPhase := (PaintPhase + 1) mod 6;
-    PaintBox.Repaint;
-    SetStatus('FPixiePaintBox.Repaint called. Paint callback count: ' + IntToStr(PaintCount) + '.');
+    PaintBox.Обновить изображение;
+    SetStatus('FPixiePaintBox.Обновить изображение called. Paint callback count: ' + IntToStr(PaintCount) + '.');
     Result := True;
     Exit;
   end;
@@ -752,14 +752,14 @@ begin
     if PaintFront then
     begin
       PaintBox.BringToFront;
-      SetTextById('btn-paint-layer', 'Send to back');
+      SetTextById('btn-paint-layer', 'На задний план');
     end
     else
     begin
       PaintBox.SendToBack;
       SetTextById('btn-paint-layer', 'Bring to front');
     end;
-    SetStatus('FPixiePaintBox.BringToFront / SendToBack toggled.');
+    SetStatus('Расположение иллюстрации изменено.');
     Result := True;
     Exit;
   end;
@@ -767,7 +767,7 @@ begin
   if Id = 'btn-select' then
   begin
     View.SelectAll;
-    SetStatus('FPixieHtmlView.SelectAll called. Click Clear selection to remove the selection.');
+    SetStatus('FPixieHtmlView.SelectAll called. Click Снять выделение to remove the selection.');
     Result := True;
     Exit;
   end;
@@ -775,7 +775,7 @@ begin
   if Id = 'btn-clear-select' then
   begin
     View.ClearSelection;
-    SetStatus('FPixieHtmlView.ClearSelection called.');
+    SetStatus('Выделение текста снято.');
     Result := True;
     Exit;
   end;
@@ -816,13 +816,13 @@ begin
       SetTextById('query-result', 'Ready. Use the controls to exercise the wrappers.');
       SetTextById('state-value', 'ENABLED');
       SetClassById('state-card', 'state-card is-on');
-      SetTextById('btn-svg-zoom', 'SVG zoom 100%');
-      SetTextById('btn-md-zoom', 'MD zoom 100%');
-      SetTextById('btn-md-styles', 'Default CSS: ON');
-      SetTextById('btn-md-visible', 'Hide Markdown');
-      SetTextById('btn-paint-grid', 'Grid: ON');
-      SetTextById('btn-paint-layer', 'Send to back');
-      SetStatus('Demo reset. All wrappers remain attached to the shared FMX workspace.');
+      SetTextById('btn-svg-zoom', 'Размер логотипа: 100%');
+      SetTextById('btn-md-zoom', 'Размер текста: 100%');
+      SetTextById('btn-md-styles', 'Оформление текста: вкл');
+      SetTextById('btn-md-visible', 'Скрыть описание');
+      SetTextById('btn-paint-grid', 'Сетка: вкл');
+      SetTextById('btn-paint-layer', 'На задний план');
+      SetStatus('Настройки восстановлены.');
     finally
       Doc.EndUpdate;
     end;
@@ -832,7 +832,7 @@ begin
     finally
       TagBatching := False;
     end;
-    PaintBox.Repaint;
+    PaintBox.Обновить изображение;
     Result := True;
     Exit;
   end;
@@ -1016,13 +1016,13 @@ begin
   PaintBox.OnPaint(@PaintBoxDraw);
   PaintBox.BringToFront;
 
-  // QuerySelectorAll / ElementList / Element are exercised immediately so
+  // Показать выбранное / ElementList / Element are exercised immediately so
   // the DOM panel starts with meaningful information.
-  FoundList.FCreate(Doc.QuerySelectorAll('.query-target'));
+  FoundList.FCreate(Doc.Показать выбранное('.query-target'));
   SetTextById('query-count', IntToStr(FoundList.Count));
-  SetTextById('query-result', 'DOM is ready. Click QuerySelectorAll or change any wrapper setting.');
-  SetStatus('Ready. HTML View, DOM, SVG View, Markdown View, TagBar and PaintBox share one FMX form.');
-  PaintBox.Repaint;
+  SetTextById('query-result', 'DOM is ready. Click Показать выбранное or change any wrapper setting.');
+  SetStatus('Параметры установки готовы к проверке.');
+  PaintBox.Обновить изображение;
   FMXForm.Show;
 end;
 
