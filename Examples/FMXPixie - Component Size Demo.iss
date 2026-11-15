@@ -1,5 +1,5 @@
 ﻿
-#define DemoAppName "PIXIE Setup - Component Selection"
+#define DemoAppName "FMXPixie - Component Size Demo"
 #define DemoAppVersion "1.0"
 
 [Setup]
@@ -164,7 +164,7 @@ begin
     AddSummaryItem(Result, 'Modding tools', 118, TotalMB, ItemCount);
 
   if ItemCount = 0 then
-    Result := '<div class="empty-list">Компоненты не выбраны.</div>';
+    Result := '<div class="empty-list">No components selected.</div>';
 end;
 
 function CalculateTotalMB: Integer;
@@ -217,15 +217,15 @@ begin
 
   Result :=
     '<div class="summary-panel panel">' +
-      '<div class="summary-head"><div class="panel-kicker">СОСТАВ УСТАНОВКИ</div>' +
-      '<div class="summary-title">Вы выбрали</div>' +
+      '<div class="summary-head"><div class="panel-kicker">INSTALL SUMMARY</div>' +
+      '<div class="summary-title">Your selection</div>' +
       '<div class="summary-status-wrap"><span class="' + StatusClass + '">' + StatusText + '</span></div></div>' +
-      '<div class="summary-meta"><span>ВЫБРАНО КОМПОНЕНТОВ</span><strong>' + IntToStr(ItemCount) + '</strong></div>' +
+      '<div class="summary-meta"><span>SELECTED ITEMS</span><strong>' + IntToStr(ItemCount) + '</strong></div>' +
       '<div class="sum-list">' + BuildSelectedList + '</div>' +
-      '<div class="total-card"><div class="total-caption">ОБЩИЙ РАЗМЕР</div>' +
+      '<div class="total-card"><div class="total-caption">ESTIMATED INSTALL SIZE</div>' +
         '<div class="total-value">' + SizeText(TotalMB) + '</div>' +
-        '<div class="total-sub">Рассчитано по текущему выбору</div></div>' +
-      '<div class="summary-foot">Размеры приведены для примера. Файлы на компьютер не копируются.</div>' +
+        '<div class="total-sub">Calculated from the current selection</div></div>' +
+      '<div class="summary-foot">Sizes are illustrative. This demo does not copy or install files.</div>' +
     '</div>';
 end;
 
@@ -234,46 +234,46 @@ begin
   Result :=
     '<!doctype html><html><head><meta charset="utf-8"></head><body>' +
     '<div id="demo-titlebar" class="titlebar">' +
-      '<span class="title-caption">FMXPIXIE</span><span class="title-note"> / ВЫБОР КОМПОНЕНТОВ</span>' +
+      '<span class="title-caption">FMXPIXIE</span><span class="title-note"> / COMPONENT SIZE DEMO</span>' +
       '<div class="title-controls"><div id="title-minimize" class="title-button title-minimize" title="Minimize">−</div>' +
       '<div id="title-close" class="title-button title-close" title="Close">×</div></div>' +
     '</div>' +
     '<div class="page">' +
-      '<div class="masthead"><div class="eyebrow">PIXIE SETUP · СОСТАВ УСТАНОВКИ</div>' +
-        '<div class="hero-title">Выберите компоненты для установки</div>' +
-        '<div class="hero-copy">Отметьте нужные компоненты и выберите один голосовой пакет. Общий размер обновляется автоматически.</div>' +
-        '<div class="count-pills"><span>ДОПОЛНИТЕЛЬНЫЕ КОМПОНЕНТЫ</span><span>ГОЛОСОВЫЕ ПАКЕТЫ</span><span>ОБЩИЙ РАЗМЕР</span></div>' +
+      '<div class="masthead"><div class="eyebrow">INSTALLER UI / LIVE SIZE CALCULATION</div>' +
+        '<div class="hero-title">Choose what to install.</div>' +
+        '<div class="hero-copy">Toggle components, switch the voice pack, and watch the estimated size update immediately.</div>' +
+        '<div class="count-pills"><span>HTML SPAN CONTROLS</span><span>PASCAL SCRIPT STATE</span><span>LIVE TOTAL</span></div>' +
       '</div>' +
       '<div class="columns">' +
         '<div class="left-column"><div class="panel selection-panel">' +
-          '<div class="panel-kicker">ДОПОЛНИТЕЛЬНО</div><div class="panel-title">Компоненты и дополнения</div>' +
-          '<div class="section-title">ОСНОВНЫЕ ФАЙЛЫ</div><div class="option-grid">' +
+          '<div class="panel-kicker">OPTIONAL CONTENT</div><div class="panel-title">Components & extras</div>' +
+          '<div class="section-title">CORE / CONTENT</div><div class="option-grid">' +
             CheckboxOption('core', 'Core runtime', 'Required base files', 84, CoreSelected) +
             CheckboxOption('textures', 'HD texture pack', 'Higher quality assets', 620, TexturesSelected) +
             CheckboxOption('cinematics', 'Cinematic videos', 'Full-motion sequences', 780, CinematicsSelected) +
           '</div>' +
-          '<div class="section-title">ГОЛОС И ЯЗЫК</div><div class="option-grid">' +
+          '<div class="section-title">VOICE / LANGUAGE</div><div class="option-grid">' +
             VoiceOption('en', 'English voice', 'Original dialogue', 145, 1) +
             VoiceOption('ru', 'Russian voice', 'Localized dialogue', 158, 2) +
             VoiceOption('jp', 'Japanese voice', 'Alternate voice-over', 212, 3) +
           '</div>' +
-          '<div class="section-title">ДОПОЛНИТЕЛЬНЫЕ ИНСТРУМЕНТЫ</div><div class="option-grid">' +
+          '<div class="section-title">EXTRAS / TOOLS</div><div class="option-grid">' +
             CheckboxOption('soundtrack', 'Original soundtrack', 'Music files', 96, SoundtrackSelected) +
             CheckboxOption('artbook', 'Artbook & wallpapers', 'Digital bonus pack', 42, ArtbookSelected) +
             CheckboxOption('modtools', 'Modding tools', 'Tools for custom content', 118, ModToolsSelected) +
           '</div>' +
-          '<div class="selection-note"><span class="note-dot"></span>Нажмите на компонент, чтобы добавить или убрать его. Для озвучивания можно выбрать только один голосовой пакет.</div>' +
+          '<div class="selection-note"><span class="note-dot"></span>Click any option to recalculate the total. Voice packs are mutually exclusive.</div>' +
         '</div></div>' +
         '<div class="right-column">' + BuildSummaryPanel +
-          '<div class="tip-card"><div class="tip-mark">i</div><div class="tip-title">Размер пакета</div>' +
-            '<div class="tip-copy">При добавлении или удалении компонента общий размер пересчитывается автоматически. Повторное нажатие не увеличивает размер дважды.</div>' +
+          '<div class="tip-card"><div class="tip-mark">i</div><div class="tip-title">How it works</div>' +
+            '<div class="tip-copy">OnElementClick updates the script-side state. The summary is rebuilt from the selected options, so checking twice cannot accidentally double-add a size.</div>' +
           '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="action-row"><div class="action-note">Это демонстрация выбора. Реальная установка не запускается.</div>' +
-        '<div id="btn-reset" class="button secondary">Сбросить выбор</div>' +
-        '<div id="btn-confirm" class="button primary">Продолжить &#8594;</div></div>' +
-      '<div class="footer-note">PIXIE SETUP · СОСТАВ УСТАНОВКИ И РАСЧЁТ РАЗМЕРА</div>' +
+      '<div class="action-row"><div class="action-note">Changes are simulated; nothing is installed.</div>' +
+        '<div id="btn-reset" class="button secondary">Reset</div>' +
+        '<div id="btn-confirm" class="button primary">Confirm selection &#8594;</div></div>' +
+      '<div class="footer-note">FMXPixie / Pixie HTML renderer / component selection and size calculation test</div>' +
     '</div></body></html>';
 end;
 
@@ -360,7 +360,7 @@ begin
   PixieView.LoadFromString(BuildHtml);
 end;
 
-procedure Сбросить выборSelection;
+procedure ResetSelection;
 begin
   CoreSelected := True;
   TexturesSelected := False;
@@ -422,7 +422,7 @@ begin
   else if Id = 'opt-modtools' then ModToolsSelected := not ModToolsSelected
   else if Id = 'btn-reset' then
   begin
-    Сбросить выборSelection;
+    ResetSelection;
     RenderPage;
     Result := True;
     Exit;
@@ -463,7 +463,7 @@ end;
 
 procedure InitializeWizard;
 begin
-  Сбросить выборSelection;
+  ResetSelection;
   EmptyWizardForm(DEMO_WIDTH, DEMO_HEIGHT);
 
   FMXForm.FCreateBlankForm(WizardForm.Handle, $FF0A1019, '', True);
