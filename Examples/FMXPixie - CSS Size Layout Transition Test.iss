@@ -1,5 +1,5 @@
 ﻿
-#define DemoAppName "FMXPixie - CSS Size Layout Transition Test"
+#define DemoAppName "PIXIE Setup - Additional Packages"
 #define DemoAppVersion "1.0"
 
 [Setup]
@@ -7,7 +7,7 @@ AppName={#DemoAppName}
 AppVersion={#DemoAppVersion}
 CreateAppDir=no
 Uninstallable=no
-OutputBaseFilename=FMXPixie - CSS Size Layout Transition Test
+OutputBaseFilename=PIXIE Setup - Additional Packages
 //SetupArchitecture=x64
 SetupIconFile=Files\setup.ico
 
@@ -66,30 +66,30 @@ begin
     '.footer{margin-top:10px;padding-top:8px;border-top:1px solid #263852;color:#7185a0;font-size:8px;letter-spacing:.8px;}' +
     '</style></head><body>' +
     '<div class="titlebar">' +
-    '<span class="brand">FMXPIXIE / CSS SIZE TRANSITIONS</span>' +
-    '<span class="subtitle">DisplayLink layout test · hover the boxes</span>' +
+    '<span class="brand">PIXIE SETUP / ДОПОЛНИТЕЛЬНЫЕ ПАКЕТЫ</span>' +
+    '<span class="subtitle">Раскройте карточки, наведя на них курсор</span>' +
     '<div class="window-controls">' +
     '<div id="title-minimize" class="window-button" title="Свернуть">−</div>' +
     '<div id="title-close" class="window-button window-close" title="Закрыть">×</div>' +
     '</div></div>' +
     '<div class="page">' +
-    '<div class="eyebrow">CSS TRANSITIONS / LAYOUT-AWARE SIZE</div>' +
-    '<div class="headline">Анимация размеров с перерасчётом layout</div>' +
-    '<div class="intro">Здесь меняется не визуальный масштаб: движок каждый кадр получает промежуточные width/height и заново раскладывает элементы. Проверьте горизонтальный сдвиг соседа, вертикальное смещение следующего блока и независимую анимацию ширины.</div>' +
-    '<div class="section-title">01 / WIDTH + HEIGHT — INLINE SIBLING</div>' +
+    '<div class="eyebrow">ДОПОЛНИТЕЛЬНЫЕ ВОЗМОЖНОСТИ</div>' +
+    '<div class="headline">Выберите дополнительные пакеты</div>' +
+    '<div class="intro">Наведите курсор на карточки, чтобы прочитать подробности. При раскрытии карточки соседние блоки плавно перемещаются и занимают новое место, а не накладываются друг на друга.</div>' +
+    '<div class="section-title">01 / ПАКЕТЫ И ШАБЛОНЫ</div>' +
     '<div class="inline-row">' +
-    '<div id="size-inline" class="grow-inline"><strong>Наведи курсор</strong><br>Ширина: 220 → 330 px<br>Высота: 78 → 112 px<br>Сосед справа должен плавно сместиться.</div>' +
-    '<div class="inline-neighbor">Соседний inline-block<br>Его позиция зависит от текущей ширины первого блока.</div>' +
+    '<div id="size-inline" class="grow-inline"><strong>Готовые шаблоны</strong><br>Наведите курсор, чтобы открыть описание и список примеров.</div>' +
+    '<div class="inline-neighbor">Документация и руководства<br>Откройте описание, не закрывая список пакетов.</div>' +
     '</div>' +
-    '<div class="section-title">02 / HEIGHT — FOLLOWING BLOCK</div>' +
+    '<div class="section-title">02 / ДОПОЛНИТЕЛЬНЫЕ ТЕМЫ</div>' +
     '<div class="stack">' +
-    '<div id="size-height" class="grow-height"><strong>Наведи курсор</strong><br>Высота: 48 → 108 px</div>' +
-    '<div class="after-height">Следующий блок должен плавно опускаться и возвращаться вместе с высотой верхнего элемента.</div>' +
+    '<div id="size-height" class="grow-height"><strong>Темы оформления</strong><br>Наведите курсор, чтобы посмотреть варианты внешнего вида.</div>' +
+    '<div class="after-height">Описание темы раскрывается, а следующие пакеты плавно перемещаются вниз.</div>' +
     '</div>' +
-    '<div class="section-title">03 / WIDTH ONLY</div>' +
-    '<div id="size-width" class="width-only">Ширина: 280 → 430 px. Текст и рамка должны перестраиваться в реальном layout.</div>' +
-    '<div class="note"><strong>Границы первой реализации:</strong> transition поддерживает явные вычисленные абсолютные размеры в px (включая абсолютные единицы, преобразованные в px). Значения auto, проценты и calc()/min()/max()/clamp() пока меняются дискретно. Opacity, background-color и transform остаются на существующем DisplayLink-механизме.</div>' +
-    '<div class="footer">FMXPIXIE · CSS WIDTH/HEIGHT TRANSITIONS · LAYOUT RECALCULATED PER DISPLAY LINK FRAME · GIF/WEBP AND SCROLLBAR TIMERS UNCHANGED</div>' +
+    '<div class="section-title">03 / ПРИМЕРЫ И ИЛЛЮСТРАЦИИ</div>' +
+    '<div id="size-width" class="width-only">Дополнительные примеры раскрываются по наведению, сохраняя аккуратное расположение остальных элементов.</div>' +
+    '<div class="note"><strong>Наведите курсор на каждый пакет и уберите его. Карточка плавно раскрывается, соседний элемент смещается, а после ухода курсора всё возвращается на место. Так можно просмотреть дополнительные сведения, не открывая отдельное окно.</div>' +
+    '<div class="footer">PIXIE SETUP · ДОПОЛНИТЕЛЬНЫЕ ПАКЕТЫ · ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР</div>' +
     '</div></body></html>';
 end;
 
