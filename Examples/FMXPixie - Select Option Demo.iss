@@ -188,7 +188,7 @@ begin
     '.row{padding:12px 0;border-bottom:1px solid #263951;}' +
     '.row:last-child{border:0;}' +
     '.label{display:inline-block;vertical-align:top;width:190px;color:#91a5bb;font-size:11px;}' +
-    '.value{display:inline-block;vertical-align:top;width:calc(100% - 200px);color:#edf4fb;font-size:12px;}' +
+    '.value{display:inline-block;vertical-align:top;width:70%;color:#edf4fb;font-size:12px;}' +
     '.actions{margin-top:22px;padding-top:14px;border-top:1px solid #24374f;}' +
     'button{padding:10px 16px;margin-right:8px;background:#253b57;color:#edf4fb;border:1px solid #496482;border-radius:5px;cursor:pointer;font:11px "Segoe UI",Arial,sans-serif;}' +
     'button:hover{background:#315477;border-color:#82d3c7;color:#fff;}' +
@@ -204,7 +204,7 @@ begin
     '<div class="row"><span class="label">Дополнительный пакет</span><span id="summary-package" class="value"></span></div>' +
     '<div class="row"><span class="label">Редакция приложения</span><span id="summary-edition" class="value">Professional</span></div>' +
     '</div>' +
-    '<div id="summary-done" class="done" style="display:none">Настройки сохранены. Можно переходить к следующему этапу установки.</div>' +
+    '<div id="summary-done" class="done">Проверьте выбранные параметры и нажмите «Продолжить».</div>' +
     '<div class="actions"><button id="btn-back">Назад</button>' +
     '<button id="btn-continue" class="primary">Продолжить</button></div>' +
     '</body></html>';
