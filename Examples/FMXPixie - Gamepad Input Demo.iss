@@ -1,5 +1,5 @@
 ﻿
-#define DemoAppName "FMXPixie - Gamepad Input Demo"
+#define DemoAppName "PIXIE Setup - Controller Settings"
 #define DemoAppVersion "1.0"
 
 [Setup]
@@ -8,7 +8,7 @@ AppVersion={#DemoAppVersion}
 CreateAppDir=no
 Uninstallable=no
 DisableProgramGroupPage=yes
-OutputBaseFilename=FMXPixie - Gamepad Input Demo
+OutputBaseFilename=PIXIE Setup - Controller Settings
 SetupIconFile=Files\setup.ico
 PrivilegesRequired=lowest
 
@@ -139,8 +139,8 @@ begin
     '.win:hover{background:#29374c;color:#fff;}' +
     '.close:hover{background:#c42b1c;color:#fff;}' +
     '</style></head><body><div class="bar">' +
-    '<span class="caption">FMXPIXIE / INPUT DEMO</span>' +
-    '<span class="note">Keyboard / Mouse / Controller</span>' +
+    '<span class="caption">PIXIE SETUP / НАСТРОЙКА УПРАВЛЕНИЯ</span>' +
+    '<span class="note">Клавиатура / Мышь / Контроллер</span>' +
     '<div class="controls">' +
     '<div id="title-minimize" class="win">−</div>' +
     '<div id="title-close" class="win close">×</div>' +
@@ -215,7 +215,7 @@ begin
     '</style></head><body><div class="app">' +
 
     '<div class="header"><div>' +
-    '<div class="brand">GAME MENU</div>' +
+    '<div class="brand">PIXIE SETUP</div>' +
     '<div class="sub">Пример управления игровым меню с помощью контроллера, клавиатуры или мыши</div>' +
     '</div></div>' +
 
@@ -226,20 +226,20 @@ begin
     '<div class="workspace">' +
 
     '<div class="panel">' +
-    '<div class="panel-head"><span>XBOX — ГОТОВАЯ РАСКЛАДКА</span><span class="panel-caption">XINPUT</span></div>' +
-    '<div class="panel-note">Готовая схема Xbox. При подключении XInput-контроллера A / B / X назначатся автоматически.</div>' +
+    '<div class="panel-head"><span>XBOX — ГОТОВАЯ РАСКЛАДКА</span><span class="panel-caption">XBOX</span></div>' +
+    '<div class="panel-note">Готовая схема Xbox. При подключении контроллера Xbox A / B / X назначатся автоматически.</div>' +
 
     '<button id="xbox-row-next" class="xbox-row" type="button">' +
     '<span class="xbox-copy"><span class="xbox-title">Далее</span><span class="xbox-hint">Продолжить / подтвердить</span></span>' +
-    '<span class="xbox-right"><span id="xbox-state-next" class="xbox-state">NO PAD</span><span class="xbox-key xbox-a">A</span></span></button>' +
+    '<span class="xbox-right"><span id="xbox-state-next" class="xbox-state">НЕ ПОДКЛЮЧЁН</span><span class="xbox-key xbox-a">A</span></span></button>' +
 
     '<button id="xbox-row-back" class="xbox-row" type="button">' +
     '<span class="xbox-copy"><span class="xbox-title">Назад</span><span class="xbox-hint">Вернуться к предыдущему шагу</span></span>' +
-    '<span class="xbox-right"><span id="xbox-state-back" class="xbox-state">NO PAD</span><span class="xbox-key xbox-b">B</span></span></button>' +
+    '<span class="xbox-right"><span id="xbox-state-back" class="xbox-state">НЕ ПОДКЛЮЧЁН</span><span class="xbox-key xbox-b">B</span></span></button>' +
 
     '<button id="xbox-row-cancel" class="xbox-row" type="button">' +
     '<span class="xbox-copy"><span class="xbox-title">Отмена</span><span class="xbox-hint">Закрыть / отменить действие</span></span>' +
-    '<span class="xbox-right"><span id="xbox-state-cancel" class="xbox-state">NO PAD</span><span class="xbox-key xbox-x">X</span></span></button>' +
+    '<span class="xbox-right"><span id="xbox-state-cancel" class="xbox-state">НЕ ПОДКЛЮЧЁН</span><span class="xbox-key xbox-x">X</span></span></button>' +
 
     '<div id="xbox-status" class="xbox-status">Ожидание Xbox-контроллера. Раскладка: A — Далее, B — Назад, X — Отмена.</div>' +
     '</div>' +
@@ -324,21 +324,21 @@ begin
     CustomNextAssigned := True;
     SetTextById('custom-binding-next', S);
     SetClassById('custom-state-next', 'custom-state');
-    SetTextById('custom-state-next', 'RELEASED');
+    SetTextById('custom-state-next', 'ОТПУЩЕНО');
   end
   else if Action = ACTION_BACK then
   begin
     CustomBackAssigned := True;
     SetTextById('custom-binding-back', S);
     SetClassById('custom-state-back', 'custom-state');
-    SetTextById('custom-state-back', 'RELEASED');
+    SetTextById('custom-state-back', 'ОТПУЩЕНО');
   end
   else if Action = ACTION_CANCEL then
   begin
     CustomCancelAssigned := True;
     SetTextById('custom-binding-cancel', S);
     SetClassById('custom-state-cancel', 'custom-state');
-    SetTextById('custom-state-cancel', 'RELEASED');
+    SetTextById('custom-state-cancel', 'ОТПУЩЕНО');
   end;
 end;
 
@@ -372,7 +372,7 @@ begin
   begin
     SetClassById(Id, 'xbox-state');
     SetClassById(RowId, 'xbox-row');
-    TextValue := 'RELEASED';
+    TextValue := 'ОТПУЩЕНО';
   end;
   SetTextById(Id, TextValue);
 end;
@@ -407,7 +407,7 @@ begin
   begin
     SetClassById(Id, 'custom-state');
     SetClassById(RowId, 'custom-row');
-    TextValue := 'RELEASED';
+    TextValue := 'ОТПУЩЕНО';
   end;
   SetTextById(Id, TextValue);
 end;
@@ -1002,7 +1002,7 @@ begin
       if DefaultXboxBindingsApplied then
         SetInputStatus('Xbox-контроллер подключен. Стандартные кнопки готовы.')
       else
-        SetInputStatus('Ввод готов. Подключите Xbox или назначьте свои кнопки справа.');
+        SetInputStatus('Готово. Подключите контроллер Xbox или назначьте кнопки для действий справа.');
     end
     else
       SetInputStatus('Не удалось обновить устройства: ' + Input.LastError);
@@ -1019,7 +1019,7 @@ begin
     end;
   end
   else
-    SetInputStatus('Служба ввода недоступна. Проверь DLL и причину ошибки инициализации.');
+    SetInputStatus('Не удалось запустить управление. Проверьте подключение и повторите попытку.');
 
   FMXForm.Show;
 end;
