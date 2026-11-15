@@ -116,7 +116,7 @@ begin
     '</div><div class="summary">Выбрано для установки: <span id="main-selected">(none)</span><br>' +
     'Активные категории: <span id="filter-selected">(none)</span><br><span id="status">Выберите компоненты и категории.</span></div></div>' +
     '<div id="display-label" class="label">04 / ОБОЗНАЧЕНИЯ</div>' +
-    '<div id="display-surface" class="surface"><div class="hint">A display-only strip with color swatches. Selection and editing are disabled.</div>' +
+    '<div id="display-surface" class="surface"><div class="hint">Обозначения показывают тип и состояние компонентов.</div>' +
     '<div class="tag-metric">Только просмотр</div></div>' +
     '<div id="footer">PIXIE Setup · предварительный выбор компонентов. ' +
     'Состав можно изменить до подтверждения установки.</div>' +
@@ -154,31 +154,22 @@ end;
 function CheckedSummary(Bar: FPixieTagBar): String;
 var
   I, ID: Integer;
-  S, IDs: String;
+  S: String;
 begin
   Result := '';
-  IDs := '';
-
-  // Exercise the DLL wrappers for GetCheckedCount and GetCheckedID.
   for I := 0 to Bar.GetCheckedCount - 1 do
   begin
     ID := Bar.GetCheckedID(I);
     S := TagNameByID(Bar, ID);
-
-    if Result <> '' then Result := Result + ' · ';
-    if S <> '' then
-      Result := Result + S
-    else
-      Result := Result + '#' + IntToStr(ID);
-
-    if IDs <> '' then IDs := IDs + ', ';
-    IDs := IDs + IntToStr(ID);
+    if S = '' then
+      Continue;
+    if Result <> '' then
+      Result := Result + ' · ';
+    Result := Result + S;
   end;
 
   if Result = '' then
-    Result := '(none) [IDs: none]'
-  else
-    Result := Result + ' [IDs: ' + IDs + ']';
+    Result := 'Не выбрано';
 end;
 
 procedure RefreshStats;
@@ -216,7 +207,7 @@ begin
   if Allow then
     SetStatus('Добавлен новый компонент: "' + Text + '".')
   else
-    SetStatus('"Такой компонент уже существует или его название пустое: "' + Text + '" (Allow=False).');
+    SetStatus('Введите название нового компонента.');
 end;
 
 // The required base package is protected from deletion.
@@ -232,8 +223,7 @@ begin
     SetStatus('Удалён компонент: "' + TagName +
       '" (ID ' + IntToStr(ID) + ').')
   else
-    SetStatus('Основной компонент нельзя удалить: "' + TagName +
-      '" (ID ' + IntToStr(ID) + ').');
+    SetStatus('Основные файлы входят в установку обязательно.');
 end;
 
 // Enter 'reserved' while renaming a tag to verify the change veto.
@@ -245,11 +235,12 @@ begin
   Allow := (ID <> ProtectedTagID) and (Trim(NewText) <> '');
 
   if Allow then
-    SetStatus('Название компонента изменено: ' +
-      IntToStr(ID) + ' ("' + NewText + '").')
+    SetStatus('Название изменено на "' + NewText + '".')
   else
-    SetStatus('Основной пакет нельзя переименовать, а название нового компонента не может быть пустым: "' + NewText +
-      '" (Allow=False).');
+    if ID = ProtectedTagID then
+      SetStatus('Основные файлы нельзя переименовать.')
+    else
+      SetStatus('Название компонента не может быть пустым.');
 end;
 
 procedure MainTagChecked(Sender: TObject; ID: Integer; Checked: Boolean);
@@ -298,13 +289,13 @@ begin
   FilterTags.AddTagWithColor('Core', $FF60A5FA);
   FilterTags.AddTagWithColor('Графика', $FFA78BFA);
   FilterTags.AddTagWithColor('Оформление', $FF34D399);
-  FilterTags.AddTagWithColor('Markdown', $FFF472B6);
-  FilterTags.AddTagWithColor('SVG', $FFFB923C);
+  FilterTags.AddTagWithColor('Документы', $FFF472B6);
+  FilterTags.AddTagWithColor('Векторная графика', $FFFB923C);
   FilterTags.AddTagWithColor('Шаблоны', $FF22D3EE);
   FilterTags.AddTagWithColor('Стили', $FF2DD4BF);
   FilterTags.AddTagWithColor('Installer', $FFA3E635);
-  FilterTags.AddTagWithColor('Launcher', $FFFBBF24);
-  FilterTags.AddTagWithColor('Events', $FFFB7185);
+  FilterTags.AddTagWithColor('Запуск', $FFFBBF24);
+  FilterTags.AddTagWithColor('События', $FFFB7185);
   FilterTags.AddTagWithColor('Системные', $FF818CF8);
   FilterTags.AddTagWithColor('Дополнительно', $FF94A3B8);
   FilterTags.CheckTag(FilterTags.GetTagID(0), True);
