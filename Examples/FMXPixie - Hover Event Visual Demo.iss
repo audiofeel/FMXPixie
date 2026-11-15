@@ -1,5 +1,6 @@
+
 #define DemoAppName "FMXPixie - Hover Event Visual Demo"
-#define DemoAppVersion "2.0"
+#define DemoAppVersion "1.0"
 
 [Setup]
 AppName={#DemoAppName}
@@ -25,7 +26,7 @@ const
   DEMO_FORM_HEIGHT = 700;
   TITLEBAR_HEIGHT = 34;
   TITLEBAR_BUTTONS_WIDTH = 92;
-  CONTENT_WIDTH = 600;
+  CONTENT_WIDTH = 555;
 
 var
   FMXForm: FForm;
@@ -33,16 +34,22 @@ var
   View: FPixieHtmlView;
   MonitorView: FPixieHtmlView;
   Doc: FPixieDocument;
-  ContentDoc: FPixieDocument;
   Elem: FPixieElement;
-
-  SelectedCore: Boolean;
-  SelectedIcons: Boolean;
-  SelectedThemes: Boolean;
-  SelectedExamples: Boolean;
-  CurrentHoverTarget: String;
-  IsConfirmed: Boolean;
+  TempDir: String;
+  ViewEnterCount: Integer;
+  ViewLeaveCount: Integer;
+  ElementEnterCount: Integer;
+  ElementLeaveCount: Integer;
+  CardClickCount: Integer;
   DocumentReady: Boolean;
+  CurrentHoverTarget: String;
+  LastHoverEvent: String;
+  LastEnterTarget: String;
+  LastLeaveTarget: String;
+  LastClickTarget: String;
+  RecentEvent1: String;
+  RecentEvent2: String;
+  RecentEvent3: String;
 
 function BuildTitlebarHtml: String;
 begin
@@ -50,16 +57,16 @@ begin
     '<!doctype html><html><head><meta charset="utf-8"><style>' +
     '*{box-sizing:border-box;}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;}' +
     'body{background:#17212f;color:#edf3fa;font-family:"Segoe UI",Arial,sans-serif;}' +
-    '.bar{position:relative;width:100%;height:34px;line-height:33px;background:#17212f;border-bottom:1px solid #344255;}' +
+    '.titlebar{position:relative;width:100%;height:34px;line-height:33px;background:#17212f;border-bottom:1px solid #344255;overflow:hidden;}' +
     '.brand{margin-left:17px;color:#9dd8ce;font-size:12px;font-weight:bold;letter-spacing:1.3px;}' +
-    '.caption{margin-left:11px;color:#9ba9ba;font-size:10px;}' +
-    '.controls{position:absolute;right:0;top:0;width:92px;height:33px;font-size:0;}' +
-    '.control{display:inline-block;vertical-align:top;width:46px;height:33px;text-align:center;line-height:32px;color:#d7e0ec;font-size:20px;cursor:pointer;}' +
-    '.control:hover{background:#334155;color:#fff;}.close:hover{background:#c43c4a;color:#fff;}' +
-    '</style></head><body><div class="bar">' +
-    '<span class="brand">PIXIE</span><span class="caption">Мастер установки</span>' +
-    '<div class="controls"><div id="title-minimize" class="control">−</div>' +
-    '<div id="title-close" class="control close">×</div></div></div></body></html>';
+    '.title-note{margin-left:11px;color:#9ba9ba;font-size:10px;letter-spacing:.7px;}' +
+    '.window-controls{position:absolute;right:0;top:0;width:92px;height:33px;font-size:0;}' +
+    '.window-button{display:inline-block;vertical-align:top;width:46px;height:33px;line-height:32px;text-align:center;font-size:20px;color:#d7e0ec;cursor:pointer;}' +
+    '.window-button:hover{background:#334155;color:#fff;}.window-close:hover{background:#c43c4a;color:#fff;}' +
+    '</style></head><body><div class="titlebar">' +
+    '<span class="brand">FMXPIXIE</span><span class="title-note">/ VISUAL HOVER CALLBACK TEST</span>' +
+    '<div class="window-controls"><div id="title-minimize" class="window-button" title="Свернуть">−</div>' +
+    '<div id="title-close" class="window-button window-close" title="Закрыть">×</div></div></div></body></html>';
 end;
 
 function BuildContentHtml: String;
@@ -68,36 +75,46 @@ begin
     '<!doctype html><html><head><meta charset="utf-8"><style>' +
     '*{box-sizing:border-box;}html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;}' +
     'body{background:#f3f5f8;color:#202936;font-family:"Segoe UI",Arial,sans-serif;font-size:13px;}' +
-    '.page{padding:21px 22px;}' +
-    '.eyebrow{font-size:9px;font-weight:bold;letter-spacing:1.7px;color:#0f766e;text-transform:uppercase;}' +
-    '.headline{margin:7px 0 6px;font-size:24px;line-height:1.15;font-weight:650;color:#17212f;}' +
-    '.intro{margin:0;color:#617083;font-size:11px;line-height:1.5;}' +
-    '.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px;}' +
-    '.tile{height:174px;padding:14px;border:1px solid #cfd8e2;background:#fff;cursor:pointer;overflow:hidden;}' +
+    '.page{padding:18px 18px 14px 18px;}' +
+    '.eyebrow{font-size:9px;font-weight:bold;letter-spacing:1.8px;color:#0f766e;text-transform:uppercase;}' +
+    '.headline{margin:5px 0 5px 0;font-size:24px;line-height:1.1;font-weight:600;letter-spacing:-.5px;color:#17212f;}' +
+    '.intro{margin:0;color:#617083;font-size:11px;line-height:1.45;}' +
+    '.badges{margin-top:9px;}' +
+    '.badge{display:inline-block;padding:5px 7px;margin-right:5px;border:1px solid #b7c8d7;background:#e9eff5;color:#42556a;font-size:8px;font-weight:bold;letter-spacing:.3px;}' +
+    '.badge-ok{background:#e2f5f0;border-color:#a8dbd0;color:#0f766e;}' +
+    '.section-head{margin-top:14px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;}' +
+    '.section-title{font-size:10px;font-weight:bold;letter-spacing:1px;color:#475569;text-transform:uppercase;}' +
+    '.section-sub{font-size:9px;color:#8a96a5;}' +
+    '.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;}' +
+    '.tile{height:132px;position:relative;padding:13px;border:1px solid #cfd8e2;background:#fff;cursor:pointer;overflow:hidden;}' +
     '.tile:hover{background:#e0f5f0;border-color:#109889;}' +
     '.tile:active{background:#c6ebe3;border-color:#087f73;}' +
-    '.tile.selected{background:#e7f4ff;border:2px solid #2679ad;padding:13px;}' +
-    '.top{display:flex;align-items:center;justify-content:space-between;}' +
-    '.kind{padding:4px 6px;background:#e9eef4;color:#63758a;font-size:9px;font-weight:bold;}' +
-    '.symbol{width:29px;height:29px;line-height:27px;border:1px solid #c9d5df;border-radius:50%;text-align:center;color:#718096;font-size:15px;}' +
-    '.tile:hover .kind,.tile.selected .kind{background:#0f766e;color:#fff;}' +
-    '.tile:hover .symbol,.tile.selected .symbol{background:#0f766e;border-color:#0f766e;color:#fff;}' +
-    '.name{margin-top:15px;font-size:14px;font-weight:650;color:#253449;}' +
-    '.desc{margin-top:6px;color:#718096;font-size:10px;line-height:1.45;}' +
-    '.hint{margin-top:11px;color:#0f766e;font-size:9px;font-weight:bold;letter-spacing:.5px;}' +
-    '.tile:not(.selected) .hint{color:#8a97a6;}' +
-    '.footer{margin-top:17px;padding-top:11px;border-top:1px solid #d7dfe7;color:#7b8999;font-size:10px;}' +
+    '.tile-top{display:flex;align-items:center;justify-content:space-between;}' +
+    '.tile-number{display:inline-block;padding:4px 6px;background:#e9eef4;color:#63758a;font-size:9px;font-weight:bold;}' +
+    '.tile:hover .tile-number{background:#0f766e;color:#fff;}' +
+    '.tile-symbol{width:27px;height:27px;line-height:25px;border:1px solid #c9d5df;border-radius:50%;text-align:center;color:#718096;font-size:14px;}' +
+    '.tile:hover .tile-symbol{background:#0f766e;border-color:#0f766e;color:#fff;}' +
+    '.tile-title{margin-top:11px;font-size:14px;font-weight:600;color:#253244;}.tile:hover .tile-title{color:#075c55;}' +
+    '.tile-desc{margin-top:4px;font-size:10px;line-height:1.35;color:#748195;}.tile:hover .tile-desc{color:#326e68;}' +
+    '.tile-hint{position:absolute;right:11px;bottom:9px;font-size:8px;font-weight:bold;letter-spacing:.7px;color:#9aa6b5;}' +
+    '.tile:hover .tile-hint{color:#0f766e;}' +
+    '.css-note{margin-top:12px;padding:10px 11px;background:#eef6fb;border:1px solid #cadfeb;color:#49667b;font-size:10px;line-height:1.45;}' +
+    '.css-note strong{color:#244c66;}' +
+    '.footer{margin-top:12px;padding-top:8px;border-top:1px solid #d7dfe7;display:flex;justify-content:space-between;color:#8b97a5;font-size:8px;letter-spacing:.35px;}' +
     '</style></head><body><div class="page">' +
-    '<div class="eyebrow">PIXIE Setup · Шаг 1 из 2</div>' +
-    '<div class="headline">Выберите дополнительные компоненты</div>' +
-    '<p class="intro">Наведите курсор, чтобы узнать, что входит в каждый набор. Нажмите на карточку, чтобы добавить компонент в установку.</p>' +
+    '<div class="eyebrow">IN-ENGINE CSS REGRESSION</div>' +
+    '<div class="headline">Наведение без JavaScript</div>' +
+    '<p class="intro">Эти карточки проверяют старое поведение Pixie. CSS должен сам менять фон, рамку и цвет текста при :hover и возвращать исходный вид после ухода мыши.</p>' +
+    '<div class="badges"><span class="badge badge-ok">CSS :hover / PIXIE</span><span class="badge">SEPARATE DOCUMENT FROM EVENT MONITOR</span></div>' +
+    '<div class="section-head"><span class="section-title">01 / Объекты наведения</span><span class="section-sub">Наведи, убери, нажми</span></div>' +
     '<div class="tiles">' +
-    '<div id="tile-alpha" class="tile"><div class="top"><span class="kind">ОБЯЗАТЕЛЬНО</span><span class="symbol">✦</span></div><div class="name">Основные файлы</div><div class="desc">Ядро PIXIE и файлы, необходимые для запуска приложения.</div><div class="hint">ВХОДИТ В УСТАНОВКУ</div></div>' +
-    '<div id="tile-beta" class="tile"><div class="top"><span class="kind">ОФОРМЛЕНИЕ</span><span class="symbol">◈</span></div><div class="name">Набор иконок</div><div class="desc">Готовые значки и изображения для оформления интерфейса.</div><div class="hint">ДОБАВИТЬ КОМПОНЕНТ</div></div>' +
-    '<div id="tile-gamma" class="tile"><div class="top"><span class="kind">ВНЕШНИЙ ВИД</span><span class="symbol">◇</span></div><div class="name">Темы оформления</div><div class="desc">Дополнительные цветовые схемы и варианты внешнего вида.</div><div class="hint">ДОБАВИТЬ КОМПОНЕНТ</div></div>' +
-    '<div id="tile-delta" class="tile"><div class="top"><span class="kind">ДЛЯ РАЗРАБОТЧИКА</span><span class="symbol">◎</span></div><div class="name">Примеры интерфейсов</div><div class="desc">Готовые страницы и шаблоны для собственных проектов.</div><div class="hint">ДОБАВИТЬ КОМПОНЕНТ</div></div>' +
+    '<div id="tile-alpha" class="tile"><div class="tile-top"><span class="tile-number">TARGET 01</span><span class="tile-symbol">↗</span></div><div class="tile-title">Alpha / Card</div><div class="tile-desc">Фон, рамка и текст меняются через CSS.</div><div class="tile-hint">HOVER ME</div></div>' +
+    '<div id="tile-beta" class="tile"><div class="tile-top"><span class="tile-number">TARGET 02</span><span class="tile-symbol">✳</span></div><div class="tile-title">Beta / Tile</div><div class="tile-desc">Отдельный HTML-элемент с собственным id.</div><div class="tile-hint">HOVER ME</div></div>' +
+    '<div id="tile-gamma" class="tile"><div class="tile-top"><span class="tile-number">TARGET 03</span><span class="tile-symbol">◇</span></div><div class="tile-title">Gamma / Item</div><div class="tile-desc">Переходи между карточками и вложенным текстом.</div><div class="tile-hint">HOVER ME</div></div>' +
+    '<div id="tile-delta" class="tile"><div class="tile-top"><span class="tile-number">TARGET 04</span><span class="tile-symbol">◎</span></div><div class="tile-title">Delta / Panel</div><div class="tile-desc">Нажми для проверки прежнего click callback.</div><div class="tile-hint">HOVER + CLICK</div></div>' +
     '</div>' +
-    '<div class="footer">Выбранные компоненты появятся справа. Выбор можно изменить до подтверждения.</div>' +
+    '<div class="css-note"><strong>Проверка CSS:</strong> при наведении карточка становится мятно-зелёной; после ухода снова белая. Код Inno не задаёт цвет карточки. Счётчики находятся в другом HTML-документе, поэтому обновление панели не меняет DOM этой области.</div>' +
+    '<div class="footer"><span>CSS :HOVER · CSS :ACTIVE</span><span>CONTENT VIEW / 555 × 666</span></div>' +
     '</div></body></html>';
 end;
 
@@ -106,78 +123,56 @@ begin
   Result :=
     '<!doctype html><html><head><meta charset="utf-8"><style>' +
     '*{box-sizing:border-box;}html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;}' +
-    'body{background:#fff;color:#202936;font-family:"Segoe UI",Arial,sans-serif;}' +
-    '.page{padding:22px 19px;}' +
-    '.eyebrow{color:#0f766e;font-size:9px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;}' +
-    '.headline{margin-top:7px;color:#17212f;font-size:20px;font-weight:650;line-height:1.2;}' +
-    '.copy{margin-top:8px;color:#617083;font-size:10px;line-height:1.5;}' +
-    '.preview{margin-top:20px;padding:14px;background:#f0f5f8;border:1px solid #d5e0e8;min-height:130px;}' +
-    '.preview-name{font-size:14px;font-weight:bold;color:#223247;}' +
-    '.preview-copy{margin-top:8px;color:#617083;font-size:10px;line-height:1.5;}' +
-    '.preview-state{margin-top:12px;padding:7px 8px;background:#e5f4f0;border:1px solid #b7ded4;color:#0f766e;font-size:9px;font-weight:bold;}' +
-    '.selection{margin-top:22px;padding-top:15px;border-top:1px solid #dbe3ea;}' +
-    '.selection-title{font-size:9px;font-weight:bold;letter-spacing:.8px;color:#68788b;text-transform:uppercase;}' +
-    '.selection-count{margin-top:7px;color:#0f766e;font-size:21px;font-weight:650;}' +
-    '.selection-list{margin-top:9px;min-height:92px;color:#526276;font-size:10px;line-height:1.6;white-space:pre-wrap;}' +
-    '.tip{margin-top:14px;color:#8793a1;font-size:9px;line-height:1.45;}' +
-    'button{width:100%;margin-top:18px;padding:11px 12px;background:#16766e;color:#fff;border:1px solid #2b9c90;border-radius:5px;font:12px "Segoe UI",Arial,sans-serif;font-weight:bold;cursor:pointer;}' +
-    'button:hover{background:#209287;border-color:#16766e;}' +
+    'body{background:#f3f5f8;color:#202936;font-family:"Segoe UI",Arial,sans-serif;font-size:12px;}' +
+    '.page{padding:14px 13px;}' +
+    '.eyebrow{font-size:9px;font-weight:bold;letter-spacing:1.6px;color:#0f766e;text-transform:uppercase;}' +
+    '.headline{margin:5px 0 4px 0;font-size:20px;line-height:1.1;font-weight:600;color:#17212f;}' +
+    '.intro{margin:0;color:#617083;font-size:10px;line-height:1.4;}' +
+    '.status{display:inline-block;margin-top:8px;padding:5px 7px;background:#fff2df;border:1px solid #e8cda3;color:#92540b;font-size:8px;font-weight:bold;letter-spacing:.4px;}' +
+    '.status-ok{background:#e2f5f0;border-color:#a8dbd0;color:#0f766e;}' +
+    '.panel{margin-top:11px;border:1px solid #d1dae4;background:#fff;padding:11px;}' +
+    '.panel-title{font-size:12px;font-weight:bold;color:#233144;margin-bottom:3px;}' +
+    '.panel-copy{font-size:9px;line-height:1.4;color:#748195;margin-bottom:7px;}' +
+    '.metric-list{border-top:1px solid #e4e9ef;}' +
+    '.metric{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e4e9ef;font-size:9px;color:#5f6d7f;}' +
+    '.metric strong{font-size:13px;color:#1f2937;font-variant-numeric:tabular-nums;}' +
+    '.metric-click strong{color:#0f766e;}' +
+    '.last-event{margin-top:8px;padding:7px 8px;background:#f0f4f8;border-left:3px solid #98a8bb;}' +
+    '.last-label{font-size:8px;font-weight:bold;letter-spacing:.8px;color:#78869a;text-transform:uppercase;}' +
+    '.last-value{margin-top:4px;font-size:11px;line-height:1.35;color:#334155;white-space:nowrap;overflow:hidden;}' +
+    '.event-pair{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px;}' +
+    '.event-chip{padding:7px 8px;border:1px solid #d7e2e9;}' +
+    '.event-in{background:#e2f5f0;border-color:#a8dbd0;}.event-out{background:#fff2df;border-color:#e8cda3;}' +
+    '.event-chip-label{font-size:8px;font-weight:bold;letter-spacing:.6px;color:#607184;}' +
+    '.event-chip-value{margin-top:3px;font-size:10px;font-weight:bold;white-space:nowrap;overflow:hidden;color:#26384b;}' +
+    '.history{margin-top:8px;padding:7px 8px;background:#f7f9fb;border:1px solid #e0e6ed;}' +
+    '.history-head{font-size:8px;font-weight:bold;letter-spacing:.8px;color:#78869a;margin-bottom:3px;}' +
+    '.history-row{height:15px;line-height:15px;font-size:9px;color:#45566b;white-space:nowrap;overflow:hidden;}' +
+    '.test-note{margin-top:8px;padding:8px;background:#eef6fb;border:1px solid #cadfeb;color:#49667b;font-size:9px;line-height:1.4;}' +
+    '.test-note strong{color:#244c66;}' +
+    '.footer{margin-top:9px;padding-top:7px;border-top:1px solid #d7dfe7;display:flex;justify-content:space-between;color:#8b97a5;font-size:8px;letter-spacing:.25px;}' +
     '</style></head><body><div class="page">' +
-    '<div class="eyebrow">Предварительный просмотр</div>' +
-    '<div class="headline">Состав установки</div>' +
-    '<div class="copy">Наведите курсор на компонент слева, чтобы прочитать описание. Нажмите на карточку, чтобы добавить или убрать его.</div>' +
-    '<div class="preview"><div id="preview-name" class="preview-name">Дополнительные компоненты</div>' +
-    '<div id="preview-copy" class="preview-copy">Здесь появится описание выбранного вами компонента.</div>' +
-    '<div id="preview-state" class="preview-state">Выберите компонент слева</div></div>' +
-    '<div class="selection"><div class="selection-title">Вы выбрали</div>' +
-    '<div id="selected-count" class="selection-count">0 компонентов</div>' +
-    '<div id="selected-list" class="selection-list">Пока выбраны только обязательные файлы.</div></div>' +
-    '<div class="tip">Основные файлы входят в установку автоматически и не могут быть удалены.</div>' +
-    '<button id="btn-next">Далее</button>' +
+    '<div class="eyebrow">LIVE EVENT TEST</div><div class="headline">Inno callback monitor</div>' +
+    '<p class="intro">Счётчики и последние события ниже обновляет Pascal Script по фактическому callback. Журнал для основной проверки не нужен.</p>' +
+    '<div id="callback-status" class="status">CALLBACK — WAITING FOR EVENT</div>' +
+    '<div class="panel"><div class="panel-title">События, полученные Inno Setup</div>' +
+    '<div class="panel-copy">Учитываются только 4 карточки и 2 кнопки заголовка. Вложенные элементы без собственного id отфильтрованы.</div>' +
+    '<div class="metric-list">' +
+    '<div class="metric"><span>OnElementMouseEvent / meEnter</span><strong id="element-enter-count">0</strong></div>' +
+    '<div class="metric"><span>OnElementMouseEvent / meLeave</span><strong id="element-leave-count">0</strong></div>' +
+    '<div class="metric metric-click"><span>OnElementClick / cards</span><strong id="element-click-count">0</strong></div>' +
+    '<div class="metric"><span>Content View Enter / Leave</span><strong id="view-count">0 / 0</strong></div>' +
+    '</div>' +
+    '<div class="last-event"><div class="last-label">Последний callback</div><div id="last-hover-event" class="last-value">Ожидание meEnter или meLeave...</div></div>' +
+    '<div class="event-pair"><div class="event-chip event-in"><div class="event-chip-label">ПОСЛЕДНИЙ ENTER</div><div id="last-enter" class="event-chip-value">—</div></div>' +
+    '<div class="event-chip event-out"><div class="event-chip-label">ПОСЛЕДНИЙ LEAVE</div><div id="last-leave" class="event-chip-value">—</div></div></div>' +
+    '<div class="last-event"><div class="last-label">Цель, отслеживаемая callback</div><div id="current-hover-target" class="last-value">(none)</div></div>' +
+    '<div class="last-event"><div class="last-label">Последний клик по карточке</div><div id="last-click-target" class="last-value">(none)</div></div>' +
+    '<div class="history"><div class="history-head">ПОСЛЕДНИЕ ТРИ CALLBACK-СОБЫТИЯ</div>' +
+    '<div id="history-1" class="history-row">1. Ожидание...</div><div id="history-2" class="history-row">2. —</div><div id="history-3" class="history-row">3. —</div></div>' +
+    '<div class="test-note"><strong>Два независимых результата:</strong> цвет карточки должен меняться CSS :hover в Content View; счётчики и события должны обновляться здесь, в отдельном документе.</div>' +
+    '<div class="footer"><span>ENTER / LEAVE / CLICK</span><span>MONITOR VIEW</span></div>' +
     '</div></body></html>';
-end;
-
-function BuildSummaryHtml: String;
-begin
-  Result :=
-    '<!doctype html><html><head><meta charset="utf-8"><style>' +
-    '*{box-sizing:border-box;}html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;}' +
-    'body{background:#f3f5f8;color:#202936;font-family:"Segoe UI",Arial,sans-serif;}' +
-    '.page{padding:27px 31px;}' +
-    '.eyebrow{color:#0f766e;font-size:9px;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;}' +
-    '.headline{margin-top:8px;color:#17212f;font-size:25px;font-weight:650;}' +
-    '.copy{margin-top:8px;color:#617083;font-size:11px;line-height:1.5;}' +
-    '.list{margin-top:24px;padding:18px 20px;background:#fff;border:1px solid #d5e0e8;color:#334155;font-size:12px;line-height:1.8;white-space:pre-wrap;}' +
-    '.done{margin-top:16px;padding:12px 14px;background:#e5f4f0;border:1px solid #b7ded4;color:#0f766e;font-size:11px;line-height:1.5;}' +
-    '.actions{margin-top:22px;padding-top:14px;border-top:1px solid #d7dfe7;}' +
-    'button{padding:10px 18px;margin-right:8px;background:#eef3f7;color:#334155;border:1px solid #cbd5e1;border-radius:5px;font:12px "Segoe UI",Arial,sans-serif;cursor:pointer;}' +
-    'button:hover{background:#dfe9f0;border-color:#91a6b9;}' +
-    'button.primary{float:right;background:#16766e;border-color:#2b9c90;color:#fff;font-weight:bold;}' +
-    'button.primary:hover{background:#209287;}' +
-    '</style></head><body><div class="page">' +
-    '<div class="eyebrow">PIXIE Setup · Шаг 2 из 2</div>' +
-    '<div class="headline">Проверьте состав установки</div>' +
-    '<div class="copy">В установку будут добавлены следующие компоненты:</div>' +
-    '<div id="summary-list" class="list"></div>' +
-    '<div id="summary-state" class="done">Если всё верно, подтвердите выбор. Вернуться и изменить его можно кнопкой «Назад».</div>' +
-    '<div class="actions"><button id="btn-back">Назад</button><button id="btn-confirm" class="primary">Подтвердить выбор</button></div>' +
-    '</div></body></html>';
-end;
-
-function SelectedCount: Integer;
-begin
-  Result := 1;
-  if SelectedIcons then Inc(Result);
-  if SelectedThemes then Inc(Result);
-  if SelectedExamples then Inc(Result);
-end;
-
-function SelectedList: String;
-begin
-  Result := 'Основные файлы';
-  if SelectedIcons then Result := Result + #13#10 + 'Набор иконок';
-  if SelectedThemes then Result := Result + #13#10 + 'Темы оформления';
-  if SelectedExamples then Result := Result + #13#10 + 'Примеры интерфейсов';
 end;
 
 procedure SetTextById(const Id, S: String);
@@ -189,107 +184,140 @@ begin
     Doc.SetElementText(H, S);
 end;
 
-procedure SetTileSelected(const Id: String; Value: Boolean);
+procedure UpdateViewFeedback;
+begin
+  if not DocumentReady then
+    Exit;
+  Doc.BeginUpdate;
+  try
+    SetTextById('view-count', IntToStr(ViewEnterCount) + ' / ' + IntToStr(ViewLeaveCount));
+  finally
+    Doc.EndUpdate;
+  end;
+  Doc.Changed;
+end;
+
+procedure UpdateClickFeedback;
+begin
+  if not DocumentReady then
+    Exit;
+  Doc.BeginUpdate;
+  try
+    SetTextById('element-click-count', IntToStr(CardClickCount));
+    SetTextById('last-click-target', LastClickTarget);
+  finally
+    Doc.EndUpdate;
+  end;
+  Doc.Changed;
+end;
+
+function IsHoverTestTarget(const Id: String): Boolean;
+begin
+  Result := (Id = 'tile-alpha') or (Id = 'tile-beta') or
+    (Id = 'tile-gamma') or (Id = 'tile-delta') or
+    (Id = 'title-minimize') or (Id = 'title-close');
+end;
+
+procedure UpdateHoverFeedback;
 var
   H: NativeInt;
 begin
-  H := ContentDoc.GetElementById(Id);
-  if H = 0 then Exit;
-  Elem.FCreate(H);
-  if Value then
-    Elem.SetAttr('class', 'tile selected')
-  else
-    Elem.SetAttr('class', 'tile');
-end;
+  if not DocumentReady then
+    Exit;
 
-procedure UpdateSelection;
-var
-  Count: Integer;
-begin
-  if not DocumentReady then Exit;
-
-  SetTileSelected('tile-alpha', True);
-  SetTileSelected('tile-beta', SelectedIcons);
-  SetTileSelected('tile-gamma', SelectedThemes);
-  SetTileSelected('tile-delta', SelectedExamples);
-  ContentDoc.Changed;
-
-  Count := SelectedCount;
-  if Count = 1 then
-    SetTextById('selected-count', '1 компонент')
-  else
-    SetTextById('selected-count', IntToStr(Count) + ' компонента');
-  SetTextById('selected-list', SelectedList);
+  Doc.BeginUpdate;
+  try
+    SetTextById('element-enter-count', IntToStr(ElementEnterCount));
+    SetTextById('element-leave-count', IntToStr(ElementLeaveCount));
+    SetTextById('callback-status', 'CALLBACK — RECEIVED');
+    H := Doc.GetElementById('callback-status');
+    if H <> 0 then
+    begin
+      Elem.FCreate(H);
+      Elem.SetAttr('class', 'status status-ok');
+    end;
+    SetTextById('last-hover-event', LastHoverEvent);
+    SetTextById('current-hover-target', CurrentHoverTarget);
+    SetTextById('last-enter', LastEnterTarget);
+    SetTextById('last-leave', LastLeaveTarget);
+    SetTextById('history-1', '1. ' + RecentEvent1);
+    SetTextById('history-2', '2. ' + RecentEvent2);
+    SetTextById('history-3', '3. ' + RecentEvent3);
+  finally
+    Doc.EndUpdate;
+  end;
   Doc.Changed;
 end;
 
-procedure UpdateHoverPreview;
+procedure ViewElementMouseEvent(Sender, El: TObject;
+  Event: TPixieMouseEvent);
 var
-  NameText, DescriptionText, StateText: String;
+  Id: String;
+  EventName: String;
 begin
-  if not DocumentReady then Exit;
+  if El = nil then
+    Exit;
 
-  NameText := 'Дополнительные компоненты';
-  DescriptionText := 'Наведите курсор на компонент слева, чтобы прочитать его описание.';
-  StateText := 'Выберите компонент слева';
+  Elem.FCreate(NativeInt(El));
+  Id := Elem.GetAttr('id', '');
 
-  if CurrentHoverTarget = 'tile-alpha' then
-  begin
-    NameText := 'Основные файлы';
-    DescriptionText := 'Ядро PIXIE и файлы, необходимые для запуска приложения.';
-    StateText := 'Входит в установку обязательно';
-  end
-  else if CurrentHoverTarget = 'tile-beta' then
-  begin
-    NameText := 'Набор иконок';
-    DescriptionText := 'Готовые значки и изображения для оформления интерфейса.';
-    if SelectedIcons then StateText := 'Уже добавлено в установку'
-    else StateText := 'Нажмите карточку, чтобы добавить';
-  end
-  else if CurrentHoverTarget = 'tile-gamma' then
-  begin
-    NameText := 'Темы оформления';
-    DescriptionText := 'Дополнительные цветовые схемы и варианты внешнего вида.';
-    if SelectedThemes then StateText := 'Уже добавлено в установку'
-    else StateText := 'Нажмите карточку, чтобы добавить';
-  end
-  else if CurrentHoverTarget = 'tile-delta' then
-  begin
-    NameText := 'Примеры интерфейсов';
-    DescriptionText := 'Готовые страницы и шаблоны для собственных проектов.';
-    if SelectedExamples then StateText := 'Уже добавлено в установку'
-    else StateText := 'Нажмите карточку, чтобы добавить';
+  // Track only the exact elements with the six demo IDs. No ancestor lookup.
+  if not IsHoverTestTarget(Id) then
+    Exit;
+
+  case Event of
+    meEnter:
+      begin
+        Inc(ElementEnterCount);
+        EventName := 'meEnter';
+        CurrentHoverTarget := Id;
+        LastEnterTarget := Id;
+        LastHoverEvent := EventName + ' / ' + Id;
+        RecentEvent3 := RecentEvent2;
+        RecentEvent2 := RecentEvent1;
+        RecentEvent1 := EventName + ' | ' + Id;
+      end;
+    meLeave:
+      begin
+        Inc(ElementLeaveCount);
+        EventName := 'meLeave';
+        if CurrentHoverTarget = Id then
+          CurrentHoverTarget := '(none)';
+        LastLeaveTarget := Id;
+        LastHoverEvent := EventName + ' / ' + Id;
+        RecentEvent3 := RecentEvent2;
+        RecentEvent2 := RecentEvent1;
+        RecentEvent1 := EventName + ' | ' + Id;
+      end;
+  else
+    Exit;
   end;
 
-  SetTextById('preview-name', NameText);
-  SetTextById('preview-copy', DescriptionText);
-  SetTextById('preview-state', StateText);
-  Doc.Changed;
+  // Only MonitorView is changed here. The originating HTML document is untouched.
+  UpdateHoverFeedback;
 end;
 
-procedure ShowOptionsPage;
+procedure ViewMouseEnter(Sender: TObject);
 begin
-  MonitorView.Visible(True);
-  View.SetBounds(0, TITLEBAR_HEIGHT, CONTENT_WIDTH,
-    DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT);
-  View.LoadFromString(BuildContentHtml);
-  ContentDoc.FCreate(View.GetDocument);
-  Doc.FCreate(MonitorView.GetDocument);
-  UpdateSelection;
-  UpdateHoverPreview;
+  Inc(ViewEnterCount);
+  UpdateViewFeedback;
 end;
 
-procedure ShowSummaryPage;
+procedure ViewMouseLeave(Sender: TObject);
 begin
-  View.SetBounds(0, TITLEBAR_HEIGHT, DEMO_FORM_WIDTH,
-    DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT);
-  View.LoadFromString(BuildSummaryHtml);
-  MonitorView.Visible(False);
-  Doc.FCreate(View.GetDocument);
-  SetTextById('summary-list', SelectedList);
-  SetTextById('summary-state', 'Проверьте выбранные компоненты. Вернитесь назад, если хотите изменить состав.');
-  Doc.Changed;
-  IsConfirmed := False;
+  Inc(ViewLeaveCount);
+  UpdateViewFeedback;
+end;
+
+procedure HeaderMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Single);
+begin
+  if Button <> mbLeft then
+    Exit;
+
+  if (X < HeaderView.GetWidth - TITLEBAR_BUTTONS_WIDTH) and
+     (Y >= 0) and (Y < TITLEBAR_HEIGHT) then
+    FMXForm.StartWindowDrag;
 end;
 
 procedure CloseSetup;
@@ -303,7 +331,8 @@ var
   Id: String;
 begin
   Result := False;
-  if El = nil then Exit;
+  if El = nil then
+    Exit;
 
   H := NativeInt(El);
   Id := '';
@@ -311,10 +340,12 @@ begin
   begin
     Elem.FCreate(H);
     Id := Elem.GetAttr('id', '');
-    if Id <> '' then Break;
+    if Id <> '' then
+      Break;
     H := Elem.Parent;
   end;
-  if H = 0 then Exit;
+  if H = 0 then
+    Exit;
 
   if Id = 'title-minimize' then
   begin
@@ -333,71 +364,12 @@ begin
   if (Id = 'tile-alpha') or (Id = 'tile-beta') or
      (Id = 'tile-gamma') or (Id = 'tile-delta') then
   begin
-    if Id = 'tile-beta' then SelectedIcons := not SelectedIcons
-    else if Id = 'tile-gamma' then SelectedThemes := not SelectedThemes
-    else if Id = 'tile-delta' then SelectedExamples := not SelectedExamples;
-    UpdateSelection;
-    UpdateHoverPreview;
+    Inc(CardClickCount);
+    LastClickTarget := Id;
+    UpdateClickFeedback;
     Result := True;
     Exit;
   end;
-
-  if Id = 'btn-next' then
-  begin
-    ShowSummaryPage;
-    Result := True;
-    Exit;
-  end;
-
-  if Id = 'btn-back' then
-  begin
-    ShowOptionsPage;
-    Result := True;
-    Exit;
-  end;
-
-  if Id = 'btn-confirm' then
-  begin
-    if IsConfirmed then
-      CloseSetup
-    else
-    begin
-      IsConfirmed := True;
-      SetTextById('summary-state', 'Готово. Выбранные компоненты переданы установщику. В этом примере файлы не копируются.');
-      SetTextById('btn-confirm', 'Завершить');
-      Doc.Changed;
-    end;
-    Result := True;
-    Exit;
-  end;
-end;
-
-procedure ViewElementMouseEvent(Sender, El: TObject; Event: TPixieMouseEvent);
-var
-  Id: String;
-begin
-  if El = nil then Exit;
-  Elem.FCreate(NativeInt(El));
-  Id := Elem.GetAttr('id', '');
-  if (Id <> 'tile-alpha') and (Id <> 'tile-beta') and
-     (Id <> 'tile-gamma') and (Id <> 'tile-delta') then
-    Exit;
-
-  if Event = meEnter then
-    CurrentHoverTarget := Id
-  else if (Event = meLeave) and (CurrentHoverTarget = Id) then
-    CurrentHoverTarget := '';
-
-  UpdateHoverPreview;
-end;
-
-procedure HeaderMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Single);
-begin
-  if Button <> mbLeft then Exit;
-  if (X < HeaderView.GetWidth - TITLEBAR_BUTTONS_WIDTH) and
-     (Y >= 0) and (Y < TITLEBAR_HEIGHT) then
-    FMXForm.StartWindowDrag;
 end;
 
 procedure FMXInit;
@@ -407,7 +379,6 @@ begin
   View := InitPixieHtmlView;
   MonitorView := InitPixieHtmlView;
   Doc := InitPixieDocument;
-  ContentDoc := InitPixieDocument;
   Elem := InitPixieElement;
 end;
 
@@ -419,42 +390,61 @@ end;
 
 procedure InitializeWizard;
 begin
-  SelectedIcons := False;
-  SelectedThemes := False;
-  SelectedExamples := False;
-  CurrentHoverTarget := '';
-  IsConfirmed := False;
+  TempDir := ExpandConstant('{tmp}');
+  ViewEnterCount := 0;
+  ViewLeaveCount := 0;
+  ElementEnterCount := 0;
+  ElementLeaveCount := 0;
+  CardClickCount := 0;
+  CurrentHoverTarget := '(none)';
+  LastHoverEvent := 'Waiting for meEnter or meLeave...';
+  LastEnterTarget := '—';
+  LastLeaveTarget := '—';
+  LastClickTarget := '(none)';
+  RecentEvent1 := 'Waiting...';
+  RecentEvent2 := '—';
+  RecentEvent3 := '—';
   DocumentReady := False;
 
   EmptyWizardForm(DEMO_FORM_WIDTH, DEMO_FORM_HEIGHT);
   FMXForm.FCreateBlankForm(WizardForm.Handle, $FFF3F5F8, '', True);
 
   HeaderView.FCreate(FMXForm.Handle);
-  HeaderView.SetBounds(0, 0, DEMO_FORM_WIDTH, TITLEBAR_HEIGHT);
+  HeaderView.Left(0);
+  HeaderView.Top(0);
+  HeaderView.Width(DEMO_FORM_WIDTH);
+  HeaderView.Height(TITLEBAR_HEIGHT);
   HeaderView.ColorScheme(pcsDark);
+  HeaderView.BaseUrl(TempDir + '\');
   HeaderView.OnElementClick(@ElementClick);
+  HeaderView.OnElementMouseEvent(@ViewElementMouseEvent);
   HeaderView.OnMouseDown(@HeaderMouseDown);
-  HeaderView.LoadFromString(BuildTitlebarHtml);
+  HeaderView.LoadFromStringUrl(BuildTitlebarHtml, TempDir + '\');
 
   View.FCreate(FMXForm.Handle);
-  View.SetBounds(0, TITLEBAR_HEIGHT, CONTENT_WIDTH,
-    DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT);
-  View.ColorScheme(pcsLight);
-  View.HitTest(True);
+  View.Left(0);
+  View.Top(TITLEBAR_HEIGHT);
+  View.Width(CONTENT_WIDTH);
+  View.Height(DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT);
+  View.ColorScheme(pcsDark);
+  View.BaseUrl(TempDir + '\');
   View.OnElementClick(@ElementClick);
   View.OnElementMouseEvent(@ViewElementMouseEvent);
+  View.OnMouseEnter(@ViewMouseEnter);
+  View.OnMouseLeave(@ViewMouseLeave);
+  View.LoadFromStringUrl(BuildContentHtml, TempDir + '\');
 
   MonitorView.FCreate(FMXForm.Handle);
-  MonitorView.SetBounds(CONTENT_WIDTH, TITLEBAR_HEIGHT,
-    DEMO_FORM_WIDTH - CONTENT_WIDTH, DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT);
-  MonitorView.ColorScheme(pcsLight);
-  MonitorView.HitTest(True);
-  MonitorView.OnElementClick(@ElementClick);
-  MonitorView.LoadFromString(BuildMonitorHtml);
+  MonitorView.Left(CONTENT_WIDTH);
+  MonitorView.Top(TITLEBAR_HEIGHT);
+  MonitorView.Width(DEMO_FORM_WIDTH - CONTENT_WIDTH);
+  MonitorView.Height(DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT);
+  MonitorView.ColorScheme(pcsDark);
+  MonitorView.BaseUrl(TempDir + '\');
+  MonitorView.LoadFromStringUrl(BuildMonitorHtml, TempDir + '\');
 
   Doc.FCreate(MonitorView.GetDocument);
   DocumentReady := True;
-  ShowOptionsPage;
   FMXForm.Show;
 end;
 
