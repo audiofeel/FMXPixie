@@ -216,10 +216,7 @@ begin
       Screen.Forms[Screen.FormCount - 1].Free;
   end;
 
-//  Application.Terminate;
-//  FMX.Platform.Win.ShutDown;
-
-  Application.Destroy;
+  FreeAndNil(Application);
 
   PID := GetCurrentProcessId;
 
