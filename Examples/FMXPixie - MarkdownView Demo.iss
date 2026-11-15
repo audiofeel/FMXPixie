@@ -1,5 +1,5 @@
 ﻿
-#define DemoAppName "PIXIE Setup - Terms and Information"
+#define DemoAppName "FMXPixie - MarkdownView Demo"
 #define DemoAppVersion "1.0"
 
 [Setup]
@@ -7,7 +7,7 @@ AppName={#DemoAppName}
 AppVersion={#DemoAppVersion}
 CreateAppDir=no
 Uninstallable=no
-OutputBaseFilename=PIXIE Setup - Terms and Information
+OutputBaseFilename=FMXPixie_MarkdownView_Demo
 ; SetupArchitecture=x64
 SetupIconFile=Files\setup.ico
 
@@ -59,8 +59,8 @@ begin
     '.button:active{background:#1d4ed8;}' +
     '</style></head><body>' +
     '<div class="titlebar">' +
-    '<span class="brand">PIXIE SETUP</span>' +
-    '<span class="subtitle">УСЛОВИЯ УСТАНОВКИ</span>' +
+    '<span class="brand">FMXPixie</span>' +
+    '<span class="subtitle">MarkdownView / LIVE PREVIEW</span>' +
     '<div class="controls">' +
     '<div id="title-minimize" class="button min" title="Свернуть">−</div>' +
     '<div id="title-close" class="button close" title="Закрыть">×</div>' +
@@ -85,12 +85,12 @@ begin
     'font-size:11px;overflow:hidden;}' +
     '</style></head><body>' +
     '<div class="actions">' +
-    '<a id="reload-markdown" class="action accent" href="#">Обновить страницу</a>' +
+    '<a id="reload-markdown" class="action accent" href="#">↻ Перезагрузить Markdown</a>' +
     '<a id="zoom-out" class="action" href="#">−</a>' +
     '<a id="zoom-reset" class="action" href="#">100%</a>' +
     '<a id="zoom-in" class="action" href="#">+</a>' +
-    '<a id="toggle-styles" class="action" href="#">Оформление текста</a>' +
-    '<span id="toolbar-status" class="status">Прочитайте условия перед продолжением</span>' +
+    '<a id="toggle-styles" class="action" href="#">UseDefaultStyles</a>' +
+    '<span id="toolbar-status" class="status">Готово · внешние ссылки открываются в браузере</span>' +
     '</div></body></html>';
 end;
 
@@ -139,7 +139,7 @@ begin
     ToolbarDoc.SetElementText(H, S);
     ToolbarDoc.Changed;
   end;
-  Log('PIXIE Setup terms: ' + S);
+  Log('FMXPixie MarkdownView: ' + S);
 end;
 
 procedure SetZoom(NewZoom: Double);
@@ -148,7 +148,7 @@ begin
   if NewZoom > 1.50 then NewZoom := 1.50;
   ZoomFactor := NewZoom;
   Markdown.Zoom(ZoomFactor);
-  SetStatus('Размер текста: ' + IntToStr(Round(ZoomFactor * 100)) + '%');
+  SetStatus('Масштаб Markdown: ' + IntToStr(Round(ZoomFactor * 100)) + '%');
 end;
 
 procedure CloseDemo;
@@ -193,7 +193,7 @@ begin
   if Id = 'reload-markdown' then
   begin
     Markdown.LoadMarkdownFromFile(MarkdownFileName);
-    SetStatus('Страница условий обновлена.');
+    SetStatus('Markdown-файл перезагружен');
     Result := True;
     Exit;
   end;
@@ -221,12 +221,12 @@ begin
 
   if Id = 'toggle-styles' then
   begin
-    NewStyles := not Markdown.GetОформление текста;
-    Markdown.SetОформление текста(NewStyles);
+    NewStyles := not Markdown.GetUseDefaultStyles;
+    Markdown.SetUseDefaultStyles(NewStyles);
     if NewStyles then
-      SetStatus('Оформление текста включён')
+      SetStatus('UseDefaultStyles включён')
     else
-      SetStatus('Оформление текста выключен');
+      SetStatus('UseDefaultStyles выключен');
     Result := True;
     Exit;
   end;
@@ -310,14 +310,14 @@ begin
   Markdown.SetBounds(0, TITLEBAR_HEIGHT + TOOLBAR_HEIGHT,
     DEMO_FORM_WIDTH, DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT - TOOLBAR_HEIGHT);
   Markdown.SetHint('Markdown content rendered by TPixieMarkdownView');
-  Markdown.SetОформление текста(False);
+  Markdown.SetUseDefaultStyles(False);
   Markdown.UserCss(BuildMarkdownCss);
   Markdown.Zoom(ZoomFactor);
   Markdown.HitTest(True);
   Markdown.OnAnchorClick(@MarkdownAnchorClick);
   Markdown.LoadMarkdownFromFile(MarkdownFileName);
 
-  SetStatus('Ознакомьтесь с условиями и нажмите «Далее» в мастере установки.');
+  SetStatus('Готово · нажми ссылку в Markdown, чтобы открыть её в браузере');
   FMXForm.Show;
   Log('FMXPixie MarkdownView Demo: ready');
 end;
