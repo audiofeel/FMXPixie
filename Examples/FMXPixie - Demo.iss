@@ -105,7 +105,7 @@ begin
     '</style></head><body>' +
     '<div class="intro"><div class="eyebrow">PIXIE Setup · Шаг 1 из 2</div>' +
     '<div class="title">Выберите параметры установки</div>' +
-    '<div class="subtitle">Настройте папку, состав и внешний вид приложения. Изменения можно будет проверить перед продолжением.</div></div>' +
+    '<div class="subtitle">Настройте папку, состав и внешний вид приложения. На следующем шаге вы увидите сводку выбранных параметров.</div></div>' +
     '<div class="layout">' +
     '<div class="panel left">' +
     '<div class="heading">Расположение и состав</div>' +
@@ -132,7 +132,7 @@ begin
     '<div class="field"><label class="field-title" for="install-notes">Дополнительные пожелания</label>' +
     '<textarea id="install-notes">Создать резервную копию настроек' + #13#10 + 'Проверить наличие обновлений</textarea></div>' +
     '</div></div>' +
-    '<div class="actions"><span class="action-note">Наведите курсор на карточки и кнопки — они подсветятся. Все выбранные параметры сохраняются при возврате назад.</span>' +
+    '<div class="actions"><span class="action-note">Параметры можно изменить на следующем шаге и вернуться сюда без потери выбора.</span>' +
     '<button id="btn-next" class="primary">Далее</button></div>' +
     '</body></html>';
 end;
@@ -151,7 +151,7 @@ begin
     '.row{padding:10px 0;border-bottom:1px solid #263951;}' +
     '.row:last-child{border-bottom:0;}' +
     '.label{display:inline-block;vertical-align:top;width:185px;color:#91a5bb;font-size:11px;}' +
-    '.value{display:inline-block;vertical-align:top;width:calc(100% - 195px);color:#edf4fb;font-size:12px;line-height:1.5;white-space:pre-wrap;}' +
+    '.value{display:inline-block;vertical-align:top;width:70%;color:#edf4fb;font-size:12px;line-height:1.5;white-space:pre-wrap;}' +
     '.progress{height:8px;margin-top:22px;background:#22344a;border-radius:5px;overflow:hidden;}' +
     '.fill{width:0;height:8px;background:#42b8a8;}' +
     '.state{margin-top:9px;color:#9bacbf;font-size:11px;}' +
