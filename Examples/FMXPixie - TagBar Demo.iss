@@ -58,7 +58,7 @@ begin
     'text-align:center;color:#cbd5e1;font-size:22px;cursor:pointer;}' +
     '.tb:hover{background:#25344b;color:#fff;}.close:hover{background:#dc2626;}' +
     '</style></head><body><div class="titlebar">' +
-    '<span class="caption">FMXPixie</span><span class="subtitle">/ Выбор компонентов</span>' +
+    '<span class="caption">FMXPixie</span><span class="subtitle">/ TagBar component lab</span>' +
     '<div class="controls"><div id="title-minimize" class="tb" title="Свернуть">−</div>' +
     '<div id="title-close" class="tb close" title="Закрыть">×</div></div></div></body></html>';
 end;
@@ -96,30 +96,30 @@ begin
     '#status{color:#bfdbfe;font-size:12px;margin-top:6px;}' +
     'a{color:#67e8f9;text-decoration:none;}' +
     '</style></head><body>' +
-    '<div class="hero"><div class="eyebrow">NATIVE FMX CONTROL / INTERACTIVE компонентов</div>' +
-    '<h1>Дополнительные компоненты</h1>' +
-    '<div class="hero-sub">Отметьте модули, которые хотите включить в установку PIXIE. Категории помогают быстро найти нужное.</div></div>' +
-    '<div id="main-label" class="label">01 / КОМПОНЕНТЫ ДЛЯ УСТАНОВКИ</div>' +
-    '<div id="main-surface" class="surface"><div class="hint">Нажмите на компонент, чтобы включить или убрать его. Можно добавить собственный компонент, изменить название или удалить ненужный.</div>' +
-    '<div class="tag-metric"><span id="main-count">0</span> компонентов</div>' +
+    '<div class="hero"><div class="eyebrow">NATIVE FMX CONTROL / INTERACTIVE TAGS</div>' +
+    '<h1>TagBar <span style="color:#67e8f9">/</span> component lab</h1>' +
+    '<div class="hero-sub">Color-coded labels, keyboard editing, selection state and filter views — hosted by FMXPixie.</div></div>' +
+    '<div id="main-label" class="label">01 / EDITABLE COLLECTION</div>' +
+    '<div id="main-surface" class="surface"><div class="hint">Click to select · “+” creates (type blocked to test veto) · × removes (Delphi is protected) · F2/double-click renames (try reserved).</div>' +
+    '<div class="tag-metric"><span id="main-count">0</span> TAGS</div>' +
     '</div>' +
-    '<div id="filter-label" class="label">02 / КАТЕГОРИИ</div>' +
-    '<div id="filter-surface" class="surface"><div class="hint">Отметьте категории, чтобы отфильтровать список компонентов.</div>' +
-    '<div class="tag-metric"><span id="filter-count">0</span> компонентов</div></div>' +
-    '<div id="tools-label" class="label">03 / УПРАВЛЕНИЕ ВЫБОРОМ</div>' +
+    '<div id="filter-label" class="label">02 / HORIZONTAL FILTER BAR</div>' +
+    '<div id="filter-surface" class="surface"><div class="hint">Select categories, then use “Selected only” to hide unchecked categories. Scroll horizontally if needed.</div>' +
+    '<div class="tag-metric"><span id="filter-count">0</span> TAGS</div></div>' +
+    '<div id="tools-label" class="label">03 / CONTROL PANEL</div>' +
     '<div id="tools-surface" class="surface"><div class="tools">' +
-    '<div class="row"><button id="btn-add-sample" class="primary">+ Добавить компонент</button>' +
-    '<button id="btn-select-all">Выбрать все</button><button id="btn-uncheck-all">Снять выбор</button>' +
-    '<button id="btn-clear-main" class="danger">Удалить все</button><button id="btn-reset">Восстановить набор</button></div>' +
-    '<div class="row"><button id="btn-filter-only">Только выбранные</button><button id="btn-filter-all">Все категории</button>' +
-    '<button id="btn-shape-pill">Метки-пилюли</button><button id="btn-shape-round">Скруглённые метки</button><button id="btn-shape-rect">Прямоугольные метки</button></div>' +
-    '</div><div class="summary">Выбрано для установки: <span id="main-selected">(none)</span><br>' +
-    'Активные категории: <span id="filter-selected">(none)</span><br><span id="status">Выберите компоненты и категории.</span></div></div>' +
-    '<div id="display-label" class="label">04 / ОБОЗНАЧЕНИЯ</div>' +
-    '<div id="display-surface" class="surface"><div class="hint">Обозначения показывают тип и состояние компонентов.</div>' +
-    '<div class="tag-metric">Только просмотр</div></div>' +
-    '<div id="footer">PIXIE Setup · предварительный выбор компонентов. ' +
-    'Состав можно изменить до подтверждения установки.</div>' +
+    '<div class="row"><button id="btn-add-sample" class="primary">+ Add sample</button>' +
+    '<button id="btn-select-all">Select all</button><button id="btn-uncheck-all">Clear selection</button>' +
+    '<button id="btn-clear-main" class="danger">Clear collection</button><button id="btn-reset">Reset demo</button></div>' +
+    '<div class="row"><button id="btn-filter-only">Selected only</button><button id="btn-filter-all">Show all categories</button>' +
+    '<button id="btn-shape-pill">Pill</button><button id="btn-shape-round">Rounded</button><button id="btn-shape-rect">Rectangle</button></div>' +
+    '</div><div class="summary">Main selected: <span id="main-selected">(none)</span><br>' +
+    'Filter selected: <span id="filter-selected">(none)</span><br><span id="status">Ready — select a tag or try one of the controls.</span></div></div>' +
+    '<div id="display-label" class="label">04 / READ-ONLY PRESENTATION</div>' +
+    '<div id="display-surface" class="surface"><div class="hint">A display-only strip with color swatches. Selection and editing are disabled.</div>' +
+    '<div class="tag-metric">READ ONLY</div></div>' +
+    '<div id="footer">FMXPixie · TagBar demonstration · no application is installed. ' +
+    'See <a href="https://gitlab.com/retrofoxed/pixie">Pixie source</a> for the component implementation.</div>' +
     '</body></html>';
 end;
 
@@ -154,22 +154,31 @@ end;
 function CheckedSummary(Bar: FPixieTagBar): String;
 var
   I, ID: Integer;
-  S: String;
+  S, IDs: String;
 begin
   Result := '';
+  IDs := '';
+
+  // Exercise the DLL wrappers for GetCheckedCount and GetCheckedID.
   for I := 0 to Bar.GetCheckedCount - 1 do
   begin
     ID := Bar.GetCheckedID(I);
     S := TagNameByID(Bar, ID);
-    if S = '' then
-      Continue;
-    if Result <> '' then
-      Result := Result + ' · ';
-    Result := Result + S;
+
+    if Result <> '' then Result := Result + ' · ';
+    if S <> '' then
+      Result := Result + S
+    else
+      Result := Result + '#' + IntToStr(ID);
+
+    if IDs <> '' then IDs := IDs + ', ';
+    IDs := IDs + IntToStr(ID);
   end;
 
   if Result = '' then
-    Result := 'Не выбрано';
+    Result := '(none) [IDs: none]'
+  else
+    Result := Result + ' [IDs: ' + IDs + ']';
 end;
 
 procedure RefreshStats;
@@ -198,19 +207,19 @@ begin
 end;
 
 // OnTagAdding is called for tags created through the TagBar's inline '+'.
-// Reject empty or duplicate component names.
+// Enter 'blocked' to verify that Allow=False cancels the operation.
 procedure MainTagAdding(Sender: TObject; const Text: WideString;
   Color: TAlphaColor; var Allow: Boolean);
 begin
-  Allow := Trim(Text) <> '';
+  Allow := Lowercase(Text) <> 'blocked';
 
   if Allow then
-    SetStatus('Добавлен новый компонент: "' + Text + '".')
+    SetStatus('OnTagAdding: allowed tag "' + Text + '".')
   else
-    SetStatus('Введите название нового компонента.');
+    SetStatus('OnTagAdding: vetoed tag "' + Text + '" (Allow=False).');
 end;
 
-// The required base package is protected from deletion.
+// The first demo tag is deliberately protected from deletion by its ID.
 procedure MainTagDeleting(Sender: TObject; ID: Integer;
   var Allow: Boolean);
 var
@@ -220,9 +229,11 @@ begin
   Allow := ID <> ProtectedTagID;
 
   if Allow then
-    SetStatus('Компонент удалён: ' + TagName + '.')
+    SetStatus('OnTagDeleting: allowed removal of "' + TagName +
+      '" (ID ' + IntToStr(ID) + ').')
   else
-    SetStatus('Основные файлы входят в установку обязательно.');
+    SetStatus('OnTagDeleting: vetoed removal of "' + TagName +
+      '" (ID ' + IntToStr(ID) + ').');
 end;
 
 // Enter 'reserved' while renaming a tag to verify the change veto.
@@ -231,15 +242,14 @@ procedure MainTagChanging(Sender: TObject; ID: Integer;
   const NewText: WideString; NewColor: TAlphaColor;
   var Allow: Boolean);
 begin
-  Allow := (ID <> ProtectedTagID) and (Trim(NewText) <> '');
+  Allow := Lowercase(NewText) <> 'reserved';
 
   if Allow then
-    SetStatus('Название изменено на "' + NewText + '".')
+    SetStatus('OnTagChanging: allowed change for ID ' +
+      IntToStr(ID) + ' ("' + NewText + '").')
   else
-    if ID = ProtectedTagID then
-      SetStatus('Основные файлы нельзя переименовать.')
-    else
-      SetStatus('Название компонента не может быть пустым.');
+    SetStatus('OnTagChanging: vetoed change to "' + NewText +
+      '" (Allow=False).');
 end;
 
 procedure MainTagChecked(Sender: TObject; ID: Integer; Checked: Boolean);
@@ -248,9 +258,9 @@ var
 begin
   S := TagNameByID(MainTags, ID);
   if Checked then
-    SetStatus('Добавлено в установку: ' + S)
+    SetStatus('Selected in editable collection: ' + S)
   else
-    SetStatus('Убрано из установки: ' + S);
+    SetStatus('Unselected in editable collection: ' + S);
   RefreshStats;
 end;
 
@@ -260,43 +270,43 @@ var
 begin
   S := TagNameByID(FilterTags, ID);
   if Checked then
-    SetStatus('Категория включена: ' + S)
+    SetStatus('Filter category selected: ' + S)
   else
-    SetStatus('Категория отключена: ' + S);
+    SetStatus('Filter category cleared: ' + S);
   RefreshStats;
 end;
 
 procedure AddInitialTags;
 begin
   MainTags.ClearTags;
-  ProtectedTagID := MainTags.AddTagWithColor('Основные файлы', $FF60A5FA);
-  MainTags.AddTagWithColor('Интерфейс', $FFA78BFA);
-  MainTags.AddTagWithColor('Интеграция с Inno Setup', $FF34D399);
-  MainTags.AddTagWithColor('Модули PIXIE', $FF22D3EE);
-  MainTags.AddTagWithColor('Шаблоны HTML / CSS', $FF2DD4BF);
-  MainTags.AddTagWithColor('Пакет SVG', $FFFB923C);
-  MainTags.AddTagWithColor('Документация', $FFF472B6);
-  MainTags.AddTagWithColor('Компоненты Windows', $FF818CF8);
-  MainTags.AddTagWithColor('Готовые макеты', $FF38BDF8);
-  MainTags.AddTagWithColor('Шаблоны установщика', $FFA3E635);
-  MainTags.AddTagWithColor('Модуль запуска', $FFFBBF24);
-  MainTags.AddTagWithColor('Обработка событий', $FFFB7185);
-  MainTags.AddTagWithColor('Дополнительные модули', $FF94A3B8);
-  MainTags.AddTagWithColor('Нативные элементы', $FF5EEAD4);
+  ProtectedTagID := MainTags.AddTagWithColor('Delphi', $FF60A5FA);
+  MainTags.AddTagWithColor('FireMonkey', $FFA78BFA);
+  MainTags.AddTagWithColor('Inno Setup', $FF34D399);
+  MainTags.AddTagWithColor('Pixie', $FF22D3EE);
+  MainTags.AddTagWithColor('HTML / CSS', $FF2DD4BF);
+  MainTags.AddTagWithColor('SVG', $FFFB923C);
+  MainTags.AddTagWithColor('Markdown', $FFF472B6);
+  MainTags.AddTagWithColor('Windows', $FF818CF8);
+  MainTags.AddTagWithColor('UI design', $FF38BDF8);
+  MainTags.AddTagWithColor('Installer', $FFA3E635);
+  MainTags.AddTagWithColor('Launcher', $FFFBBF24);
+  MainTags.AddTagWithColor('Events', $FFFB7185);
+  MainTags.AddTagWithColor('Experimental', $FF94A3B8);
+  MainTags.AddTagWithColor('Native control', $FF5EEAD4);
 
   FilterTags.ClearTags;
   FilterTags.AddTagWithColor('Core', $FF60A5FA);
-  FilterTags.AddTagWithColor('Графика', $FFA78BFA);
-  FilterTags.AddTagWithColor('Оформление', $FF34D399);
-  FilterTags.AddTagWithColor('Документы', $FFF472B6);
-  FilterTags.AddTagWithColor('Векторная графика', $FFFB923C);
-  FilterTags.AddTagWithColor('Шаблоны', $FF22D3EE);
-  FilterTags.AddTagWithColor('Стили', $FF2DD4BF);
+  FilterTags.AddTagWithColor('Graphics', $FFA78BFA);
+  FilterTags.AddTagWithColor('Layout', $FF34D399);
+  FilterTags.AddTagWithColor('Markdown', $FFF472B6);
+  FilterTags.AddTagWithColor('SVG', $FFFB923C);
+  FilterTags.AddTagWithColor('HTML', $FF22D3EE);
+  FilterTags.AddTagWithColor('CSS', $FF2DD4BF);
   FilterTags.AddTagWithColor('Installer', $FFA3E635);
-  FilterTags.AddTagWithColor('Запуск', $FFFBBF24);
-  FilterTags.AddTagWithColor('События', $FFFB7185);
-  FilterTags.AddTagWithColor('Системные', $FF818CF8);
-  FilterTags.AddTagWithColor('Дополнительно', $FF94A3B8);
+  FilterTags.AddTagWithColor('Launcher', $FFFBBF24);
+  FilterTags.AddTagWithColor('Events', $FFFB7185);
+  FilterTags.AddTagWithColor('Native', $FF818CF8);
+  FilterTags.AddTagWithColor('Experimental', $FF94A3B8);
   FilterTags.CheckTag(FilterTags.GetTagID(0), True);
   FilterTags.CheckTag(FilterTags.GetTagID(1), True);
   FilterTags.CheckTag(FilterTags.GetTagID(3), True);
@@ -317,10 +327,10 @@ begin
   FilterTags.TagShape(Value);
   DisplayTags.TagShape(Value);
   case Value of
-    tsRect: SetStatus('Tag shape changed to Прямоугольные метки.');
-    tsСкруглённые меткиRect: SetStatus('Tag shape changed to Скруглённые метки rectangle.');
+    tsRect: SetStatus('Tag shape changed to Rectangle.');
+    tsRoundedRect: SetStatus('Tag shape changed to Rounded rectangle.');
   else
-    SetStatus('Tag shape changed to Метки-пилюли.');
+    SetStatus('Tag shape changed to Pill.');
   end;
 end;
 
@@ -374,7 +384,7 @@ begin
       IgnoredID := MainTags.AddTagWithColor('Custom ' + IntToStr(AddedCount), $FF22D3EE);
     end;
     RefreshStats;
-    SetStatus('Добавлен новый компонент. Его можно переименовать или удалить.');
+    SetStatus('A sample tag was added. You can also use the + pill inside the TagBar.');
     Result := True;
     Exit;
   end;
@@ -383,7 +393,7 @@ begin
   begin
     MainTags.CheckAll;
     RefreshStats;
-    SetStatus('Все компоненты включены в установку.');
+    SetStatus('All tags in the editable collection are selected.');
     Result := True;
     Exit;
   end;
@@ -392,7 +402,7 @@ begin
   begin
     MainTags.UncheckAll;
     RefreshStats;
-    SetStatus('Выбор дополнительных компонентов сброшен.');
+    SetStatus('Selection cleared in the editable collection.');
     Result := True;
     Exit;
   end;
@@ -401,7 +411,7 @@ begin
   begin
     MainTags.ClearTags;
     RefreshStats;
-    SetStatus('Список очищен. Добавьте компоненты, которые нужны для установки.');
+    SetStatus('Editable collection cleared. Use + or Add sample to repopulate it.');
     Result := True;
     Exit;
   end;
@@ -410,7 +420,7 @@ begin
   begin
     FilterTags.Options([tboAllowCheck]);
     RefreshStats;
-    SetStatus('Показаны только выбранные категории.');
+    SetStatus('Filter bar now shows checked categories only.');
     Result := True;
     Exit;
   end;
@@ -419,20 +429,20 @@ begin
   begin
     FilterTags.Options([tboShowAll, tboAllowCheck]);
     RefreshStats;
-    SetStatus('Показаны все категории.');
+    SetStatus('All filter categories are visible.');
     Result := True;
     Exit;
   end;
 
   if Id = 'btn-shape-pill' then
   begin
-    ApplyTagShape(tsМетки-пилюли);
+    ApplyTagShape(tsPill);
     Result := True;
     Exit;
   end;
   if Id = 'btn-shape-round' then
   begin
-    ApplyTagShape(tsСкруглённые меткиRect);
+    ApplyTagShape(tsRoundedRect);
     Result := True;
     Exit;
   end;
@@ -456,10 +466,10 @@ begin
     FilterTags.ScrollMode(smHorizontal);
     DisplayTags.AutoHeight(False);
     DisplayTags.ScrollMode(smNone);
-    ApplyTagShape(tsМетки-пилюли);
+    ApplyTagShape(tsPill);
     AddInitialTags;
     RefreshStats;
-    SetStatus('Восстановлен первоначальный набор компонентов. Можно продолжить выбор.');
+    SetStatus('Demo reset. Try checking pills, adding a tag, changing its shape or filtering categories.');
     Result := True;
     Exit;
   end;
@@ -496,7 +506,7 @@ procedure InitializeWizard;
 begin
   TempDir := ExpandConstant('{tmp}');
   AddedCount := 0;
-  CurrentShape := tsМетки-пилюли;
+  CurrentShape := tsPill;
 
   EmptyWizardForm(DEMO_FORM_WIDTH, DEMO_FORM_HEIGHT);
   FMXForm.FCreateBlankForm(WizardForm.Handle, $FFF3F5F8, '', True);
@@ -531,7 +541,7 @@ begin
   MainTags.FontSize(13);
   MainTags.Options([tboShowAll, tboShowDismiss, tboAllowCheck,
     tboAllowCreate, tboAllowEdit, tboShowColorSwatch]);
-  MainTags.TagShape(tsМетки-пилюли);
+  MainTags.TagShape(tsPill);
   MainTags.AutoHeight(True);
   MainTags.ScrollMode(smAuto);
 
@@ -542,7 +552,7 @@ begin
   FilterTags.FontFamily('Segoe UI');
   FilterTags.FontSize(12);
   FilterTags.Options([tboShowAll, tboAllowCheck]);
-  FilterTags.TagShape(tsМетки-пилюли);
+  FilterTags.TagShape(tsPill);
   FilterTags.AutoHeight(False);
   FilterTags.ScrollMode(smHorizontal);
 
@@ -553,7 +563,7 @@ begin
   DisplayTags.FontFamily('Segoe UI');
   DisplayTags.FontSize(12);
   DisplayTags.Options([tboShowAll, tboReadOnly, tboShowColorSwatch]);
-  DisplayTags.TagShape(tsМетки-пилюли);
+  DisplayTags.TagShape(tsPill);
   DisplayTags.AutoHeight(False);
   DisplayTags.ScrollMode(smNone);
 
@@ -566,7 +576,7 @@ begin
   FilterTags.OnTagChecked(@FilterTagChecked);
   FilterTags.OnChanged(@FilterTagBarChanged);
   RefreshStats;
-  SetStatus('Отметьте нужные компоненты. Основной пакет входит в установку обязательно.');
+  SetStatus('Ready — try blocked (add veto), reserved (rename veto), or deleting Delphi (delete veto). Checked summaries show IDs.');
   FMXForm.Show;
 end;
 
