@@ -96,19 +96,19 @@ begin
     '#status{color:#bfdbfe;font-size:12px;margin-top:6px;}' +
     'a{color:#67e8f9;text-decoration:none;}' +
     '</style></head><body>' +
-    '<div class="hero"><div class="eyebrow">NATIVE FMX CONTROL / INTERACTIVE TAGS</div>' +
+    '<div class="hero"><div class="eyebrow">NATIVE FMX CONTROL / INTERACTIVE компонентов</div>' +
     '<h1>Дополнительные компоненты</h1>' +
     '<div class="hero-sub">Отметьте модули, которые хотите включить в установку PIXIE. Категории помогают быстро найти нужное.</div></div>' +
     '<div id="main-label" class="label">01 / КОМПОНЕНТЫ ДЛЯ УСТАНОВКИ</div>' +
     '<div id="main-surface" class="surface"><div class="hint">Нажмите на компонент, чтобы включить или убрать его. Можно добавить собственный компонент, изменить название или удалить ненужный.</div>' +
-    '<div class="tag-metric"><span id="main-count">0</span> TAGS</div>' +
+    '<div class="tag-metric"><span id="main-count">0</span> компонентов</div>' +
     '</div>' +
     '<div id="filter-label" class="label">02 / КАТЕГОРИИ</div>' +
     '<div id="filter-surface" class="surface"><div class="hint">Отметьте категории, чтобы отфильтровать список компонентов.</div>' +
-    '<div class="tag-metric"><span id="filter-count">0</span> TAGS</div></div>' +
+    '<div class="tag-metric"><span id="filter-count">0</span> компонентов</div></div>' +
     '<div id="tools-label" class="label">03 / УПРАВЛЕНИЕ ВЫБОРОМ</div>' +
     '<div id="tools-surface" class="surface"><div class="tools">' +
-    '<div class="row"><button id="btn-add-sample" class="primary">+ Add sample</button>' +
+    '<div class="row"><button id="btn-add-sample" class="primary">+ Добавить компонент</button>' +
     '<button id="btn-select-all">Выбрать все</button><button id="btn-uncheck-all">Снять выбор</button>' +
     '<button id="btn-clear-main" class="danger">Удалить все</button><button id="btn-reset">Восстановить набор</button></div>' +
     '<div class="row"><button id="btn-filter-only">Только выбранные</button><button id="btn-filter-all">Все категории</button>' +
@@ -117,7 +117,7 @@ begin
     'Активные категории: <span id="filter-selected">(none)</span><br><span id="status">Выберите компоненты и категории.</span></div></div>' +
     '<div id="display-label" class="label">04 / ОБОЗНАЧЕНИЯ</div>' +
     '<div id="display-surface" class="surface"><div class="hint">A display-only strip with color swatches. Selection and editing are disabled.</div>' +
-    '<div class="tag-metric">READ ONLY</div></div>' +
+    '<div class="tag-metric">Только просмотр</div></div>' +
     '<div id="footer">PIXIE Setup · предварительный выбор компонентов. ' +
     'Состав можно изменить до подтверждения установки.</div>' +
     '</body></html>';
@@ -212,11 +212,9 @@ procedure MainTagAdding(Sender: TObject; const Text: WideString;
   Color: TAlphaColor; var Allow: Boolean);
 begin
   Allow := Trim(Text) <> '';
-  if Allow then
-    Allow := Pos('|' + Lowercase(Text) + '|', '|' + Lowercase(CheckedSummary(MainTags)) + '|') = 0;
 
   if Allow then
-    SetStatus('"Добавлен новый компонент: "' + Text + '".')
+    SetStatus('Добавлен новый компонент: "' + Text + '".')
   else
     SetStatus('"Такой компонент уже существует или его название пустое: "' + Text + '" (Allow=False).');
 end;
@@ -231,10 +229,10 @@ begin
   Allow := ID <> ProtectedTagID;
 
   if Allow then
-    SetStatus('"Удалён компонент: "' + TagName +
+    SetStatus('Удалён компонент: "' + TagName +
       '" (ID ' + IntToStr(ID) + ').')
   else
-    SetStatus('"Основной компонент нельзя удалить: "' + TagName +
+    SetStatus('Основной компонент нельзя удалить: "' + TagName +
       '" (ID ' + IntToStr(ID) + ').');
 end;
 
@@ -244,13 +242,13 @@ procedure MainTagChanging(Sender: TObject; ID: Integer;
   const NewText: WideString; NewColor: TAlphaColor;
   var Allow: Boolean);
 begin
-  Allow := (Trim(NewText) <> '') and (Lowercase(NewText) <> 'основные файлы');
+  Allow := (ID <> ProtectedTagID) and (Trim(NewText) <> '');
 
   if Allow then
     SetStatus('Название компонента изменено: ' +
       IntToStr(ID) + ' ("' + NewText + '").')
   else
-    SetStatus('"Это название уже занято: "' + NewText +
+    SetStatus('Основной пакет нельзя переименовать, а название нового компонента не может быть пустым: "' + NewText +
       '" (Allow=False).');
 end;
 
