@@ -72,8 +72,8 @@ begin
     '.window-button:hover{background:rgba(160,204,255,.23);color:#fff;}' +
     '.window-close:hover{background:#c84155;color:#fff;}' +
     '</style></head><body><div class="bar">' +
-    '<span class="logo">A</span><span class="brand">PIXIE SETUP</span>' +
-    '<span class="subbrand">НАСТРОЙКА ВНЕШНЕГО ВИДА ОКНА</span>' +
+    '<span class="logo">A</span><span class="brand">AERO / GLASS LAB</span>' +
+    '<span class="subbrand">WINDOW MATERIALS · HTML/CSS · PIXIE EVENTS</span>' +
     '<div class="window-controls"><div id="title-minimize" class="window-button" title="Minimize">−</div>' +
     '<div id="title-close" class="window-button window-close" title="Close">×</div></div>' +
     '</div></body></html>';
@@ -150,37 +150,37 @@ begin
     '.bottomline{display:flex;justify-content:space-between;margin-top:14px;padding-top:9px;border-top:1px solid rgba(204,228,255,.15);' +
     'color:rgba(192,218,248,.38);font-size:8px;letter-spacing:.7px;}' +
     '</style></head><body><div class="page">' +
-    '<div class="eyebrow">PIXIE SETUP · ПЕРСОНАЛЬНОЕ ОФОРМЛЕНИЕ</div>' +
-    '<div class="headline">Выберите оформление окна</div>' +
-    '<p class="intro">Выберите прозрачный, стеклянный или цветной вариант оформления. Изменения сразу видны в предварительном просмотре окна.</p>' +
-    '<div class="top-tags"><span class="tag tag-accent">ФОН ОКНА · АКРИЛОВЫЙ ЭФФЕКТ</span><span class="tag">ПОЛУПРОЗРАЧНЫЕ СЛОИ</span><span class="tag">ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР</span></div>' +
+    '<div class="eyebrow">NATIVE WINDOW MATERIAL / CSS COMPOSITION</div>' +
+    '<div class="headline">The surface is the interface.</div>' +
+    '<p class="intro">A live playground for transparent canvas, tinted glass and rich gradients. The Acrylic material belongs to the Windows host; Pixie draws the interface above it.</p>' +
+    '<div class="top-tags"><span class="tag tag-accent">WINDOW BACKDROP · ACRYLIC</span><span class="tag">HTML/CSS · NO FMX CONTROLS INSIDE</span><span class="tag">INTERACTIVE DOM</span></div>' +
     '<div class="work-grid"><div class="stage-wrap">' +
-    '<div class="section-line"><span class="section-name">01 / ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР</span><span class="section-hint">Выберите оформление справа</span></div>' +
+    '<div class="section-line"><span class="section-name">01 / LIVE SURFACE PREVIEW</span><span class="section-hint">Choose a material below →</span></div>' +
     '<div class="stage"><div id="preview-surface" class="sample material-transparent">' +
     '<div class="orb orb-one"></div><div class="orb orb-two"></div><div class="orb orb-three"></div><div class="orbit-line"></div>' +
-    '<div class="preview-copy"><div class="preview-kicker">PIXIE SETUP / 01</div>' +
-    '<div class="preview-title">Лёгкий интерфейс.<br>Ничего лишнего.</div>' +
-    '<div class="preview-desc">Выбранный вариант меняет внешний вид окна. Текст и элементы остаются хорошо читаемыми на любом фоне.</div>' +
-    '<div class="preview-metrics"><div class="preview-metric"><strong>3</strong><span>ВАРИАНТА</span></div>' +
-    '<div class="preview-metric"><strong>CSS</strong><span>НАВЕДЕНИЕ</span></div><div class="preview-metric"><strong>LIVE</strong><span>ВЫБОР</span></div></div></div>' +
-    '<div class="preview-foot"><span>PIXIE · ПРЕДПРОСМОТР</span><span>ОФОРМЛЕНИЕ ОКНА</span></div>' +
+    '<div class="preview-copy"><div class="preview-kicker">AERO COMPOSITOR / 01</div>' +
+    '<div class="preview-title">Light, layered.<br>Not boxed in.</div>' +
+    '<div class="preview-desc">The panel underneath stays transparent. The visible color comes from the chosen CSS layer and the system material behind the window.</div>' +
+    '<div class="preview-metrics"><div class="preview-metric"><strong>3</strong><span>SURFACES</span></div>' +
+    '<div class="preview-metric"><strong>CSS</strong><span>HOVER STYLE</span></div><div class="preview-metric"><strong>LIVE</strong><span>PAS SCRIPT</span></div></div></div>' +
+    '<div class="preview-foot"><span>PIXIE RENDER / SURFACE 001</span><span>WINDOW MATERIAL: ACRYLIC</span></div>' +
     '</div></div>' +
-    '<div class="sample-note">Наведите курсор на варианты справа, чтобы увидеть подсветку. Нажмите на подходящий вариант — он сразу применится к окну.</div>' +
-    '</div><div><div class="section-line"><span class="section-name">02 / ВАРИАНТЫ ОФОРМЛЕНИЯ</span><span class="section-hint">Нажмите, чтобы выбрать</span></div>' +
+    '<div class="sample-note">Hover the preview choices. Their CSS highlight and the event monitor are independent: callbacks update the inspector document, not this surface document.</div>' +
+    '</div><div><div class="section-line"><span class="section-name">02 / SURFACE MODES</span><span class="section-hint">Click to switch</span></div>' +
     '<div class="material-list">' +
-    '<div id="material-transparent" class="material-option active"><span class="option-top"><span class="option-name">Прозрачный</span><span class="option-number">01</span></span>' +
-    '<span class="option-chip chip-transparent"></span><span class="option-desc">Сохраняет видимым системный фон окна.</span></div>' +
-    '<div id="material-glass" class="material-option"><span class="option-top"><span class="option-name">Стекло с оттенком</span><span class="option-number">02</span></span>' +
-    '<span class="option-chip chip-glass"></span><span class="option-desc">Добавляет лёгкий голубовато-зелёный оттенок.</span></div>' +
-    '<div id="material-gradient" class="material-option"><span class="option-top"><span class="option-name">Цветной градиент</span><span class="option-number">03</span></span>' +
-    '<span class="option-chip chip-gradient"></span><span class="option-desc">Использует насыщенный плавный переход цветов.</span></div>' +
-    '</div><div class="mini-panel"><div class="mini-head">ONE WINDOW · DIFFERENT ВАРИАНТА</div>' +
-    '<div class="mini-copy">Выбор меняет только оформление поверхности. Само окно и расположение элементов остаются прежними.</div></div>' +
+    '<div id="material-transparent" class="material-option active"><span class="option-top"><span class="option-name">Transparent</span><span class="option-number">01</span></span>' +
+    '<span class="option-chip chip-transparent"></span><span class="option-desc">Let the native window material show through.</span></div>' +
+    '<div id="material-glass" class="material-option"><span class="option-top"><span class="option-name">Tinted glass</span><span class="option-number">02</span></span>' +
+    '<span class="option-chip chip-glass"></span><span class="option-desc">A light blue-green tint with translucent layers.</span></div>' +
+    '<div id="material-gradient" class="material-option"><span class="option-top"><span class="option-name">Gradient</span><span class="option-number">03</span></span>' +
+    '<span class="option-chip chip-gradient"></span><span class="option-desc">A richer color surface when transparency is not enough.</span></div>' +
+    '</div><div class="mini-panel"><div class="mini-head">ONE WINDOW · DIFFERENT SURFACES</div>' +
+    '<div class="mini-copy">The native backdrop and the HTML surface are separate layers. Choose a mode to see the CSS background change without recreating the host form.</div></div>' +
     '</div></div>' +
-    '<div class="bottom-grid"><div class="info-card"><div class="info-label">ФОН ОКНА</div><div class="info-value">Системный акриловый фон</div><div class="info-copy">Полупрозрачный фон, предоставляемый Windows.</div></div>' +
-    '<div class="info-card"><div class="info-label">ПОВЕРХНОСТЬ</div><div class="info-value">Прозрачный by default</div><div class="info-copy">Выбранный стиль добавляет оттенок или градиент.</div></div>' +
-    '<div class="info-card"><div class="info-label">УПРАВЛЕНИЕ</div><div class="info-value">НАВЕДЕНИЕ И ВЫБОР</div><div class="info-copy">Вариант применяется сразу после нажатия.</div></div></div>' +
-    '<div class="bottomline"><span>PIXIE SETUP · ОФОРМЛЕНИЕ</span><span>ВЫБЕРИТЕ ПОДХОДЯЩИЙ ВИД ОКНА</span></div>' +
+    '<div class="bottom-grid"><div class="info-card"><div class="info-label">NATIVE LAYER</div><div class="info-value">Windows Acrylic</div><div class="info-copy">Created by the FMX host API, not by CSS blur.</div></div>' +
+    '<div class="info-card"><div class="info-label">HTML LAYER</div><div class="info-value">Transparent by default</div><div class="info-copy">Selected panels add tint or gradient only where needed.</div></div>' +
+    '<div class="info-card"><div class="info-label">EVENT BRIDGE</div><div class="info-value">ENTER / LEAVE / CLICK</div><div class="info-copy">Pixie element events are handled in Pascal Script.</div></div></div>' +
+    '<div class="bottomline"><span>FMXPIXIE / AERO GLASS LAB</span><span>WINDOW: FMX · CONTENT: PIXIE HTML/CSS · LOGIC: INNO SETUP</span></div>' +
     '</div></body></html>';
 end;
 
@@ -191,28 +191,47 @@ begin
     '*{box-sizing:border-box;}html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden;}' +
     'body{background:transparent;color:#edf5ff;font-family:"Segoe UI",Arial,sans-serif;font-size:12px;}' +
     '.inspector{height:100%;padding:19px 16px 15px 3px;}' +
-    '.glass-panel{height:100%;padding:17px 15px;border:1px solid rgba(200,228,255,.24);background:linear-gradient(155deg,rgba(12,28,48,.46),rgba(19,47,68,.25),rgba(29,31,67,.30));}' +
-    '.eyebrow{font-size:8px;font-weight:700;letter-spacing:1.5px;color:#9fe6f0;}' +
-    '.title{margin-top:8px;font-size:20px;line-height:1.1;font-weight:600;color:#f2f7ff;}' +
-    '.copy{margin-top:8px;font-size:10px;line-height:1.5;color:rgba(211,231,252,.70);}' +
-    '.selected{margin-top:19px;padding:13px;border:1px solid rgba(113,226,247,.45);background:rgba(53,158,208,.17);}' +
-    '.selected-label{color:rgba(207,228,252,.58);font-size:8px;font-weight:700;letter-spacing:1px;}' +
-    '.selected-value{margin-top:7px;color:#f2fbff;font-size:15px;font-weight:650;}' +
-    '.guide{margin-top:19px;padding-top:14px;border-top:1px solid rgba(204,226,255,.17);}' +
-    '.guide-title{color:rgba(209,229,251,.65);font-size:8px;font-weight:700;letter-spacing:1.3px;}' +
-    '.guide-row{margin-top:12px;padding:10px;border:1px solid rgba(204,229,255,.16);background:rgba(10,24,42,.20);}' +
-    '.guide-name{color:#edf7ff;font-size:11px;font-weight:600;}' +
-    '.guide-copy{margin-top:5px;color:rgba(206,224,247,.62);font-size:9px;line-height:1.45;}' +
-    '.footer-note{margin-top:18px;padding:11px;border:1px solid rgba(200,226,255,.14);background:rgba(6,20,37,.16);color:rgba(206,228,250,.65);font-size:9px;line-height:1.5;}' +
+    '.glass-panel{height:100%;padding:16px 14px;border:1px solid rgba(200,228,255,.24);' +
+    'background:linear-gradient(155deg,rgba(12,28,48,.46),rgba(19,47,68,.25),rgba(29,31,67,.30));}' +
+    '.eyebrow{font-size:8px;font-weight:700;letter-spacing:1.6px;color:#9fe6f0;}' +
+    '.title{margin-top:6px;font-size:20px;line-height:1.1;font-weight:600;color:#f2f7ff;}' +
+    '.copy{margin-top:7px;font-size:9px;line-height:1.45;color:rgba(211,231,252,.59);}' +
+    '.live{display:flex;align-items:center;margin-top:12px;padding:7px 8px;border:1px solid rgba(96,223,193,.30);background:rgba(37,172,147,.10);}' +
+    '.live-dot{width:6px;height:6px;border-radius:50%;background:#70ead4;margin-right:7px;}' +
+    '.live-text{color:#b7f7e8;font-size:8px;font-weight:700;letter-spacing:.8px;}' +
+    '.section{margin-top:17px;padding-top:12px;border-top:1px solid rgba(204,226,255,.17);}' +
+    '.section-title{margin-bottom:9px;color:rgba(209,229,251,.53);font-size:8px;font-weight:700;letter-spacing:1.4px;}' +
+    '.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}' +
+    '.metric{padding:10px;border:1px solid rgba(204,229,255,.17);background:rgba(10,24,42,.23);}' +
+    '.metric-number{font-size:24px;font-weight:600;line-height:1;color:#f5faff;}' +
+    '.metric-name{margin-top:6px;font-size:8px;color:rgba(207,228,252,.56);letter-spacing:.6px;}' +
+    '.wide-metric{margin-top:8px;padding:10px;border:1px solid rgba(204,229,255,.17);background:rgba(10,24,42,.18);}' +
+    '.wide-label{color:rgba(207,228,252,.48);font-size:8px;font-weight:700;letter-spacing:1px;}' +
+    '.wide-value{margin-top:6px;color:#dff6ff;font-size:11px;font-weight:600;overflow:hidden;}' +
+    '.state-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:8px 0;border-bottom:1px solid rgba(204,226,255,.10);}' +
+    '.state-row:last-child{border-bottom:0;}' +
+    '.state-key{font-size:9px;color:rgba(202,224,249,.53);}' +
+    '.state-value{font-size:9px;color:#eff8ff;font-weight:600;text-align:right;}' +
+    '.history{margin:0;padding:0;list-style:none;}' +
+    '.history li{padding:8px 0;border-bottom:1px solid rgba(204,226,255,.09);font-size:9px;color:rgba(224,239,255,.76);}' +
+    '.history li:last-child{border-bottom:0;}' +
+    '.footer-note{margin-top:15px;padding:10px;border:1px solid rgba(200,226,255,.14);background:rgba(6,20,37,.16);' +
+    'color:rgba(206,228,250,.49);font-size:8px;line-height:1.5;}' +
     '</style></head><body><div class="inspector"><div class="glass-panel">' +
-    '<div class="eyebrow">PIXIE SETUP · ВАШ ВЫБОР</div><div class="title">Оформление окна</div>' +
-    '<div class="copy">Выберите один из трёх вариантов слева. Предварительный просмотр обновится сразу после нажатия.</div>' +
-    '<div class="selected"><div class="selected-label">ТЕКУЩИЙ ВАРИАНТ</div><div id="current-material" class="selected-value">Прозрачный</div></div>' +
-    '<div class="guide"><div class="guide-title">ЧЕМ ОТЛИЧАЮТСЯ ВАРИАНТЫ</div>' +
-    '<div class="guide-row"><div class="guide-name">Прозрачный</div><div class="guide-copy">Системный фон остаётся видимым под интерфейсом.</div></div>' +
-    '<div class="guide-row"><div class="guide-name">Стекло с оттенком</div><div class="guide-copy">Лёгкий цветной слой делает окно выразительнее.</div></div>' +
-    '<div class="guide-row"><div class="guide-name">Цветной градиент</div><div class="guide-copy">Насыщенный фон для более заметного оформления.</div></div></div>' +
-    '<div class="footer-note">Наведите курсор на любую карточку, чтобы увидеть её подсветку. Нажмите, чтобы применить выбранный стиль.</div>' +
+    '<div class="eyebrow">03 / EVENT INSPECTOR</div><div class="title">Live telemetry</div>' +
+    '<div class="copy">The monitor is another HTML document. It receives the callback results without rewriting the document currently under the cursor.</div>' +
+    '<div class="live"><span class="live-dot"></span><span class="live-text" id="callback-status">LISTENING FOR PIXIE EVENTS</span></div>' +
+    '<div class="section"><div class="section-title">ELEMENT CALLBACKS</div><div class="metric-grid">' +
+    '<div class="metric"><div class="metric-number" id="enter-count">0</div><div class="metric-name">MEENTER</div></div>' +
+    '<div class="metric"><div class="metric-number" id="leave-count">0</div><div class="metric-name">MELEAVE</div></div></div>' +
+    '<div class="wide-metric"><div class="wide-label">LAST HOVER EVENT</div><div class="wide-value" id="last-event">Waiting for hover…</div></div>' +
+    '<div class="state-row"><span class="state-key">Element ID</span><span class="state-value" id="last-hover-id">—</span></div>' +
+    '<div class="state-row"><span class="state-key">Current surface</span><span class="state-value" id="current-material">Transparent</span></div>' +
+    '<div class="state-row"><span class="state-key">Clicks</span><span class="state-value" id="click-count">0</span></div>' +
+    '<div class="state-row"><span class="state-key">Last clicked</span><span class="state-value" id="last-click-id">—</span></div></div>' +
+    '<div class="section"><div class="section-title">RECENT EVENTS</div><ul class="history">' +
+    '<li id="history-1">Ready / waiting for first event</li><li id="history-2">—</li><li id="history-3">—</li></ul></div>' +
+    '<div class="footer-note">CSS :hover is still handled by Pixie. The counters here are updated by Inno Setup through OnElementMouseEvent. No JavaScript is used.</div>' +
     '</div></div></body></html>';
 end;
 
@@ -226,11 +245,11 @@ end;
 function MaterialLabel(const Material: String): String;
 begin
   if Material = 'glass' then
-    Result := 'Стекло с оттенком'
+    Result := 'Tinted glass'
   else if Material = 'gradient' then
-    Result := 'Цветной градиент'
+    Result := 'Gradient'
   else
-    Result := 'Прозрачный';
+    Result := 'Transparent';
 end;
 
 procedure SetInspectorText(const Id, Value: String);
@@ -419,14 +438,14 @@ procedure InitializeWizard;
 begin
   TempDir := ExpandConstant('{tmp}');
   CurrentMaterial := 'transparent';
-  CurrentMaterialLabel := 'Прозрачный';
+  CurrentMaterialLabel := 'Transparent';
   HoverEnterCount := 0;
   HoverLeaveCount := 0;
   ClickCount := 0;
-  LastHoverEvent := 'Наведите курсор на вариант оформления';
+  LastHoverEvent := 'Waiting for hover…';
   LastHoverId := '—';
   LastClickId := '—';
-  Recent1 := 'Наведите курсор на карточку или выберите оформление';
+  Recent1 := 'Ready / waiting for first event';
   Recent2 := '—';
   Recent3 := '—';
   DocumentsReady := False;
