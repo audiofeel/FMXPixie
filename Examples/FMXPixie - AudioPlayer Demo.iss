@@ -1,5 +1,5 @@
 ﻿; ============================================================================
-; FMXPixie - Installer Welcome Page + Background Music
+; PIXIE Setup - Welcome page and music settings
 ;
 ; Visual test of a polished first installer page. It does not install files.
 ; The only audio controls are: choose/toggle music, volume down, volume slider,
@@ -13,7 +13,7 @@
 ; InitPixieAudioPlayer. Do not include a duplicate audio interface.
 ; ============================================================================
 
-#define DemoAppName "FMXPixie - AudioPlayer Demo"
+#define DemoAppName "PIXIE Setup - Welcome and Music"
 #define DemoAppVersion "1.0"
 
 [Setup]
@@ -132,28 +132,71 @@ begin
     '.cancel:hover{background:#1b2b40;color:#fff;}.next:hover{background:#94f0df;}' +
     '.footer-note{position:absolute;right:44px;bottom:10px;color:#394c63;font-size:8px;letter-spacing:1.2px;}' +
     '</style></head><body>' +
-    '<div class="topbar"><span class="brand">ORBIT</span><span class="brand-slash">/</span><span class="brand-sub">DESKTOP SUITE INSTALLER</span>' +
+    '<div class="topbar"><span class="brand">PIXIE</span><span class="brand-slash">/</span><span class="brand-sub">МАСТЕР УСТАНОВКИ</span>' +
     '<div class="win-buttons"><div id="win-minimize" class="win-btn">-</div><div id="win-close" class="win-btn win-close">X</div></div></div>' +
-    '<div class="eyebrow"><span class="eyebrow-mark">01</span> &nbsp; INSTALLATION WIZARD &nbsp; / &nbsp; WELCOME</div>' +
-    '<h1>Everything in place.<br><span class="accent">Ready when you are.</span></h1>' +
-    '<div class="lead">A clean, considered setup for a smoother desktop experience. This wizard will guide you through a few simple steps.</div>' +
-    '<div class="release">+ &nbsp; STABLE RELEASE &nbsp; / &nbsp; VERSION 1.4.2</div>' +
-    '<div class="visual"><div class="visual-grid"></div><div class="orbit"></div><div class="orbit orbit-two"></div><div class="planet"></div><div class="planet-cut"></div><div class="orbit-dot"></div><div class="visual-tag">ORBIT / CORE SYSTEM</div><div class="visual-code">READY_001</div></div>' +
+    '<div class="eyebrow"><span class="eyebrow-mark">01</span> &nbsp; ШАГ 1 ИЗ 2 &nbsp; / &nbsp; ПРИВЕТСТВИЕ</div>' +
+    '<h1>Добро пожаловать!<br><span class="accent">Начнём установку.</span></h1>' +
+    '<div class="lead">Настройте приветственную музыку и её громкость. Затем перейдите к следующему шагу, чтобы проверить выбранные параметры.</div>' +
+    '<div class="release">+ &nbsp; ДЕМОНСТРАЦИЯ &nbsp; / &nbsp; ВЕРСИЯ 1.0</div>' +
+    '<div class="visual"><div class="visual-grid"></div><div class="orbit"></div><div class="orbit orbit-two"></div><div class="planet"></div><div class="planet-cut"></div><div class="orbit-dot"></div><div class="visual-tag">PIXIE / ОСНОВНОЙ ПАКЕТ</div><div class="visual-code">ГОТОВО К УСТАНОВКЕ</div></div>' +
     '<div class="feature-row">' +
-    '<div class="feature feature-a"><div><span class="feature-icon">01</span><span class="feature-title">Lightweight</span></div><div class="feature-desc">Minimal footprint</div></div>' +
-    '<div class="feature feature-b"><div><span class="feature-icon">02</span><span class="feature-title">Integrated</span></div><div class="feature-desc">One guided setup</div></div>' +
-    '<div class="feature feature-c"><div><span class="feature-icon">03</span><span class="feature-title">Straightforward</span></div><div class="feature-desc">Ready in minutes</div></div>' +
+    '<div class="feature feature-a"><div><span class="feature-icon">01</span><span class="feature-title">Лёгкая</span></div><div class="feature-desc">Не занимает лишнего места</div></div>' +
+    '<div class="feature feature-b"><div><span class="feature-icon">02</span><span class="feature-title">Единая настройка</span></div><div class="feature-desc">Все параметры в одном мастере</div></div>' +
+    '<div class="feature feature-c"><div><span class="feature-icon">03</span><span class="feature-title">Просто и понятно</span></div><div class="feature-desc">Несколько простых шагов</div></div>' +
     '</div>' +
     '<div class="bottom-rule"></div>' +
-    '<div class="music-label">BACKGROUND MUSIC</div>' +
-    '<div id="music-toggle" class="music-toggle" title="Choose music or play/pause">&gt;</div>' +
-    '<div id="volume-down" class="vol-button vol-down" title="Lower volume">-</div>' +
-    '<div id="volume-up" class="vol-button vol-up" title="Raise volume">+</div>' +
+    '<div class="music-label">ФОНОВАЯ МУЗЫКА</div>' +
+    '<div id="music-toggle" class="music-toggle" title="Выбрать MP3 или включить / приостановить музыку">&gt;</div>' +
+    '<div id="volume-down" class="vol-button vol-down" title="Уменьшить громкость">-</div>' +
+    '<div id="volume-up" class="vol-button vol-up" title="Увеличить громкость">+</div>' +
     '<div id="volume-value" class="vol-percent">65%</div>' +
-    '<div id="music-state" class="music-state">CLICK PLAY TO CHOOSE AN MP3 SOUNDTRACK</div>' +
-    '<div id="btn-cancel" class="nav-button cancel">CANCEL</div>' +
-    '<div id="btn-next" class="nav-button next">NEXT &nbsp; &gt;</div>' +
-    '<div class="footer-note">NO FILES ARE INSTALLED IN THIS DEMO</div>' +
+    '<div id="music-state" class="music-state">Нажмите кнопку воспроизведения, чтобы выбрать MP3</div>' +
+    '<div id="btn-cancel" class="nav-button cancel">ОТМЕНА</div>' +
+    '<div id="btn-next" class="nav-button next">ДАЛЕЕ &nbsp; &gt;</div>' +
+    '<div class="footer-note">ДЕМОНСТРАЦИЯ · ФАЙЛЫ НЕ КОПИРУЮТСЯ</div>' +
+    '</body></html>';
+end;
+
+
+function BuildReviewHtml: String;
+begin
+  Result :=
+    '<!doctype html><html><head><meta charset="utf-8"><style>' +
+    '*{box-sizing:border-box;}html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;}' +
+    'body{position:relative;background:#080e1a;color:#edf3fc;font:13px "Segoe UI",Arial,sans-serif;}' +
+    '.topbar{position:absolute;left:0;top:0;width:100%;height:40px;background:#0c1422;border-bottom:1px solid #24344a;line-height:39px;}' +
+    '.brand{margin-left:24px;color:#80ead8;font-size:12px;font-weight:800;letter-spacing:3px;}' +
+    '.sub{margin-left:14px;color:#8798b1;font-size:10px;letter-spacing:1.2px;}' +
+    '.controls{position:absolute;right:0;top:0;width:92px;font-size:0;}' +
+    '.control{display:inline-block;width:46px;height:39px;line-height:38px;text-align:center;color:#aabbd0;font-size:20px;cursor:pointer;}' +
+    '.control:hover{background:#223149;color:#fff;}.close:hover{background:#bd4051;color:#fff;}' +
+    '.content{position:absolute;left:58px;top:94px;width:820px;}' +
+    '.eyebrow{color:#5fe0ca;font-size:10px;font-weight:700;letter-spacing:2px;}' +
+    'h1{margin:14px 0 9px;color:#f4f7fc;font-size:34px;font-weight:600;}' +
+    '.lead{width:650px;color:#9cacc1;font-size:13px;line-height:1.6;}' +
+    '.panel{margin-top:25px;padding:22px 24px;border:1px solid #294052;background:#0e1b2b;}' +
+    '.row{padding:12px 0;border-bottom:1px solid #24344a;}' +
+    '.row:last-child{border-bottom:0;}' +
+    '.label{display:inline-block;width:210px;color:#8fa3bc;font-size:11px;letter-spacing:.4px;}' +
+    '.value{display:inline-block;max-width:560px;color:#e4effa;font-size:13px;line-height:1.5;overflow-wrap:anywhere;}' +
+    '.note{margin-top:20px;color:#7289a4;font-size:10px;line-height:1.5;}' +
+    '.actions{position:absolute;left:58px;right:58px;bottom:32px;padding-top:15px;border-top:1px solid #24344a;}' +
+    'button{padding:11px 20px;border:1px solid #344a62;background:#101d2d;color:#b9c9dd;font:11px "Segoe UI",Arial,sans-serif;font-weight:700;letter-spacing:1px;cursor:pointer;}' +
+    'button:hover{background:#1b3048;color:#fff;border-color:#4f7898;}' +
+    'button.primary{float:right;background:#5ed9c2;color:#071a22;border-color:#64dfca;}' +
+    'button.primary:hover{background:#94f0df;}' +
+    '</style></head><body>' +
+    '<div class="topbar"><span class="brand">PIXIE</span><span class="sub">МАСТЕР УСТАНОВКИ</span>' +
+    '<div class="controls"><div id="win-minimize" class="control">−</div><div id="win-close" class="control close">×</div></div></div>' +
+    '<div class="content"><div class="eyebrow">ШАГ 2 ИЗ 2 · ПРОВЕРКА ПАРАМЕТРОВ</div>' +
+    '<h1>Музыка настроена</h1>' +
+    '<div class="lead">Проверьте выбранный файл и уровень громкости. Нажмите «Назад», чтобы выбрать другую музыку или изменить громкость.</div>' +
+    '<div class="panel">' +
+    '<div class="row"><span class="label">ФОНОВАЯ МУЗЫКА</span><span id="review-track" class="value">Не выбрана</span></div>' +
+    '<div class="row"><span class="label">ГРОМКОСТЬ</span><span id="review-volume" class="value">65%</span></div>' +
+    '<div class="row"><span class="label">ВОСПРОИЗВЕДЕНИЕ</span><span id="review-state" class="value">Готово</span></div>' +
+    '</div><div class="note">Это демонстрационная страница. Настройки музыки работают, но установочные файлы не копируются.</div></div>' +
+    '<div class="actions"><button id="btn-back">НАЗАД</button><button id="btn-finish" class="primary">ЗАВЕРШИТЬ</button></div>' +
     '</body></html>';
 end;
 
@@ -232,7 +275,7 @@ var
 begin
   if AudioPlayer = nil then Exit;
   SelectedFile := AudioPlayer.GetCurrentFile;
-  if GetOpenFileName('Choose background music', SelectedFile,
+  if GetOpenFileName('Выберите фоновую музыку', SelectedFile,
     ExtractFileDir(SelectedFile),
     'MP3 audio (*.mp3)|*.mp3|All files (*.*)|*.*', 'mp3') then
   begin
@@ -295,13 +338,13 @@ begin
   if AudioPlayer.GetOpening then
   begin
     PlaybackOverrideActive := False;
-    StateText := 'LOADING MUSIC...';
+    StateText := 'ЗАГРУЗКА МУЗЫКИ…';
     ButtonText := '..';
   end
   else if CurrentFile = '' then
   begin
     PlaybackOverrideActive := False;
-    StateText := 'CLICK PLAY TO CHOOSE AN MP3 SOUNDTRACK';
+    StateText := 'Нажмите кнопку воспроизведения, чтобы выбрать MP3';
     ButtonText := '>';
   end
   else
@@ -319,12 +362,12 @@ begin
     end;
 
     case State of
-      2: begin StateText := 'PLAYING  /  ' + ExtractFileName(CurrentFile); ButtonText := '||'; end;
-      3: begin StateText := 'PAUSED  /  ' + ExtractFileName(CurrentFile); ButtonText := '>'; end;
-      4: begin StateText := 'TRACK FINISHED  /  ' + ExtractFileName(CurrentFile); ButtonText := '>'; end;
-      5: begin StateText := 'AUDIO ERROR  /  ' + AudioPlayer.GetErrorText; ButtonText := '>'; end;
+      2: begin StateText := 'ВОСПРОИЗВОДИТСЯ · ' + ExtractFileName(CurrentFile); ButtonText := '||'; end;
+      3: begin StateText := 'ПАУЗА · ' + ExtractFileName(CurrentFile); ButtonText := '>'; end;
+      4: begin StateText := 'ВОСПРОИЗВЕДЕНИЕ ЗАВЕРШЕНО · ' + ExtractFileName(CurrentFile); ButtonText := '>'; end;
+      5: begin StateText := 'ОШИБКА ВОСПРОИЗВЕДЕНИЯ · ' + AudioPlayer.GetErrorText; ButtonText := '>'; end;
     else
-      begin StateText := 'READY  /  ' + ExtractFileName(CurrentFile); ButtonText := '>'; end;
+      begin StateText := 'ГОТОВО · ' + ExtractFileName(CurrentFile); ButtonText := '>'; end;
     end;
   end;
 
@@ -396,8 +439,38 @@ begin
   end
   else if Id = 'btn-next' then
   begin
-    MsgBox('This is a visual welcome-page demo. No files will be installed.',
-      mbInformation, MB_OK);
+    View.LoadFromString(BuildReviewHtml);
+    Doc.FCreate(View.GetDocument);
+    VolumeBox.Visible(False);
+    if AudioPlayer.GetCurrentFile <> '' then
+      Doc.SetElementText(Doc.GetElementById('review-track'),
+        ExtractFileName(AudioPlayer.GetCurrentFile))
+    else
+      Doc.SetElementText(Doc.GetElementById('review-track'), 'Музыка не выбрана');
+    Doc.SetElementText(Doc.GetElementById('review-volume'),
+      IntToStr(Round(VolumeValue * 100)) + '%');
+    if AudioPlayer.GetState = 2 then
+      Doc.SetElementText(Doc.GetElementById('review-state'), 'Воспроизводится')
+    else if AudioPlayer.GetState = 3 then
+      Doc.SetElementText(Doc.GetElementById('review-state'), 'Приостановлено')
+    else
+      Doc.SetElementText(Doc.GetElementById('review-state'), 'Остановлено');
+    Doc.Changed;
+    Result := True;
+  end
+  else if Id = 'btn-back' then
+  begin
+    View.LoadFromString(BuildWelcomeHtml);
+    Doc.FCreate(View.GetDocument);
+    VolumeBox.Visible(True);
+    VolumeBox.BringToFront;
+    UpdateMusicUI;
+    VolumeBox.Repaint;
+    Result := True;
+  end
+  else if Id = 'btn-finish' then
+  begin
+    CancelDemo;
     Result := True;
   end;
 end;

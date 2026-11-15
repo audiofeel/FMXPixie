@@ -1,5 +1,5 @@
 
-#define DemoAppName "FMXPixie - SVGView Demo"
+#define DemoAppName "PIXIE Setup - Installer Artwork"
 #define DemoAppVersion "1.0"
 
 [Setup]
@@ -8,7 +8,7 @@ AppVersion={#DemoAppVersion}
 AppCopyright=audiofeel
 CreateAppDir=no
 Uninstallable=no
-OutputBaseFilename=FMXPixie_SvgView_Demo
+OutputBaseFilename=PIXIE Setup - Installer Artwork
 ; SetupArchitecture=x64
 SetupIconFile=Files\setup.ico
 
@@ -49,7 +49,7 @@ var
   SvgSourceLabel: String;
   ZoomFactor: Double;
   DarkBackground: Boolean;
-  CheckerboardEnabled: Boolean;
+  Прозрачный фонEnabled: Boolean;
   BorderEnabled: Boolean;
 
 function BuildTitleBarHtml: String;
@@ -72,7 +72,7 @@ begin
     '</style></head><body>' +
     '<div class="titlebar">' +
     '<span class="brand">FMXPixie</span>' +
-    '<span class="subtitle">SVGView / VECTOR LAB</span>' +
+    '<span class="subtitle">ОФОРМЛЕНИЕ УСТАНОВЩИКА</span>' +
     '<div class="controls">' +
     '<div id="title-minimize" class="button min" title="Свернуть">−</div>' +
     '<div id="title-close" class="button close" title="Закрыть">×</div>' +
@@ -97,20 +97,20 @@ begin
     '.quiet{color:#94a3b8;}' +
     '</style></head><body>' +
     '<div class="row">' +
-    '<a id="load-file" class="action accent" href="#">Load SVG file</a>' +
-    '<a id="load-string" class="action" href="#">Load SVG string</a>' +
-    '<a id="zoom-out" class="action" href="#">− Zoom</a>' +
+    '<a id="load-file" class="action accent" href="#">Загрузить логотип</a>' +
+    '<a id="load-string" class="action" href="#">Встроенный вариант</a>' +
+    '<a id="zoom-out" class="action" href="#">− Уменьшить</a>' +
     '<a id="zoom-reset" class="action" href="#">100%</a>' +
-    '<a id="zoom-in" class="action" href="#">+ Zoom</a>' +
-    '<a id="align-center" class="action" href="#">Center SVG</a>' +
+    '<a id="zoom-in" class="action" href="#">+ Увеличить</a>' +
+    '<a id="align-center" class="action" href="#">По центру</a>' +
     '</div>' +
     '<div class="row">' +
-    '<a id="align-topleft" class="action" href="#">Top-left</a>' +
-    '<a id="toggle-background" class="action" href="#">Toggle background</a>' +
-    '<a id="toggle-checkers" class="action" href="#">Checkerboard</a>' +
-    '<a id="toggle-border" class="action" href="#">Toggle border</a>' +
-    '<a id="restore" class="action accent" href="#">Restore demo</a>' +
-    '<span class="quiet">SVG controls · FMXPixie</span>' +
+    '<a id="align-topleft" class="action" href="#">В левый верхний угол</a>' +
+    '<a id="toggle-background" class="action" href="#">Фон окна</a>' +
+    '<a id="toggle-checkers" class="action" href="#">Прозрачный фон</a>' +
+    '<a id="toggle-border" class="action" href="#">Рамка</a>' +
+    '<a id="restore" class="action accent" href="#">Восстановить</a>' +
+    '<span class="quiet">Настройте размер и расположение иллюстрации</span>' +
     '</div></body></html>';
 end;
 
@@ -126,8 +126,8 @@ begin
     '.dot{display:inline-block;width:6px;height:6px;border-radius:50%;' +
     'background:#34d399;margin-right:8px;vertical-align:middle;}' +
     '</style></head><body>' +
-    '<span class="dot"></span><span id="footer-status" class="status">Ready</span>' +
-    '<span id="footer-meta" class="meta">SVG 680 × 480 · Zoom 100%</span>' +
+    '<span class="dot"></span><span id="footer-status" class="status">Готово</span>' +
+    '<span id="footer-meta" class="meta">Логотип · масштаб 100%</span>' +
     '</body></html>';
 end;
 
@@ -178,13 +178,13 @@ begin
   MetaText := SvgSourceLabel + ' · SVG ' + IntToStr(Round(Svg.GetImageWidth)) + ' × ' +
     IntToStr(Round(Svg.GetImageHeight)) + ' · Zoom ' +
     IntToStr(Round(ZoomFactor * 100)) + '% · BG ' + BooleanText(DarkBackground) +
-    ' · Checker ' + BooleanText(CheckerboardEnabled);
+    ' · Checker ' + BooleanText(Прозрачный фонEnabled);
   H := FooterDoc.GetElementById('footer-meta');
   if H <> 0 then
     FooterDoc.SetElementText(H, MetaText);
 
   FooterDoc.Changed;
-  Log('FMXPixie SVGView: ' + Message + '; ' + MetaText);
+  Log('PIXIE Setup artwork: ' + Message + '; ' + MetaText);
 end;
 
 procedure SetZoom(NewZoom: Double);
@@ -193,20 +193,20 @@ begin
   if NewZoom > 1.40 then NewZoom := 1.40;
   ZoomFactor := NewZoom;
   Svg.Zoom(ZoomFactor);
-  UpdateFooter('SVG scale updated');
+  UpdateFooter('Размер иллюстрации изменён.');
 end;
 
 procedure SetAlignment(Value: Integer; const Description: String);
 begin
   Svg.SvgAlign(TPixieSvgAlign(Value));
-  UpdateFooter('Alignment: ' + Description);
+  UpdateFooter('Расположение иллюстрации: ' + Description);
 end;
 
 procedure RestoreDemo;
 begin
   ZoomFactor := 1.0;
   DarkBackground := True;
-  CheckerboardEnabled := False;
+  Прозрачный фонEnabled := False;
   BorderEnabled := True;
   Svg.LoadFromFile(SvgFileName);
   SvgSourceLabel := 'SVG file / Vector 01';
@@ -216,7 +216,7 @@ begin
   Svg.ColorCheckers($00000000);
   Svg.ColorInnerBorder($FF334155);
   Svg.CheckersSize(12);
-  UpdateFooter('Demo restored · loaded from SVG file');
+  UpdateFooter('Исходное оформление восстановлено.');
 end;
 
 procedure CloseDemo;
@@ -261,7 +261,7 @@ begin
   begin
     Svg.LoadFromFile(SvgFileName);
     SvgSourceLabel := 'SVG file / Vector 01';
-    UpdateFooter('Loaded SVG from file');
+    UpdateFooter('Иллюстрация загружена.');
     Result := True;
     Exit;
   end;
@@ -270,7 +270,7 @@ begin
   begin
     Svg.LoadFromString(BuildInlineSvg);
     SvgSourceLabel := 'inline string / Vector 02';
-    UpdateFooter('Loaded SVG from string');
+    UpdateFooter('Показан встроенный вариант иллюстрации.');
     Result := True;
     Exit;
   end;
@@ -317,22 +317,22 @@ begin
       Svg.ColorInner($FF0B1020)
     else
       Svg.ColorInner($00000000);
-    UpdateFooter('Background: ' + BooleanText(DarkBackground));
+    UpdateFooter('Фон окна изменён.');
     Result := True;
     Exit;
   end;
 
   if Id = 'toggle-checkers' then
   begin
-    CheckerboardEnabled := not CheckerboardEnabled;
-    if CheckerboardEnabled then
+    Прозрачный фонEnabled := not Прозрачный фонEnabled;
+    if Прозрачный фонEnabled then
     begin
       Svg.ColorCheckers($FF26364F);
       Svg.CheckersSize(12);
     end
     else
       Svg.ColorCheckers($00000000);
-    UpdateFooter('Checkerboard: ' + BooleanText(CheckerboardEnabled));
+    UpdateFooter('Прозрачный фон: ' + BooleanText(Прозрачный фонEnabled));
     Result := True;
     Exit;
   end;
@@ -344,7 +344,7 @@ begin
       Svg.ColorInnerBorder($FF334155)
     else
       Svg.ColorInnerBorder($00000000);
-    UpdateFooter('SVG frame: ' + BooleanText(BorderEnabled));
+    UpdateFooter('Рамка изменена.');
     Result := True;
     Exit;
   end;
@@ -378,7 +378,7 @@ begin
 
   ZoomFactor := 1.0;
   DarkBackground := True;
-  CheckerboardEnabled := False;
+  Прозрачный фонEnabled := False;
   BorderEnabled := True;
   SvgSourceLabel := 'SVG file / Vector 01';
   Result := True;
@@ -421,9 +421,9 @@ begin
   FooterView.LoadFromString(BuildFooterHtml);
   FooterDoc.FCreate(FooterView.GetDocument);
 
-  UpdateFooter('Ready · click Load SVG string to switch artwork');
+  UpdateFooter('Готово · click Встроенный вариант to switch artwork');
   FMXForm.Show;
-  Log('FMXPixie SVGView Demo: ready; source=' + SvgSourceLabel);
+  Log('PIXIE Setup artwork: ready; source=' + SvgSourceLabel);
 end;
 
 procedure CancelButtonClick(CurPageID: Integer; var Cancel, Confirm: Boolean);

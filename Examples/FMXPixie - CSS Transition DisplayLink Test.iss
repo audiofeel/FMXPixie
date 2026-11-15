@@ -1,5 +1,5 @@
 ﻿
-#define DemoAppName "FMXPixie - CSS Transition DisplayLink Test"
+#define DemoAppName "PIXIE Setup - Hover Effects"
 #define DemoAppVersion "1.0"
 
 [Setup]
@@ -7,7 +7,7 @@ AppName={#DemoAppName}
 AppVersion={#DemoAppVersion}
 CreateAppDir=no
 Uninstallable=no
-OutputBaseFilename=FMXPixie - CSS Transition DisplayLink Test
+OutputBaseFilename=PIXIE Setup - Hover Effects
 //SetupArchitecture=x64
 SetupIconFile=Files\setup.ico
 
@@ -78,30 +78,30 @@ begin
     '.footer{margin-top:11px;padding-top:8px;border-top:1px solid #263852;color:#7185a0;font-size:8px;letter-spacing:.8px;}' +
     '</style></head><body>' +
     '<div class="titlebar">' +
-    '<span class="brand">FMXPIXIE / TRANSITION LAB</span>' +
-    '<span class="subtitle">DisplayLink regression suite · hover each card</span>' +
+    '<span class="brand">PIXIE SETUP / ВЫБОР ОФОРМЛЕНИЯ</span>' +
+    '<span class="subtitle">Наведите курсор на карточки, чтобы сравнить эффекты</span>' +
     '<div class="window-controls">' +
     '<div id="title-minimize" class="window-button" title="Свернуть">−</div>' +
     '<div id="title-close" class="window-button window-close" title="Закрыть">×</div>' +
     '</div></div>' +
     '<div class="page">' +
-    '<div class="eyebrow">CSS TRANSITIONS / IMPLEMENTED PROPERTIES</div>' +
-    '<div class="headline">Проверка анимации без сторонних таймеров</div>' +
-    '<div class="intro">Наводите курсор на карточки, убирайте его и быстро переключайтесь между ними. Проверяются opacity, background-color, transform translate/scale, несколько свойств одновременно, transition:all, longhand delay и обратный переход при повторном наведении.</div>' +
+    '<div class="eyebrow">ДОПОЛНИТЕЛЬНОЕ ОФОРМЛЕНИЕ</div>' +
+    '<div class="headline">Посмотрите, как реагируют элементы</div>' +
+    '<div class="intro">Наведите курсор на каждую карточку. Одни элементы меняют цвет, другие становятся ярче, немного увеличиваются или смещаются. Уберите курсор — карточка вернётся к обычному виду.</div>' +
     '<div class="row">' +
-    '<div id="t-color" class="card"><div class="card-index">TEST 01 / COLOR</div><div class="card-title">Цвет фона</div><div class="card-copy">Тёмно-красный → алый. Только background-color.</div><div class="card-hint">180 ms · LINEAR</div></div>' +
-    '<div id="t-opacity" class="card"><div class="card-index">TEST 02 / OPACITY</div><div class="card-title">Прозрачность</div><div class="card-copy">Карточка становится ярче и снова тускнеет.</div><div class="card-hint">160 ms · EASE-OUT</div></div>' +
-    '<div id="t-scale" class="card"><div class="card-index">TEST 03 / SCALE</div><div class="card-title">Увеличение</div><div class="card-copy">Масштаб 92% → 107%. Слот карточки не меняется.</div><div class="card-hint">180 ms · EASE-OUT</div></div>' +
-    '<div id="t-translate" class="card"><div class="card-index">TEST 04 / TRANSLATE</div><div class="card-title">Смещение</div><div class="card-copy">Сдвиг по X/Y с плавным возвратом.</div><div class="card-hint">180 ms · EASE-OUT</div></div>' +
+    '<div id="t-color" class="card"><div class="card-index">АКЦЕНТНЫЙ ЦВЕТ</div><div class="card-title">Акцентный цвет</div><div class="card-copy">Наведите курсор, чтобы карточка выделилась цветом.</div><div class="card-hint">180 ms · LINEAR</div></div>' +
+    '<div id="t-opacity" class="card"><div class="card-index">ЯРКОСТЬ</div><div class="card-title">Яркость</div><div class="card-copy">Карточка плавно становится ярче и возвращается назад.</div><div class="card-hint">160 ms · EASE-OUT</div></div>' +
+    '<div id="t-scale" class="card"><div class="card-index">УВЕЛИЧЕНИЕ</div><div class="card-title">Увеличение</div><div class="card-copy">Карточка немного увеличивается при наведении.</div><div class="card-hint">180 ms · EASE-OUT</div></div>' +
+    '<div id="t-translate" class="card"><div class="card-index">СМЕЩЕНИЕ</div><div class="card-title">Смещение</div><div class="card-copy">Карточка слегка смещается и возвращается обратно.</div><div class="card-hint">180 ms · EASE-OUT</div></div>' +
     '</div>' +
     '<div class="row">' +
-    '<div id="t-combo" class="card"><div class="card-index">TEST 05 / COMBINED</div><div class="card-title">Три свойства</div><div class="card-copy">Цвет, opacity и transform идут одновременно.</div><div class="card-hint">160–180 ms</div></div>' +
-    '<div id="t-longhand" class="card"><div class="card-index">TEST 06 / LONGHAND</div><div class="card-title">Задержка</div><div class="card-copy">Цвет меняется сразу, движение начинается позже.</div><div class="card-hint">60 ms DELAY ON TRANSFORM</div></div>' +
-    '<div id="t-all" class="card"><div class="card-index">TEST 07 / ALL</div><div class="card-title">transition: all</div><div class="card-copy">Проверка всех трёх поддерживаемых свойств вместе.</div><div class="card-hint">170 ms · EASE-OUT</div></div>' +
-    '<div id="t-retarget" class="card"><div class="card-index">TEST 08 / RETARGET</div><div class="card-title">Быстрый реверс</div><div class="card-copy">Входите и выходите до окончания анимации.</div><div class="card-hint">210 ms · EASE-IN-OUT</div></div>' +
+    '<div id="t-combo" class="card"><div class="card-index">СОВМЕЩЁННЫЙ ЭФФЕКТ</div><div class="card-title">Три свойства</div><div class="card-copy">Цвет, яркость и положение меняются вместе.</div><div class="card-hint">160–180 ms</div></div>' +
+    '<div id="t-longhand" class="card"><div class="card-index">ПЛАВНОЕ ПОЯВЛЕНИЕ</div><div class="card-title">Задержка</div><div class="card-copy">Сначала появляется цветовой акцент, затем карточка плавно смещается.</div><div class="card-hint">60 ms DELAY ON TRANSFORM</div></div>' +
+    '<div id="t-all" class="card"><div class="card-index">СИНЯЯ ПОДСВЕТКА</div><div class="card-title">Синяя подсветка</div><div class="card-copy">Сразу меняются цвет, яркость и положение.</div><div class="card-hint">170 ms · EASE-OUT</div></div>' +
+    '<div id="t-retarget" class="card"><div class="card-index">ОРАНЖЕВЫЙ АКЦЕНТ</div><div class="card-title">Быстрый реверс</div><div class="card-copy">Входите и выходите до окончания анимации.</div><div class="card-hint">210 ms · EASE-IN-OUT</div></div>' +
     '</div>' +
-    '<div class="note"><strong>Проверка соседних элементов:</strong> transform:scale() только визуально меняет размер и не двигает соседей — это ожидаемое поведение CSS. Для анимации width/height с перерасчётом layout используйте отдельный CSS Size Layout Transition Test. Этот набор проверяет opacity, background-color и совместимые transform translate/scale.</div>' +
-    '<div class="footer">FMXPIXIE · CSS TRANSITIONS ON FMX DISPLAY LINK · GIF/WEBP AND SCROLLBAR TIMERS ARE UNCHANGED</div>' +
+    '<div class="note"><strong>Как пользоваться:</strong> Карточки показывают разные варианты реакции на наведение. Сравните цвет, яркость, увеличение и смещение. Быстро перемещайте курсор, чтобы увидеть, как элементы плавно меняют состояние и возвращаются назад.</div>' +
+    '<div class="footer">PIXIE SETUP · НАВЕДЕНИЕ И ПЛАВНОЕ ИЗМЕНЕНИЕ ВНЕШНЕГО ВИДА</div>' +
     '</div></body></html>';
 end;
 
