@@ -1,6 +1,5 @@
-﻿
 #define DemoAppName "FMXPixie - Select Option Demo"
-#define DemoAppVersion "1.1"
+#define DemoAppVersion "2.0"
 
 [Setup]
 AppName={#DemoAppName}
@@ -34,239 +33,292 @@ var
   Doc: FPixieDocument;
   Elem: FPixieElement;
 
-  TempDir: String;
+  LanguageValue: String;
+  ComponentValue: String;
+  PackageValue: String;
+  LanguageName: String;
+  ComponentName: String;
+  PackageName: String;
+  IsConfirmed: Boolean;
 
-function BuildTitleBarHtml: String;
-begin
-  Result :=
-    '<!doctype html>' +
-    '<html><head><meta charset="utf-8"><style>' +
-    'html,body{width:100%;height:32px;margin:0;padding:0;overflow:hidden;}' +
-    'body{background:#111827;color:#e5e7eb;font-family:"Segoe UI",Arial,sans-serif;font-size:14px;}' +
-    '.titlebar{position:relative;width:100%;height:31px;overflow:hidden;background:#111827;border-bottom:1px solid #263247;line-height:31px;}' +
-    '.title-caption{margin-left:12px;color:#93c5fd;font-weight:bold;}' +
-    '.title-controls{position:absolute;top:0;right:0;width:92px;height:31px;font-size:0;}' +
-    '.title-button{display:inline-block;vertical-align:top;overflow:hidden;width:46px;height:31px;line-height:31px;text-align:center;color:#d1d5db;cursor:pointer;font-size:23px;}' +
-    '.title-close{font-size:25px;line-height:28px;}' +
-    '.title-minimize:hover{background:#25344b;color:#fff;}' +
-    '.title-close:hover{background:#dc2626;color:#fff;}' +
-    '.title-button:active{background:#1d4ed8;}' +
-    '</style></head><body>' +
-    '<div class="titlebar">' +
-    '<span class="title-caption">FMXPixie / HTML SELECT TEST</span>' +
-    '<div class="title-controls">' +
-    '<div id="title-minimize" class="title-button title-minimize" title="Свернуть">−</div>' +
-    '<div id="title-close" class="title-button title-close" title="Закрыть">×</div>' +
-    '</div></div></body></html>';
-end;
-
-function BuildDemoHtml: String;
+function BuildTitleHtml: String;
 begin
   Result :=
     '<!doctype html><html><head><meta charset="utf-8"><style>' +
-    'body{margin:0;padding:20px;background:transparent;color:#e5e7eb;font-family:"Segoe UI",Arial,sans-serif;font-size:14px;}' +
-    '.topline{background:#111827;border:1px solid #263247;padding:16px;margin-bottom:14px;}' +
-    '.brand{color:#93c5fd;font-size:24px;font-weight:bold;}' +
-    '.sub{color:#9ca3af;margin-top:4px;}' +
-    '.tag{display:inline-block;color:#a7f3d0;border:1px solid #276749;padding:4px 8px;margin-top:10px;}' +
-    '.panel{background:#111827;border:1px solid #263247;padding:16px;margin-bottom:14px;}' +
-    '.section-title{color:#93c5fd;font-weight:bold;margin-bottom:10px;}' +
-    '.muted{color:#9ca3af;}' +
-    '.field-label{display:block;color:#cbd5e1;margin-top:9px;margin-bottom:5px;}' +
-    'select{width:290px;height:36px;margin:2px 0 8px;background:#1f2937;color:#e5e7eb;border:1px solid #475569;border-radius:8px;}' +
-    'select:hover{background:#26364d;color:#fff;border-color:#93c5fd;}' +
-    '.select-blue{background:#172554;color:#dbeafe;border:1px solid #3b82f6;border-radius:11px;}' +
-    '.select-blue:hover{background:#1e3a8a;color:#fff;border-color:#93c5fd;}' +
-    '.select-green{background:#052e2b;color:#d1fae5;border:1px solid #10b981;border-radius:3px;}' +
+    'html,body{width:100%;height:32px;margin:0;padding:0;overflow:hidden;}' +
+    'body{background:#111c2b;color:#e8eef7;font:13px "Segoe UI",Arial,sans-serif;}' +
+    '.bar{position:relative;height:31px;line-height:31px;background:#111c2b;border-bottom:1px solid #2b3b50;}' +
+    '.brand{padding-left:14px;color:#91ddd1;font-weight:700;}' +
+    '.caption{margin-left:9px;color:#91a2b7;font-size:11px;}' +
+    '.controls{position:absolute;top:0;right:0;width:92px;height:31px;font-size:0;}' +
+    '.control{display:inline-block;width:46px;height:31px;text-align:center;line-height:30px;color:#cbd5e1;font-size:21px;cursor:pointer;}' +
+    '.control:hover{background:#2d4059;color:#fff;}.close:hover{background:#c43d4b;}' +
+    '</style></head><body><div class="bar"><span class="brand">PIXIE</span>' +
+    '<span class="caption">Выбор параметров</span><div class="controls">' +
+    '<div id="title-minimize" class="control">−</div><div id="title-close" class="control close">×</div>' +
+    '</div></div></body></html>';
+end;
+
+function BuildOptionsHtml: String;
+begin
+  Result :=
+    '<!doctype html><html><head><meta charset="utf-8"><style>' +
+    '*{box-sizing:border-box;}' +
+    'html,body{width:100%;height:668px;margin:0;padding:0;overflow:hidden;}' +
+    'body{padding:20px 22px;background:#0b1422;color:#e7eef7;font:12px "Segoe UI",Arial,sans-serif;}' +
+    '.intro{height:77px;}' +
+    '.eyebrow{color:#78bdb4;font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;}' +
+    '.title{margin-top:5px;color:#f3f7fb;font-size:22px;font-weight:650;}' +
+    '.subtitle{margin-top:5px;color:#9bacbf;font-size:11px;}' +
+    '.grid{height:470px;white-space:normal;}' +
+    '.card{display:inline-block;vertical-align:top;width:49%;height:214px;margin:0 .7% 12px 0;padding:14px;background:#132136;border:1px solid #2b405b;border-radius:7px;white-space:normal;}' +
+    '.card:nth-child(even){margin-right:0;}' +
+    '.heading{margin-bottom:5px;color:#93d9ce;font-size:13px;font-weight:650;}' +
+    '.hint{margin:0 0 10px;color:#91a3b8;font-size:10px;line-height:1.4;}' +
+    '.field-label{display:block;margin:5px 0;color:#d8e2ee;font-size:11px;font-weight:600;}' +
+    'select{display:block;width:100%;height:37px;padding:0 8px;background:#172554;color:#dbeafe;border:1px solid #3b82f6;border-radius:8px;font:12px "Segoe UI",Arial,sans-serif;}' +
+    'select:hover{background:#1e3a8a;color:#fff;border-color:#93c5fd;}' +
+    '.select-green{background:#052e2b;color:#d1fae5;border:1px solid #10b981;border-radius:4px;}' +
     '.select-green:hover{background:#064e3b;color:#ecfdf5;border-color:#6ee7b7;}' +
-    '.select-amber{background:#422006;color:#ffedd5;border:1px solid #d97706;border-radius:16px;}' +
+    '.select-amber{background:#422006;color:#ffedd5;border:1px solid #d97706;border-radius:12px;}' +
     '.select-amber:hover{background:#78350f;color:#fff7ed;border-color:#fbbf24;}' +
     '.select-disabled{background:#202936;color:#94a3b8;border:1px solid #475569;border-radius:6px;}' +
     'option{background:#1f2937;color:#e5e7eb;border:1px solid #344256;border-radius:5px;}' +
-    'option:hover{background:#334155;color:#fff;border-color:#60a5fa;border-radius:5px;}' +
-    'option:checked{background:#2563eb;color:#fff;border-color:#60a5fa;border-radius:5px;}' +
+    'option:hover{background:#334155;color:#fff;border-color:#60a5fa;}' +
+    'option:checked{background:#2563eb;color:#fff;border-color:#60a5fa;}' +
     'option:disabled{color:#64748b;}' +
-    '.blue-option{background:#172554;color:#dbeafe;border:1px solid #1e40af;border-radius:7px;}' +
-    '.blue-option:hover{background:#1d4ed8;color:#fff;border-color:#93c5fd;}' +
-    '.blue-option:checked{background:#2563eb;color:#fff;border-color:#bfdbfe;}' +
-    '.blue-option:disabled{color:#64748b;}' +
     '.green-option{background:#064e3b;color:#d1fae5;border:1px solid #047857;border-radius:3px;}' +
     '.green-option:hover{background:#047857;color:#fff;border-color:#6ee7b7;}' +
     '.green-option:checked{background:#059669;color:#fff;border-color:#a7f3d0;}' +
     '.green-option:disabled{background:#1f2937;color:#64748b;border-color:#374151;}' +
     '.green-group{background:#064e3b;color:#6ee7b7;border:1px solid #10b981;border-radius:4px;}' +
     '.green-group:hover{background:#065f46;color:#a7f3d0;}' +
-    '.green-group:disabled{color:#64748b;}' +
-    '.amber-option{background:#451a03;color:#ffedd5;border:1px solid #92400e;border-radius:10px;}' +
+    '.amber-option{background:#451a03;color:#ffedd5;border:1px solid #92400e;border-radius:8px;}' +
     '.amber-option:hover{background:#92400e;color:#fff7ed;border-color:#fbbf24;}' +
     '.amber-option:checked{background:#b45309;color:#fff;border-color:#fcd34d;}' +
-    '.amber-option:disabled{color:#78716c;}' +
     '.disabled-option{background:#202936;color:#64748b;border:1px solid #374151;border-radius:6px;}' +
-    '.field-theme{display:inline-block;margin:0 0 4px;padding:3px 7px;font-size:10px;font-weight:bold;letter-spacing:1px;border:1px solid;}' +
-    '.theme-blue{color:#93c5fd;border-color:#3b82f6;background:#172554;}' +
-    '.theme-green{color:#6ee7b7;border-color:#10b981;background:#052e2b;}' +
-    '.theme-amber{color:#fcd34d;border-color:#d97706;background:#422006;}' +
-    '.theme-gray{color:#94a3b8;border-color:#475569;background:#202936;}' +
-    'button{background:#25344b;color:#f9fafb;border:1px solid #40516b;padding:8px 12px;margin:4px 5px 4px 0;cursor:pointer;}' +
-    'button:hover{background:#2563a6;border-color:#60a5fa;}' +
-    'button:active{background:#174477;}' +
-    '.primary{background:#1d4ed8;border-color:#3b82f6;}' +
-    '.row{margin-top:8px;}' +
-    '.value{display:inline-block;min-width:180px;color:#a7f3d0;background:#07101f;border:1px solid #263247;padding:5px 8px;margin:3px 0;}' +
-    '.status{background:#07101f;border:1px solid #263247;padding:10px;color:#bfdbfe;margin-top:12px;}' +
-    '.hint{font-size:12px;color:#9ca3af;margin-top:5px;}' +
-    '.disabled-note{color:#fca5a5;}' +
+    '.theme{display:inline-block;margin:0 0 7px;padding:3px 6px;border:1px solid;font-size:9px;font-weight:700;letter-spacing:.8px;}' +
+    '.blue{color:#93c5fd;border-color:#3b82f6;background:#172554;}' +
+    '.green{color:#6ee7b7;border-color:#10b981;background:#052e2b;}' +
+    '.amber{color:#fcd34d;border-color:#d97706;background:#422006;}' +
+    '.gray{color:#94a3b8;border-color:#475569;background:#202936;}' +
+    '.note{margin-top:8px;color:#91a3b8;font-size:10px;line-height:1.4;}' +
+    '.actions{height:62px;padding-top:12px;border-top:1px solid #24374f;}' +
+    '.action-note{display:inline-block;vertical-align:middle;width:61%;color:#8396ad;font-size:10px;line-height:1.4;}' +
+    'button{padding:10px 14px;margin-left:7px;background:#253b57;color:#edf4fb;border:1px solid #496482;border-radius:5px;cursor:pointer;font:11px "Segoe UI",Arial,sans-serif;}' +
+    'button:hover{background:#315477;border-color:#82d3c7;color:#fff;}' +
+    'button.primary{float:right;background:#16766e;border-color:#2b9c90;color:#fff;font-weight:700;}' +
     '</style></head><body>' +
-
-    '<div class="topline">' +
-    '<div class="brand">HTML Select / Option</div>' +
-    '<div class="sub">Три CSS-темы для select. Наведи мышь на закрытый список, чтобы увидеть его hover-состояние.</div>' +
-    '<div class="tag">CSS THEMES · SINGLE SELECT</div>' +
-    '</div>' +
-
-    '<div class="panel">' +
-    '<div class="section-title">01 / Обычный select и атрибуты option</div>' +
-    '<div class="muted">Проверь открытие списка, выбор мышью, начальное состояние selected и чтение value.</div>' +
-    '<label class="field-label" for="select-basic">Язык интерфейса</label>' +
-    '<div class="field-theme theme-blue">BLUE / ROUNDED</div>' +
-    '<select id="select-basic" class="select-blue">' +
+    '<div class="intro"><div class="eyebrow">PIXIE Setup · Шаг 1 из 2</div>' +
+    '<div class="title">Выберите язык и дополнительные модули</div>' +
+    '<div class="subtitle">Списки можно раскрывать мышью и выбирать пункты клавиатурой.</div></div>' +
+    '<div class="grid">' +
+    '<div class="card"><div class="heading">Язык интерфейса</div>' +
+    '<p class="hint">Выберите язык, который будет использоваться в приложении.</p>' +
+    '<div class="theme blue">СИНИЙ СТИЛЬ</div>' +
+    '<label class="field-label" for="select-language">Язык</label>' +
+    '<select id="select-language">' +
     '<option value="de" class="blue-option">Deutsch</option>' +
     '<option value="ru" class="blue-option" selected>Русский</option>' +
-    '<option value="en" class="blue-option" label="English">English language</option>' +
+    '<option value="en" class="blue-option">English</option>' +
     '<option value="fr" class="blue-option">Français</option>' +
     '<option value="es" class="blue-option">Español</option>' +
-    '</select>' +
-    '<div class="row"><button id="btn-set-basic" class="primary">SetValue: English</button>' +
-    '<span class="hint">Кнопка программно выбирает option с value="en".</span></div>' +
-    '</div>' +
-
-    '<div class="panel">' +
-    '<div class="section-title">02 / optgroup и disabled</div>' +
-    '<div class="muted">Группы должны отображаться отдельными строками. Недоступные пункты должны быть серыми и не выбираться.</div>' +
-    '<label class="field-label" for="select-groups">Компонент</label>' +
-    '<div class="field-theme theme-green">EMERALD / COMPACT</div>' +
-    '<select id="select-groups" class="select-green">' +
+    '</select><div class="note">Наведение на закрытый список и пункты меню меняет цвет оформления.</div></div>' +
+    '<div class="card"><div class="heading">Основной компонент</div>' +
+    '<p class="hint">Выберите технологию, которая будет добавлена в состав установки.</p>' +
+    '<div class="theme green">ЗЕЛЁНЫЙ СТИЛЬ</div>' +
+    '<label class="field-label" for="select-component">Компонент</label>' +
+    '<select id="select-component" class="select-green">' +
     '<optgroup label="Основные" class="green-group">' +
     '<option value="delphi" class="green-option" selected>Delphi</option>' +
-    '<option value="fpc" class="green-option">Free Pascal</option>' +
-    '</optgroup>' +
+    '<option value="fpc" class="green-option">Free Pascal</option></optgroup>' +
     '<optgroup label="Графика" class="green-group">' +
     '<option value="skia" class="green-option">Skia</option>' +
-    '<option value="svg" class="green-option">SVG</option>' +
-    '</optgroup>' +
-    '<optgroup label="Недоступная группа" class="green-group" disabled>' +
-    '<option value="disabled-group" class="green-option">Этот пункт отключён группой</option>' +
-    '</optgroup>' +
-    '<option value="disabled-option" class="disabled-option" disabled>Отдельный disabled option</option>' +
-    '</select>' +
-    '<div class="row"><button id="btn-set-group">SetValue: Skia</button>' +
-    '<span class="hint">Отдельно проверь disabled-группу и disabled option.</span></div>' +
+    '<option value="svg" class="green-option">SVG</option></optgroup>' +
+    '<optgroup label="Недоступные" class="green-group" disabled>' +
+    '<option value="legacy" class="green-option">Устаревший модуль</option></optgroup>' +
+    '</select><div class="note">Некоторые пункты сгруппированы, недоступные варианты нельзя выбрать.</div></div>' +
+    '<div class="card"><div class="heading">Дополнительный пакет</div>' +
+    '<p class="hint">В списке много вариантов. Прокрутите его или используйте клавиши со стрелками.</p>' +
+    '<div class="theme amber">ЯНТАРНЫЙ СТИЛЬ</div>' +
+    '<label class="field-label" for="select-package">Пакет</label>' +
+    '<select id="select-package" class="select-amber">' +
+    '<option value="item-01" class="amber-option" selected>Пакет 01 — базовый</option>' +
+    '<option value="item-02" class="amber-option">Пакет 02</option>' +
+    '<option value="item-03" class="amber-option">Пакет 03</option>' +
+    '<option value="item-04" class="amber-option">Пакет 04</option>' +
+    '<option value="item-05" class="amber-option">Пакет 05</option>' +
+    '<option value="item-06" class="amber-option">Пакет 06</option>' +
+    '<option value="item-07" class="amber-option">Пакет 07</option>' +
+    '<option value="item-08" class="amber-option">Пакет 08</option>' +
+    '<option value="item-09" class="amber-option">Пакет 09</option>' +
+    '<option value="item-10" class="amber-option">Пакет 10</option>' +
+    '<option value="item-11" class="amber-option">Пакет 11</option>' +
+    '<option value="item-12" class="amber-option">Пакет 12 — расширенный</option>' +
+    '<option value="item-13" class="amber-option">Пакет 13</option>' +
+    '<option value="item-14" class="amber-option">Пакет 14</option>' +
+    '<option value="item-15" class="amber-option">Пакет 15</option>' +
+    '<option value="item-16" class="amber-option">Пакет 16 — последний</option>' +
+    '</select><div class="note">В длинном списке доступны прокрутка, Home, End, PgUp и PgDn.</div></div>' +
+    '<div class="card"><div class="heading">Редакция приложения</div>' +
+    '<p class="hint">Эта редакция задаётся поставщиком и недоступна для изменения.</p>' +
+    '<div class="theme gray">ТОЛЬКО ЧТЕНИЕ</div>' +
+    '<label class="field-label" for="select-edition">Редакция</label>' +
+    '<select id="select-edition" class="select-disabled" disabled>' +
+    '<option value="professional" selected>Professional</option>' +
+    '<option value="enterprise">Enterprise</option></select>' +
+    '<div class="note">Список отключён: его значение нельзя поменять.</div></div>' +
     '</div>' +
-
-    '<div class="panel">' +
-    '<div class="section-title">03 / Длинный список и клавиатура</div>' +
-    '<div class="muted">Список содержит больше строк, чем помещается в popup. Проверь прокрутку колесом и переходы по клавишам.</div>' +
-    '<label class="field-label" for="select-long">Тестовый список</label>' +
-    '<div class="field-theme theme-amber">AMBER / ROUNDED</div>' +
-    '<select id="select-long" class="select-amber">' +
-    '<option value="item-01" class="amber-option" selected>Пункт 01 — первый</option>' +
-    '<option value="item-02" class="amber-option">Пункт 02</option>' +
-    '<option value="item-03" class="amber-option">Пункт 03</option>' +
-    '<option value="item-04" class="amber-option">Пункт 04</option>' +
-    '<option value="item-05" class="amber-option">Пункт 05</option>' +
-    '<option value="item-06" class="amber-option">Пункт 06</option>' +
-    '<option value="item-07" class="amber-option">Пункт 07</option>' +
-    '<option value="item-08" class="amber-option">Пункт 08</option>' +
-    '<option value="item-09" class="amber-option">Пункт 09</option>' +
-    '<option value="item-10" class="amber-option">Пункт 10</option>' +
-    '<option value="item-11" class="amber-option">Пункт 11</option>' +
-    '<option value="item-12" class="amber-option">Пункт 12</option>' +
-    '<option value="item-13" class="amber-option">Пункт 13</option>' +
-    '<option value="item-14" class="amber-option">Пункт 14</option>' +
-    '<option value="item-15" class="amber-option">Пункт 15</option>' +
-    '<option value="item-16" class="amber-option">Пункт 16 — последний</option>' +
-    '</select>' +
-    '<div class="row"><button id="btn-set-long">SetValue: item-12</button></div>' +
-    '<div class="hint">Клавиши: Up / Down, Home / End, PgUp / PgDn, Enter / Space, Escape.</div>' +
-    '</div>' +
-
-    '<div class="panel">' +
-    '<div class="section-title">04 / Чтение значения и проверка API</div>' +
-    '<div class="muted">После выбора нажми «Считать значения». Для каждого select вызывается FPixieElement.GetValue.</div>' +
-    '<div>Язык: <span id="value-basic" class="value">—</span></div>' +
-    '<div>Компонент: <span id="value-groups" class="value">—</span></div>' +
-    '<div>Длинный список: <span id="value-long" class="value">—</span></div>' +
-    '<div class="row">' +
-    '<button id="btn-read-values" class="primary">Считать значения</button>' +
-    '<button id="btn-reset">Сбросить значения</button>' +
-    '</div>' +
-    '<div class="status" id="demo-status">Готово. Выбери значения и нажми «Считать значения».</div>' +
-    '</div>' +
-
-    '<div class="panel">' +
-    '<div class="section-title">05 / Отключённый select</div>' +
-    '<label class="field-label" for="select-disabled">Этот список отключён</label>' +
-    '<div class="field-theme theme-gray">DISABLED / MUTED</div>' +
-    '<select id="select-disabled" class="select-disabled" disabled>' +
-    '<option value="locked" selected>Недоступный элемент</option>' +
-    '<option value="locked-2">Ещё один недоступный элемент</option>' +
-    '</select>' +
-    '<div class="hint disabled-note">Попытка открыть или изменить список не должна менять его значение.</div>' +
-    '</div>' +
-
-    '<div class="hint">FMXPixie Select Demo · multiple не входит в текущий тест.</div>' +
+    '<div class="actions"><span class="action-note">«Рекомендуемые параметры» подставит подходящий набор. Перед продолжением его можно изменить вручную.</span>' +
+    '<button id="btn-recommended">Рекомендуемые параметры</button>' +
+    '<button id="btn-next" class="primary">Далее</button></div>' +
     '</body></html>';
 end;
 
-// ---------------------------------------------------------------------------
-// DOM helpers
-// ---------------------------------------------------------------------------
-procedure SetTextById(const Id, S: String);
+function BuildSummaryHtml: String;
+begin
+  Result :=
+    '<!doctype html><html><head><meta charset="utf-8"><style>' +
+    '*{box-sizing:border-box;}html,body{width:100%;height:668px;margin:0;padding:0;overflow:hidden;}' +
+    'body{padding:24px 28px;background:#0b1422;color:#e7eef7;font:12px "Segoe UI",Arial,sans-serif;}' +
+    '.eyebrow{color:#78bdb4;font-size:10px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;}' +
+    '.title{margin-top:7px;color:#f3f7fb;font-size:22px;font-weight:650;}' +
+    '.subtitle{margin-top:6px;color:#9bacbf;font-size:11px;}' +
+    '.summary{margin-top:24px;padding:18px 20px;background:#132136;border:1px solid #2b405b;border-radius:7px;}' +
+    '.row{padding:12px 0;border-bottom:1px solid #263951;}' +
+    '.row:last-child{border:0;}' +
+    '.label{display:inline-block;vertical-align:top;width:190px;color:#91a5bb;font-size:11px;}' +
+    '.value{display:inline-block;vertical-align:top;width:70%;color:#edf4fb;font-size:12px;}' +
+    '.actions{margin-top:22px;padding-top:14px;border-top:1px solid #24374f;}' +
+    'button{padding:10px 16px;margin-right:8px;background:#253b57;color:#edf4fb;border:1px solid #496482;border-radius:5px;cursor:pointer;font:11px "Segoe UI",Arial,sans-serif;}' +
+    'button:hover{background:#315477;border-color:#82d3c7;color:#fff;}' +
+    'button.primary{float:right;background:#16766e;border-color:#2b9c90;color:#fff;font-weight:700;}' +
+    '.done{margin-top:22px;padding:14px;background:#103a37;border:1px solid #247d73;color:#c7f5ec;border-radius:6px;}' +
+    '</style></head><body>' +
+    '<div class="eyebrow">PIXIE Setup · Шаг 2 из 2</div>' +
+    '<div id="summary-title" class="title">Выбранные параметры</div>' +
+    '<div id="summary-subtitle" class="subtitle">Проверьте выбор перед продолжением.</div>' +
+    '<div class="summary">' +
+    '<div class="row"><span class="label">Язык интерфейса</span><span id="summary-language" class="value"></span></div>' +
+    '<div class="row"><span class="label">Основной компонент</span><span id="summary-component" class="value"></span></div>' +
+    '<div class="row"><span class="label">Дополнительный пакет</span><span id="summary-package" class="value"></span></div>' +
+    '<div class="row"><span class="label">Редакция приложения</span><span id="summary-edition" class="value">Professional</span></div>' +
+    '</div>' +
+    '<div id="summary-done" class="done">Проверьте выбранные параметры и нажмите «Продолжить».</div>' +
+    '<div class="actions"><button id="btn-back">Назад</button>' +
+    '<button id="btn-continue" class="primary">Продолжить</button></div>' +
+    '</body></html>';
+end;
+
+procedure SetOutput(const Id, Value: String);
 var
   H: NativeInt;
 begin
   H := Doc.GetElementById(Id);
   if H <> 0 then
-    Doc.SetElementText(H, S);
+    Doc.SetElementText(H, Value);
 end;
 
-function GetSelectValue(const Id: String): String;
+procedure WriteSelectValue(const Id, Value: String);
+var
+  H: NativeInt;
+begin
+  H := Doc.GetElementById(Id);
+  if H = 0 then Exit;
+  Elem.FCreate(H);
+  Elem.SetValue(Value);
+end;
+
+function ReadSelectValue(const Id: String): String;
 var
   H: NativeInt;
 begin
   Result := '';
   H := Doc.GetElementById(Id);
-  if H = 0 then
-    Exit;
-
+  if H = 0 then Exit;
   Elem.FCreate(H);
   Result := Elem.GetValue;
 end;
 
-procedure SetSelectValue(const Id, Value: String);
-var
-  H: NativeInt;
+function LanguageCaption(const Value: String): String;
 begin
-  H := Doc.GetElementById(Id);
-  if H = 0 then
-    Exit;
-
-  Elem.FCreate(H);
-  Elem.SetValue(Value);
+  if Value = 'en' then Result := 'English'
+  else if Value = 'de' then Result := 'Deutsch'
+  else if Value = 'fr' then Result := 'Français'
+  else if Value = 'es' then Result := 'Español'
+  else Result := 'Русский';
 end;
 
-procedure RefreshValues(const StatusText: String);
+function ComponentCaption(const Value: String): String;
 begin
-  Doc.BeginUpdate;
-  try
-    SetTextById('value-basic', GetSelectValue('select-basic'));
-    SetTextById('value-groups', GetSelectValue('select-groups'));
-    SetTextById('value-long', GetSelectValue('select-long'));
-    SetTextById('demo-status', StatusText);
-  finally
-    Doc.EndUpdate;
-  end;
-  Log('FMXPixie Select Demo: ' + StatusText);
+  if Value = 'fpc' then Result := 'Free Pascal'
+  else if Value = 'skia' then Result := 'Skia'
+  else if Value = 'svg' then Result := 'SVG'
+  else Result := 'Delphi';
+end;
+
+function PackageCaption(const Value: String): String;
+begin
+  if Value = '' then
+    Result := 'Не выбран'
+  else if Value = 'item-12' then
+    Result := 'Пакет 12 — расширенный'
+  else
+    Result := 'Пакет ' + Copy(Value, 6, 2);
+end;
+
+procedure LoadDefaultValues;
+begin
+  LanguageValue := 'ru';
+  ComponentValue := 'delphi';
+  PackageValue := 'item-01';
+  LanguageName := LanguageCaption(LanguageValue);
+  ComponentName := ComponentCaption(ComponentValue);
+  PackageName := PackageCaption(PackageValue);
+end;
+
+procedure ShowOptionsPage;
+begin
+  View.LoadFromString(BuildOptionsHtml);
+  Doc.FCreate(View.GetDocument);
+  WriteSelectValue('select-language', LanguageValue);
+  WriteSelectValue('select-component', ComponentValue);
+  WriteSelectValue('select-package', PackageValue);
+  WriteSelectValue('select-edition', 'professional');
+  Doc.Changed;
+end;
+
+procedure ReadOptions;
+begin
+  LanguageValue := ReadSelectValue('select-language');
+  ComponentValue := ReadSelectValue('select-component');
+  PackageValue := ReadSelectValue('select-package');
+
+  LanguageName := LanguageCaption(LanguageValue);
+  ComponentName := ComponentCaption(ComponentValue);
+  PackageName := PackageCaption(PackageValue);
+end;
+
+procedure ShowSummaryPage;
+begin
+  ReadOptions;
+  IsConfirmed := False;
+  View.LoadFromString(BuildSummaryHtml);
+  Doc.FCreate(View.GetDocument);
+  SetOutput('summary-language', LanguageName);
+  SetOutput('summary-component', ComponentName);
+  SetOutput('summary-package', PackageName);
+  Doc.Changed;
+end;
+
+procedure ConfirmOptions;
+begin
+  IsConfirmed := True;
+  SetOutput('summary-title', 'Настройки сохранены');
+  SetOutput('summary-subtitle', 'Выбранные параметры переданы установщику.');
+  SetOutput('summary-done', 'Готово. В реальном установщике теперь можно переходить к копированию выбранных компонентов.');
+  SetOutput('btn-continue', 'Завершить');
+  Doc.Changed;
 end;
 
 procedure CloseSetup;
@@ -274,17 +326,13 @@ begin
   WizardForm.CancelButton.OnClick(WizardForm.CancelButton);
 end;
 
-// ---------------------------------------------------------------------------
-// Event handling
-// ---------------------------------------------------------------------------
 function ElementClick(Sender, El: TObject): Boolean;
 var
   H: NativeInt;
   Id: String;
 begin
   Result := False;
-  if El = nil then
-    Exit;
+  if El = nil then Exit;
 
   H := NativeInt(El);
   Id := '';
@@ -292,12 +340,10 @@ begin
   begin
     Elem.FCreate(H);
     Id := Elem.GetAttr('id', '');
-    if Id <> '' then
-      Break;
+    if Id <> '' then Break;
     H := Elem.Parent;
   end;
-  if H = 0 then
-    Exit;
+  if H = 0 then Exit;
 
   if Id = 'title-minimize' then
   begin
@@ -313,65 +359,52 @@ begin
     Exit;
   end;
 
-  if Id = 'btn-read-values' then
+  if Id = 'btn-recommended' then
   begin
-    RefreshValues('Значения прочитаны через FPixieElement.GetValue.');
+    WriteSelectValue('select-language', 'en');
+    WriteSelectValue('select-component', 'skia');
+    WriteSelectValue('select-package', 'item-12');
+    LanguageValue := 'en';
+    ComponentValue := 'skia';
+    PackageValue := 'item-12';
     Result := True;
     Exit;
   end;
 
-  if Id = 'btn-set-basic' then
+  if Id = 'btn-next' then
   begin
-    SetSelectValue('select-basic', 'en');
-    RefreshValues('SetValue установил для select-basic значение en.');
+    ShowSummaryPage;
     Result := True;
     Exit;
   end;
 
-  if Id = 'btn-set-group' then
+  if Id = 'btn-back' then
   begin
-    SetSelectValue('select-groups', 'skia');
-    RefreshValues('SetValue установил для select-groups значение skia.');
+    ShowOptionsPage;
     Result := True;
     Exit;
   end;
 
-  if Id = 'btn-set-long' then
+  if Id = 'btn-continue' then
   begin
-    SetSelectValue('select-long', 'item-12');
-    RefreshValues('SetValue установил для select-long значение item-12.');
-    Result := True;
-    Exit;
-  end;
-
-  if Id = 'btn-reset' then
-  begin
-    SetSelectValue('select-basic', 'ru');
-    SetSelectValue('select-groups', 'delphi');
-    SetSelectValue('select-long', 'item-01');
-    RefreshValues('Начальные значения восстановлены.');
+    if IsConfirmed then
+      CloseSetup
+    else
+      ConfirmOptions;
     Result := True;
     Exit;
   end;
 end;
 
-// ---------------------------------------------------------------------------
-// Title bar
-// ---------------------------------------------------------------------------
 procedure ViewMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Single);
 begin
-  if Button <> mbLeft then
-    Exit;
-
+  if Button <> mbLeft then Exit;
   if (Y >= 0) and (Y < TITLEBAR_HEIGHT) and
      (X < TitleView.GetWidth - TITLEBAR_BUTTONS_WIDTH) then
     FMXForm.StartWindowDrag;
 end;
 
-// ---------------------------------------------------------------------------
-// Initialization
-// ---------------------------------------------------------------------------
 procedure FMXInit;
 begin
   FMXForm := InitFormHandle;
@@ -389,33 +422,29 @@ end;
 
 procedure InitializeWizard;
 begin
-  TempDir := ExpandConstant('{tmp}');
+  LoadDefaultValues;
 
   EmptyWizardForm(DEMO_FORM_WIDTH, DEMO_FORM_HEIGHT);
   FMXForm.FCreateBackdropForm(WizardForm.Handle, btMain, True, True);
+  FMXForm.Caption('PIXIE Setup');
 
   TitleView.FCreate(FMXForm.Handle);
-  TitleView.Left(0);
-  TitleView.Top(0);
-  TitleView.Width(DEMO_FORM_WIDTH);
-  TitleView.Height(TITLEBAR_HEIGHT);
+  TitleView.SetBounds(0, 0, DEMO_FORM_WIDTH, TITLEBAR_HEIGHT);
   TitleView.ColorScheme(pcsDark);
+  TitleView.HitTest(True);
   TitleView.OnElementClick(@ElementClick);
   TitleView.OnMouseDown(@ViewMouseDown);
-  TitleView.LoadFromString(BuildTitleBarHtml);
+  TitleView.LoadFromString(BuildTitleHtml);
 
   View.FCreate(FMXForm.Handle);
-  View.Left(0);
-  View.Top(TITLEBAR_HEIGHT);
-  View.Width(DEMO_FORM_WIDTH);
-  View.Height(DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT);
+  View.SetBounds(0, TITLEBAR_HEIGHT, DEMO_FORM_WIDTH,
+    DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT);
   View.ColorScheme(pcsDark);
-  View.BaseUrl(TempDir + '\');
+  View.SetScrollbarVisibility(svHide);
+  View.HitTest(True);
   View.OnElementClick(@ElementClick);
-  View.LoadFromStringUrl(BuildDemoHtml, TempDir + '\');
 
-  Doc.FCreate(View.GetDocument);
-  RefreshValues('Готово. Select / Option загружены.');
+  ShowOptionsPage;
   FMXForm.Show;
 end;
 
