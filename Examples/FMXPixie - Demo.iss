@@ -84,6 +84,7 @@ begin
     '.hint{margin:0 0 14px;color:#91a3b8;font-size:10px;line-height:1.45;}' +
     '.field{margin-bottom:15px;}' +
     '.field-title{display:block;margin-bottom:6px;color:#d8e2ee;font-size:11px;font-weight:600;}' +
+    '.validation{min-height:13px;margin-top:4px;color:#f08b96;font-size:10px;}' +
     'input[type=text],select,textarea{display:block;width:100%;padding:9px 10px;background:#0b1728;color:#edf4fb;border:1px solid #3d536f;border-radius:5px;font:12px "Segoe UI",Arial,sans-serif;}' +
     'input[type=text]:focus,select:focus,textarea:focus{border-color:#71c9bc;}' +
     'textarea{height:91px;resize:none;line-height:1.4;}' +
@@ -110,7 +111,8 @@ begin
     '<div class="heading">Расположение и состав</div>' +
     '<p class="hint">Укажите, куда установить PIXIE, и выберите нужные компоненты.</p>' +
     '<div class="field"><label class="field-title" for="install-path">Папка установки</label>' +
-    '<input id="install-path" type="text" value="C:\Program Files\PIXIE"></div>' +
+    '<input id="install-path" type="text" value="C:\Program Files\PIXIE">' +
+    '<div id="path-error" class="validation"></div></div>' +
     '<div class="group-label">Тип установки</div>' +
     '<label class="choice"><input id="mode-standard" type="radio" name="install-mode" value="standard" checked>Обычная установка<small>Основные файлы и необходимые компоненты</small></label>' +
     '<label class="choice"><input id="mode-full" type="radio" name="install-mode" value="full">Полная установка<small>Все компоненты, темы и примеры</small></label>' +
@@ -289,6 +291,7 @@ begin
   View.LoadFromString(BuildOptionsHtml);
   Doc.FCreate(View.GetDocument);
   ApplySavedSettings;
+  SetOutput('path-error', '');
 end;
 
 procedure ReadSettingsFromForm;
@@ -412,7 +415,7 @@ begin
   begin
     if Trim(ReadControlValue('install-path')) = '' then
     begin
-      SetOutput('summary-state', ''); // The options page remains open for correction.
+      SetOutput('path-error', 'Укажите папку, в которую установить PIXIE.');
       Result := True;
       Exit;
     end;
