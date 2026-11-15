@@ -1,6 +1,5 @@
-﻿
 #define DemoAppName "FMXPixie - Demo"
-#define DemoAppVersion "1.0"
+#define DemoAppVersion "2.0"
 
 [Setup]
 AppName={#DemoAppName}
@@ -24,8 +23,8 @@ Source: "Modules\FMXPixie_x86.dll"; DestName: "FMXPixie.dll"; Flags: dontcopy
 const
   DEMO_FORM_WIDTH = 900;
   DEMO_FORM_HEIGHT = 690;
-  TITLEBAR_HEIGHT = 32;
-  TITLEBAR_BUTTONS_WIDTH = 92; // две кнопки по 46 px справа
+  TITLEBAR_HEIGHT = 34;
+  TITLEBAR_BUTTONS_WIDTH = 92;
 
 var
   FMXForm: FForm;
@@ -33,259 +32,338 @@ var
   View: FPixieHtmlView;
   Doc: FPixieDocument;
   Elem: FPixieElement;
-  FoundList: FPixieElementList;
 
-  TempDir: String;
-  ClickCount: Integer;
-  DemoProgress: Integer;
-  ZoomFactor: Double;
-  SystemEnabled: Boolean;
-  DesktopShortcut: Boolean;
-  LaunchAfterInstall: Boolean;
+  InstallPath: String;
+  InstallNotes: String;
+  InstallMode: String;
+  InstallModeValue: String;
+  LanguageName: String;
+  LanguageValue: String;
+  Compression: String;
+  SelectedComponents: String;
+  CreateShortcut: Boolean;
+  IncludeExamples: Boolean;
+  IncludeThemes: Boolean;
+  IsInstalled: Boolean;
 
-  PdfFileName: String;
-  PngFileName: String;
-
-function BuildTitleBarHtml: String;
+function BuildTitleHtml: String;
 begin
   Result :=
-    '<!doctype html>' +
-    '<html><head><meta charset="utf-8">' +
-    '<style>' +
-    'html, body { width: 100%; height: 32px; margin: 0; padding: 0;' +
-    '  overflow: hidden; }' +
-    'body { background: #111827; color: #e5e7eb;' +
-    '  font-family: "Segoe UI", Arial, sans-serif; font-size: 14px; }' +
-    '.titlebar { position: relative; width: 100%; height: 31px; overflow: hidden;' +
-    '  background: #111827; border-bottom: 1px solid #263247;' +
-    '  color: #e5e7eb; line-height: 31px; }' +
-    '.title-caption { margin-left: 10px; color: #93c5fd; font-weight: bold; }' +
-    '.title-controls { position: absolute; top: 0; right: 0; width: 92px;' +
-    '  height: 31px; font-size: 0; }' +
-    '.title-button { display: inline-block; vertical-align: top; overflow: hidden;' +
-    '  width: 46px; height: 31px; line-height: 31px; text-align: center;' +
-    '  color: #d1d5db; cursor: pointer; font-size: 23px; }' +
-    '.title-close { font-size: 25px; line-height: 28px; }' +
-    '.title-minimize:hover { background: #25344b; color: #ffffff; }' +
-    '.title-close:hover { background: #dc2626; color: #ffffff; }' +
-    '.title-button:active { background: #1d4ed8; }' +
+    '<!doctype html><html><head><meta charset="utf-8"><style>' +
+    'html,body{width:100%;height:34px;margin:0;padding:0;overflow:hidden;}' +
+    'body{background:#111c2b;color:#e8eef7;font:13px "Segoe UI",Arial,sans-serif;}' +
+    '.bar{position:relative;height:33px;line-height:33px;background:#111c2b;border-bottom:1px solid #2b3b50;}' +
+    '.brand{padding-left:15px;color:#91ddd1;font-weight:700;letter-spacing:.4px;}' +
+    '.caption{margin-left:9px;color:#91a2b7;font-size:11px;}' +
+    '.controls{position:absolute;top:0;right:0;width:92px;height:33px;font-size:0;}' +
+    '.control{display:inline-block;width:46px;height:33px;text-align:center;line-height:31px;color:#cbd5e1;font-size:21px;cursor:pointer;}' +
+    '.control:hover{background:#2d4059;color:#fff;}' +
+    '.close:hover{background:#c43d4b;}' +
+    '</style></head><body><div class="bar">' +
+    '<span class="brand">PIXIE</span><span class="caption">Мастер установки</span>' +
+    '<div class="controls"><div id="title-minimize" class="control">−</div>' +
+    '<div id="title-close" class="control close">×</div></div></div></body></html>';
+end;
+
+function BuildOptionsHtml: String;
+begin
+  Result :=
+    '<!doctype html><html><head><meta charset="utf-8"><style>' +
+    '*{box-sizing:border-box;}' +
+    'html,body{width:100%;height:656px;margin:0;padding:0;overflow:hidden;}' +
+    'body{padding:20px 23px;background:#0b1422;color:#e7eef7;font:13px "Segoe UI",Arial,sans-serif;}' +
+    '.intro{height:86px;}' +
+    '.eyebrow{color:#78bdb4;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}' +
+    '.title{margin-top:5px;color:#f3f7fb;font-size:23px;font-weight:650;}' +
+    '.subtitle{margin-top:5px;color:#9bacbf;font-size:11px;}' +
+    '.layout{height:435px;white-space:nowrap;}' +
+    '.panel{display:inline-block;vertical-align:top;height:425px;padding:17px;background:#132136;border:1px solid #2b405b;border-radius:8px;white-space:normal;}' +
+    '.left{width:55%;}' +
+    '.right{width:43%;margin-left:1.2%;}' +
+    '.heading{margin-bottom:7px;color:#93d9ce;font-size:14px;font-weight:650;}' +
+    '.hint{margin:0 0 14px;color:#91a3b8;font-size:10px;line-height:1.45;}' +
+    '.field{margin-bottom:15px;}' +
+    '.field-title{display:block;margin-bottom:6px;color:#d8e2ee;font-size:11px;font-weight:600;}' +
+    'input[type=text],select,textarea{display:block;width:100%;padding:9px 10px;background:#0b1728;color:#edf4fb;border:1px solid #3d536f;border-radius:5px;font:12px "Segoe UI",Arial,sans-serif;}' +
+    'input[type=text]:focus,select:focus,textarea:focus{border-color:#71c9bc;}' +
+    'textarea{height:91px;resize:none;line-height:1.4;}' +
+    'input[type=range]{display:block;width:100%;margin:13px 0 6px;}' +
+    '.range-labels{color:#8ea1b7;font-size:10px;}' +
+    '.choice{display:block;margin:8px 0;padding:8px 9px;border:1px solid #2b405b;border-radius:5px;color:#dce6f1;font-size:11px;cursor:pointer;}' +
+    '.choice:hover{background:#1c3049;border-color:#68bdb2;color:#fff;}' +
+    '.choice input{margin:0 8px 0 0;vertical-align:middle;}' +
+    '.choice small{display:block;margin:4px 0 0 23px;color:#91a3b8;font-size:10px;}' +
+    '.group-label{margin:16px 0 6px;color:#91a3b8;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;}' +
+    '.actions{height:63px;padding-top:12px;border-top:1px solid #24374f;}' +
+    '.action-note{display:inline-block;vertical-align:middle;width:62%;color:#8396ad;font-size:10px;line-height:1.4;}' +
+    'button{padding:10px 17px;background:#253b57;color:#edf4fb;border:1px solid #496482;border-radius:5px;cursor:pointer;font:12px "Segoe UI",Arial,sans-serif;}' +
+    'button:hover{background:#315477;border-color:#82d3c7;color:#fff;}' +
+    'button:active{background:#1a2e47;}' +
+    'button.primary{float:right;background:#16766e;border-color:#2b9c90;color:#fff;font-weight:700;}' +
+    'button.primary:hover{background:#209287;}' +
     '</style></head><body>' +
-    '<div id="demo-titlebar" class="titlebar">' +
-    '  <span class="title-caption">FMXPixie Demo</span>' +
-    '  <div class="title-controls">' +
-    '    <div id="title-minimize" class="title-button title-minimize" title="Свернуть">−</div>' +
-    '    <div id="title-close" class="title-button title-close" title="Закрыть">×</div>' +
-    '  </div>' +
+    '<div class="intro"><div class="eyebrow">PIXIE Setup · Шаг 1 из 2</div>' +
+    '<div class="title">Выберите параметры установки</div>' +
+    '<div class="subtitle">Настройте папку, состав и внешний вид приложения. Изменения можно будет проверить перед продолжением.</div></div>' +
+    '<div class="layout">' +
+    '<div class="panel left">' +
+    '<div class="heading">Расположение и состав</div>' +
+    '<p class="hint">Укажите, куда установить PIXIE, и выберите нужные компоненты.</p>' +
+    '<div class="field"><label class="field-title" for="install-path">Папка установки</label>' +
+    '<input id="install-path" type="text" value="C:\Program Files\PIXIE"></div>' +
+    '<div class="group-label">Тип установки</div>' +
+    '<label class="choice"><input id="mode-standard" type="radio" name="install-mode" value="standard" checked>Обычная установка<small>Основные файлы и необходимые компоненты</small></label>' +
+    '<label class="choice"><input id="mode-full" type="radio" name="install-mode" value="full">Полная установка<small>Все компоненты, темы и примеры</small></label>' +
+    '<div class="group-label">Дополнительные компоненты</div>' +
+    '<label class="choice"><input id="component-examples" type="checkbox" value="examples" checked>Примеры и шаблоны</label>' +
+    '<label class="choice"><input id="component-themes" type="checkbox" value="themes">Дополнительные темы оформления</label>' +
+    '<label class="choice"><input id="component-shortcut" type="checkbox" value="desktop-shortcut" checked>Создать ярлык на рабочем столе</label>' +
     '</div>' +
+    '<div class="panel right">' +
+    '<div class="heading">Предпочтения</div>' +
+    '<p class="hint">Выберите язык и настройте параметры установки.</p>' +
+    '<div class="field"><label class="field-title" for="install-language">Язык интерфейса</label>' +
+    '<select id="install-language"><option value="ru">Русский</option><option value="en">English</option><option value="de">Deutsch</option></select></div>' +
+    '<div class="field"><label class="field-title" for="install-compression">Уровень сжатия</label>' +
+    '<input id="install-compression" type="range" min="0" max="10" step="1" value="6">' +
+    '<div class="range-labels">Быстрее <span style="float:right">Меньше места</span></div></div>' +
+    '<div class="field"><label class="field-title" for="install-notes">Дополнительные пожелания</label>' +
+    '<textarea id="install-notes">Создать резервную копию настроек' + #13#10 + 'Проверить наличие обновлений</textarea></div>' +
+    '</div></div>' +
+    '<div class="actions"><span class="action-note">Наведите курсор на карточки и кнопки — они подсветятся. Все выбранные параметры сохраняются при возврате назад.</span>' +
+    '<button id="btn-next" class="primary">Далее</button></div>' +
     '</body></html>';
 end;
 
-function BuildDemoHtml: String;
+function BuildSummaryHtml: String;
 begin
   Result :=
-    '<!doctype html>' +
-    '<html><head><meta charset="utf-8">' +
-    '<style>' +
-    'body {' +
-    '  margin: 0; padding: 22px; background: transparent; color: #e5e7eb;' +
-    '  font-family: "Segoe UI", Arial, sans-serif; font-size: 14px;' +
-    '}' +
-    '.topline { background: #111827; border: 1px solid #263247; padding: 18px;' +
-    '  margin-bottom: 14px; }' +
-    '.brand { color: #93c5fd; font-size: 25px; font-weight: bold; }' +
-    '.sub { color: #9ca3af; margin-top: 4px; }' +
-    '.tag { color: #a7f3d0; border: 1px solid #276749; padding: 4px 8px;' +
-    '  margin-top: 10px; display: inline-block; }' +
-    '.panel { background: #111827; border: 1px solid #263247; padding: 16px;' +
-    '  margin-bottom: 14px; }' +
-    '.section-title { color: #93c5fd; font-weight: bold; margin-bottom: 10px; }' +
-    '.muted { color: #9ca3af; }' +
-    '.button-row { margin-top: 10px; }' +
-    'button { background: #25344b; color: #f9fafb; border: 1px solid #40516b;' +
-    '  padding: 9px 12px; margin: 3px 5px 3px 0; cursor: pointer; }' +
-    'button:hover { background: #2563a6; border-color: #60a5fa; }' +
-    'button:active { background: #174477; }' +
-    '.primary { background: #1d4ed8; border-color: #3b82f6; }' +
-    '.feature-card { background: #0f172a; border: 1px solid #263247;' +
-    '  padding: 12px; margin: 8px 0; }' +
-    '.feature-card:hover { background: #17243a; border-color: #3b82f6; }' +
-    '.check-row { margin: 9px 0; }' +
-    '.check { display: inline-block; width: 15px; height: 15px;' +
-    '  border: 1px solid #64748b; margin-right: 8px; }' +
-    '.check.is-on { background: #16a34a; border-color: #4ade80; }' +
-    '.state-pill { display: inline-block; padding: 5px 9px; margin-left: 5px;' +
-    '  border: 1px solid #276749; color: #a7f3d0; }' +
-    '.state-pill.is-off { color: #fecaca; border-color: #9f1239; }' +
-    '.progress-track { height: 14px; background: #263247; margin: 8px 0;' +
-    '  border: 1px solid #40516b; }' +
-    '.progress-fill { height: 14px; width: 0%; background: #22c55e; }' +
-    '.status { background: #07101f; border: 1px solid #263247; padding: 10px;' +
-    '  color: #bfdbfe; margin-top: 12px; }' +
-    'a { color: #93c5fd; text-decoration: underline; }' +
-    'a:hover { color: #4ade80; }' +
-    '.small { font-size: 12px; color: #9ca3af; }' +
+    '<!doctype html><html><head><meta charset="utf-8"><style>' +
+    '*{box-sizing:border-box;}' +
+    'html,body{width:100%;height:656px;margin:0;padding:0;overflow:hidden;}' +
+    'body{padding:23px 28px;background:#0b1422;color:#e7eef7;font:13px "Segoe UI",Arial,sans-serif;}' +
+    '.eyebrow{color:#78bdb4;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}' +
+    '.title{margin-top:6px;color:#f3f7fb;font-size:23px;font-weight:650;}' +
+    '.subtitle{margin-top:6px;color:#9bacbf;font-size:11px;}' +
+    '.summary{margin-top:22px;padding:18px 20px;background:#132136;border:1px solid #2b405b;border-radius:8px;}' +
+    '.row{padding:10px 0;border-bottom:1px solid #263951;}' +
+    '.row:last-child{border-bottom:0;}' +
+    '.label{display:inline-block;vertical-align:top;width:185px;color:#91a5bb;font-size:11px;}' +
+    '.value{display:inline-block;vertical-align:top;width:calc(100% - 195px);color:#edf4fb;font-size:12px;line-height:1.5;white-space:pre-wrap;}' +
+    '.progress{height:8px;margin-top:22px;background:#22344a;border-radius:5px;overflow:hidden;}' +
+    '.fill{width:0;height:8px;background:#42b8a8;}' +
+    '.state{margin-top:9px;color:#9bacbf;font-size:11px;}' +
+    '.actions{margin-top:22px;padding-top:14px;border-top:1px solid #24374f;}' +
+    'button{margin-right:9px;padding:10px 17px;background:#253b57;color:#edf4fb;border:1px solid #496482;border-radius:5px;cursor:pointer;font:12px "Segoe UI",Arial,sans-serif;}' +
+    'button:hover{background:#315477;border-color:#82d3c7;color:#fff;}' +
+    'button.primary{float:right;background:#16766e;border-color:#2b9c90;color:#fff;font-weight:700;}' +
+    'button.primary:hover{background:#209287;}' +
     '</style></head><body>' +
-
-    '<div class="topline">' +
-    '  <div class="brand">FMXPixie</div>' +
-    '  <div class="sub">HTML + CSS внутри FMX-формы Inno Setup</div>' +
-    '  <div class="tag">DEMO · INSTALLER / LAUNCHER UI</div>' +
+    '<div class="eyebrow">PIXIE Setup · Шаг 2 из 2</div>' +
+    '<div id="summary-title" class="title">Всё готово к установке</div>' +
+    '<div id="summary-subtitle" class="subtitle">Проверьте выбранные параметры. Чтобы что-то изменить, вернитесь на предыдущий шаг.</div>' +
+    '<div class="summary">' +
+    '<div class="row"><span class="label">Папка установки</span><span id="summary-path" class="value"></span></div>' +
+    '<div class="row"><span class="label">Тип установки</span><span id="summary-mode" class="value"></span></div>' +
+    '<div class="row"><span class="label">Компоненты</span><span id="summary-components" class="value"></span></div>' +
+    '<div class="row"><span class="label">Язык интерфейса</span><span id="summary-language" class="value"></span></div>' +
+    '<div class="row"><span class="label">Уровень сжатия</span><span id="summary-compression" class="value"></span></div>' +
+    '<div class="row"><span class="label">Дополнительные пожелания</span><span id="summary-notes" class="value"></span></div>' +
     '</div>' +
-
-    '<div class="panel">' +
-    '  <div class="section-title">01 / СОБЫТИЯ И DOM</div>' +
-    '  <div class="muted">Кнопки вызывают Pascal Script через OnElementClick.' +
-    ' Изменение текста и классов выполняется через FPixieDocument / FPixieElement.</div>' +
-    '  <div class="button-row">' +
-    '    <button id="btn-counter" class="primary">Увеличить счётчик</button>' +
-    '    <button id="btn-toggle">Переключить состояние</button>' +
-    '    <button id="btn-query">QuerySelectorAll</button>' +
-    '    <button id="btn-close">Закрыть демо</button>' +
-    '  </div>' +
-    '  <div class="feature-card" id="feature-css"><b>CSS :hover</b>' +
-    '    <div class="muted">Наведи курсор на эту карточку или на кнопку.</div></div>' +
-    '  <div class="feature-card" id="feature-events"><b>События</b>' +
-    '    <div class="muted">Клик по кнопке и HTML-ссылке обрабатывается в ISS.</div></div>' +
-    '  <div class="feature-card" id="feature-dom"><b>Обновление DOM</b>' +
-    '    <div class="muted">Изменения объединяются через BeginUpdate / EndUpdate.</div></div>' +
-    '  <div>Счётчик: <b id="counter-value">0</b>' +
-    '    &nbsp; Состояние: <span id="state-value" class="state-pill">Включено</span></div>' +
-    '  <div id="query-result" class="small">QuerySelectorAll ещё не запускался.</div>' +
-    '</div>' +
-
-    '<div class="panel">' +
-    '  <div class="section-title">02 / ПАРАМЕТРЫ УСТАНОВКИ</div>' +
-    '  <div class="muted">Это демонстрационные флаги. В реальном установщике их значения' +
-    ' используются при создании ярлыков, выборе компонентов и запуске приложения.</div>' +
-    '  <div class="check-row"><div id="opt-desktop" class="check is-on"></div>' +
-    '    Создать ярлык на рабочем столе' +
-    '    <span id="desktop-value" class="small">Включено</span></div>' +
-    '  <div class="check-row"><div id="opt-launch" class="check"></div>' +
-    '    Запустить приложение после установки' +
-    '    <span id="launch-value" class="small">Выключено</span></div>' +
-    '  <div class="section-title">Пример обновления прогресса</div>' +
-    '  <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>' +
-    '  <div>Прогресс: <b id="progress-value">0%</b></div>' +
-    '  <div class="button-row"><button id="btn-progress">Симулировать +10%</button>' +
-    '    <button id="btn-reset">Сбросить демо</button></div>' +
-    '</div>' +
-
-    '<div class="panel">' +
-    '  <div class="section-title">03 / ФУНКЦИИ HTML VIEW</div>' +
-    '  <div class="button-row">' +
-    '    <button id="btn-zoom-in">Увеличить масштаб</button>' +
-    '    <button id="btn-zoom-reset">Масштаб 100%</button>' +
-    '    <button id="btn-pdf">Экспорт PDF</button>' +
-    '    <button id="btn-png">Экспорт PNG</button>' +
-    '    <button id="btn-launch-notepad">Запустить Блокнот</button>' +
-    '  </div>' +
-    '  <div class="muted">Масштаб: <b id="zoom-value">100%</b></div>' +
-    '  <div style="margin-top:10px">' +
-    '    Внешняя ссылка — только проверка события, она не открывает браузер:' +
-    '    <a id="demo-anchor" href="https://example.com/">OnAnchorClick</a>' +
-    '  </div>' +
-    '  <div class="small" style="margin-top:8px">PDF и PNG сохраняются во временный каталог Inno Setup.</div>' +
-    '  <div id="demo-status" class="status">Готово. Нажми любую кнопку для демонстрации.</div>' +
-    '</div>' +
-
-    '<div class="small">FMXPixie Demo · демонстрационный интерфейс, без установки реального приложения.</div>' +
+    '<div class="progress"><div id="install-progress" class="fill"></div></div>' +
+    '<div id="summary-state" class="state">Настройки проверены. Можно начинать установку.</div>' +
+    '<div class="actions"><button id="btn-back">Назад</button>' +
+    '<button id="btn-install" class="primary">Установить</button></div>' +
     '</body></html>';
 end;
 
-// ---------------------------------------------------------------------------
-// DOM helpers
-// ---------------------------------------------------------------------------
-procedure SetTextById(const Id, S: String);
+procedure SetOutput(const Id, Value: String);
 var
   H: NativeInt;
 begin
   H := Doc.GetElementById(Id);
   if H <> 0 then
-    Doc.SetElementText(H, S);
+    Doc.SetElementText(H, Value);
 end;
 
-procedure SetClassById(const Id, ClassName: String);
+function ElementHandle(const Id: String): NativeInt;
+begin
+  Result := Doc.GetElementById(Id);
+end;
+
+procedure WriteControlValue(const Id, Value: String);
 var
   H: NativeInt;
 begin
-  H := Doc.GetElementById(Id);
+  H := ElementHandle(Id);
   if H = 0 then
     Exit;
   Elem.FCreate(H);
-  Elem.SetAttr('class', ClassName);
+  Elem.SetValue(Value);
 end;
 
-procedure SetStatus(const S: String);
-begin
-  SetTextById('demo-status', S);
-  Log('FMXPixie Demo: ' + S);
-end;
-
-procedure UpdateProgressVisual;
+function ReadControlValue(const Id: String): String;
 var
   H: NativeInt;
 begin
-  H := Doc.GetElementById('progress-fill');
-  if H <> 0 then
-  begin
-    Elem.FCreate(H);
-    Elem.SetAttr('style', 'width:' + IntToStr(DemoProgress) + '%');
-  end;
-  SetTextById('progress-value', IntToStr(DemoProgress) + '%');
+  Result := '';
+  H := ElementHandle(Id);
+  if H = 0 then
+    Exit;
+  Elem.FCreate(H);
+  Result := Elem.GetValue;
 end;
 
-procedure ApplyInitialState;
+procedure WriteChecked(const Id: String; Value: Boolean);
+var
+  H: NativeInt;
 begin
+  H := ElementHandle(Id);
+  if H = 0 then
+    Exit;
+  Elem.FCreate(H);
+  Elem.SetChecked(Value);
+end;
+
+function ReadChecked(const Id: String): Boolean;
+var
+  H: NativeInt;
+begin
+  Result := False;
+  H := ElementHandle(Id);
+  if H = 0 then
+    Exit;
+  Elem.FCreate(H);
+  Result := Elem.GetChecked;
+end;
+
+procedure SetElementStyle(const Id, StyleText: String);
+var
+  H: NativeInt;
+begin
+  H := ElementHandle(Id);
+  if H = 0 then
+    Exit;
+  Elem.FCreate(H);
+  Elem.SetAttr('style', StyleText);
+end;
+
+procedure ApplySavedSettings;
+begin
+  WriteControlValue('install-path', InstallPath);
+  WriteControlValue('install-notes', InstallNotes);
+  WriteControlValue('install-language', LanguageValue);
+  WriteControlValue('install-compression', Compression);
+
+  WriteControlValue('mode-standard', 'standard');
+  WriteControlValue('mode-full', 'full');
+  WriteControlValue('component-examples', 'examples');
+  WriteControlValue('component-themes', 'themes');
+  WriteControlValue('component-shortcut', 'desktop-shortcut');
+
+  WriteChecked('mode-standard', InstallModeValue = 'standard');
+  WriteChecked('mode-full', InstallModeValue = 'full');
+  WriteChecked('component-examples', IncludeExamples);
+  WriteChecked('component-themes', IncludeThemes);
+  WriteChecked('component-shortcut', CreateShortcut);
+  Doc.Changed;
+end;
+
+procedure LoadDefaultSettings;
+begin
+  InstallPath := 'C:\Program Files\PIXIE';
+  InstallNotes := 'Создать резервную копию настроек' + #13#10 +
+    'Проверить наличие обновлений';
+  InstallModeValue := 'standard';
+  InstallMode := 'Обычная установка';
+  LanguageValue := 'ru';
+  LanguageName := 'Русский';
+  Compression := '6';
+  IncludeExamples := True;
+  IncludeThemes := False;
+  CreateShortcut := True;
+end;
+
+procedure ShowOptionsPage;
+begin
+  View.LoadFromString(BuildOptionsHtml);
+  Doc.FCreate(View.GetDocument);
+  ApplySavedSettings;
+end;
+
+procedure ReadSettingsFromForm;
+var
+  Parts: String;
+begin
+  InstallPath := ReadControlValue('install-path');
+  InstallNotes := ReadControlValue('install-notes');
+  Compression := ReadControlValue('install-compression');
+  LanguageValue := ReadControlValue('install-language');
+
+  if LanguageValue = 'en' then
+    LanguageName := 'English'
+  else if LanguageValue = 'de' then
+    LanguageName := 'Deutsch'
+  else
+    LanguageName := 'Русский';
+
+  if ReadChecked('mode-full') then
+  begin
+    InstallModeValue := ReadControlValue('mode-full');
+    InstallMode := 'Полная установка';
+  end
+  else
+  begin
+    InstallModeValue := ReadControlValue('mode-standard');
+    InstallMode := 'Обычная установка';
+  end;
+
+  IncludeExamples := ReadChecked('component-examples');
+  IncludeThemes := ReadChecked('component-themes');
+  CreateShortcut := ReadChecked('component-shortcut');
+
+  Parts := '';
+  if IncludeExamples then
+    Parts := Parts + 'Примеры и шаблоны' + #13#10;
+  if IncludeThemes then
+    Parts := Parts + 'Дополнительные темы оформления' + #13#10;
+  if CreateShortcut then
+    Parts := Parts + 'Ярлык на рабочем столе' + #13#10;
+  if Parts = '' then
+    Parts := 'Дополнительные компоненты не выбраны';
+  SelectedComponents := Parts;
+end;
+
+procedure ShowSummaryPage;
+begin
+  ReadSettingsFromForm;
+  IsInstalled := False;
+
+  View.LoadFromString(BuildSummaryHtml);
+  Doc.FCreate(View.GetDocument);
   Doc.BeginUpdate;
   try
-    SetTextById('counter-value', IntToStr(ClickCount));
-    SetTextById('state-value', 'Включено');
-    SetClassById('state-value', 'state-pill');
-    SetClassById('opt-desktop', 'check is-on');
-    SetClassById('opt-launch', 'check');
-    SetTextById('desktop-value', 'Включено');
-    SetTextById('launch-value', 'Выключено');
-    SetTextById('query-result', 'QuerySelectorAll ещё не запускался.');
-    SetTextById('zoom-value', '100%');
-    UpdateProgressVisual;
+    SetOutput('summary-path', InstallPath);
+    SetOutput('summary-mode', InstallMode);
+    SetOutput('summary-components', SelectedComponents);
+    SetOutput('summary-language', LanguageName);
+    SetOutput('summary-compression', Compression + ' из 10');
+    SetOutput('summary-notes', InstallNotes);
+    SetOutput('summary-state', 'Настройки проверены. Можно начинать установку.');
   finally
     Doc.EndUpdate;
   end;
   Doc.Changed;
 end;
 
-procedure ToggleOption(const Id: String);
+procedure FinishDemoInstall;
 begin
-  if Id = 'opt-desktop' then
-  begin
-    DesktopShortcut := not DesktopShortcut;
-    if DesktopShortcut then
-    begin
-      SetClassById('opt-desktop', 'check is-on');
-      SetTextById('desktop-value', 'Включено');
-    end
-    else
-    begin
-      SetClassById('opt-desktop', 'check');
-      SetTextById('desktop-value', 'Выключено');
-    end;
-    SetStatus('Параметр ярлыка изменён. В реальном проекте используй DesktopShortcut при создании ярлыка.');
-  end
-  else if Id = 'opt-launch' then
-  begin
-    LaunchAfterInstall := not LaunchAfterInstall;
-    if LaunchAfterInstall then
-    begin
-      SetClassById('opt-launch', 'check is-on');
-      SetTextById('launch-value', 'Включено');
-    end
-    else
-    begin
-      SetClassById('opt-launch', 'check');
-      SetTextById('launch-value', 'Выключено');
-    end;
-    SetStatus('Параметр запуска изменён. В реальном проекте проверяй LaunchAfterInstall в конце установки.');
-  end;
+  IsInstalled := True;
+  SetElementStyle('install-progress', 'width:100%;');
+  SetOutput('summary-title', 'Демонстрация завершена');
+  SetOutput('summary-subtitle', 'PIXIE Setup получил выбранные параметры. Файлы на компьютер не копировались.');
+  SetOutput('summary-state', 'Готово. В реальном установщике здесь начинается копирование выбранных компонентов.');
+  SetOutput('btn-install', 'Завершить');
   Doc.Changed;
 end;
 
@@ -294,15 +372,10 @@ begin
   WizardForm.CancelButton.OnClick(WizardForm.CancelButton);
 end;
 
-// ---------------------------------------------------------------------------
-// Обработка кликов: подъем по родительским элементам DOM до ближайшего 
-// элемента с идентификатором.
-// ---------------------------------------------------------------------------
 function ElementClick(Sender, El: TObject): Boolean;
 var
   H: NativeInt;
   Id: String;
-  ResultCode: Integer;
 begin
   Result := False;
   if El = nil then
@@ -321,19 +394,6 @@ begin
   if H = 0 then
     Exit;
 
-  if (Id = 'opt-desktop') or (Id = 'opt-launch') then
-  begin
-    Doc.BeginUpdate;
-    try
-      ToggleOption(Id);
-    finally
-      Doc.EndUpdate;
-    end;
-    Doc.Changed;
-    Result := True;
-    Exit;
-  end;
-
   if Id = 'title-minimize' then
   begin
     FMXForm.Minimize;
@@ -348,208 +408,47 @@ begin
     Exit;
   end;
 
-  if Id = 'btn-counter' then
+  if Id = 'btn-next' then
   begin
-    Inc(ClickCount);
-    Doc.BeginUpdate;
-    try
-      SetTextById('counter-value', IntToStr(ClickCount));
-      SetStatus('Клик обработан в Pascal Script; текст в HTML обновлён через DOM.');
-    finally
-      Doc.EndUpdate;
+    if Trim(ReadControlValue('install-path')) = '' then
+    begin
+      SetOutput('summary-state', ''); // The options page remains open for correction.
+      Result := True;
+      Exit;
     end;
-    Doc.Changed;
+    ShowSummaryPage;
     Result := True;
     Exit;
   end;
 
-  if Id = 'btn-toggle' then
+  if Id = 'btn-back' then
   begin
-    SystemEnabled := not SystemEnabled;
-    Doc.BeginUpdate;
-    try
-      if SystemEnabled then
-      begin
-        SetClassById('state-value', 'state-pill');
-        SetTextById('state-value', 'Включено');
-      end
-      else
-      begin
-        SetClassById('state-value', 'state-pill is-off');
-        SetTextById('state-value', 'Выключено');
-      end;
-      if SystemEnabled then
-        SetStatus('Состояние включено.')
-      else
-        SetStatus('Состояние выключено.');
-    finally
-      Doc.EndUpdate;
-    end;
-    Doc.Changed;
+    ShowOptionsPage;
     Result := True;
     Exit;
   end;
 
-  if Id = 'btn-query' then
+  if Id = 'btn-install' then
   begin
-    FoundList := InitPixieElementList;
-    FoundList.FCreate(Doc.QuerySelectorAll('.feature-card'));
-    SetTextById('query-result', 'QuerySelectorAll(''.feature-card'') нашёл карточек: ' +
-      IntToStr(FoundList.Count));
-    SetStatus('CSS-селектор выполнен через FPixieDocument.QuerySelectorAll.');
-    Doc.Changed;
-    Result := True;
-    Exit;
-  end;
-
-  if Id = 'btn-progress' then
-  begin
-    DemoProgress := DemoProgress + 10;
-    if DemoProgress > 100 then
-      DemoProgress := 0;
-    Doc.BeginUpdate;
-    try
-      UpdateProgressVisual;
-      SetStatus('Прогресс обновлён из Inno Pascal Script: ' + IntToStr(DemoProgress) + '%.');
-    finally
-      Doc.EndUpdate;
-    end;
-    Doc.Changed;
-    Result := True;
-    Exit;
-  end;
-
-  if Id = 'btn-reset' then
-  begin
-    ClickCount := 0;
-    DemoProgress := 0;
-    ZoomFactor := 1.0;
-    SystemEnabled := True;
-    DesktopShortcut := True;
-    LaunchAfterInstall := False;
-    View.Zoom(ZoomFactor);
-    Doc.BeginUpdate;
-    try
-      ApplyInitialState;
-      SetStatus('Демо сброшено к начальному состоянию.');
-    finally
-      Doc.EndUpdate;
-    end;
-    Doc.Changed;
-    Result := True;
-    Exit;
-  end;
-
-  if Id = 'btn-zoom-in' then
-  begin
-    ZoomFactor := ZoomFactor + 0.1;
-    if ZoomFactor > 1.6 then
-      ZoomFactor := 1.6;
-    View.Zoom(ZoomFactor);
-    SetTextById('zoom-value', IntToStr(Round(ZoomFactor * 100)) + '%');
-    SetStatus('Масштаб HTML: ' + IntToStr(Round(ZoomFactor * 100)) + '%.');
-    Result := True;
-    Exit;
-  end;
-
-  if Id = 'btn-zoom-reset' then
-  begin
-    ZoomFactor := 1.0;
-    View.Zoom(ZoomFactor);
-    SetTextById('zoom-value', '100%');
-    SetStatus('Масштаб возвращён к 100%.');
-    Result := True;
-    Exit;
-  end;
-
-  if Id = 'btn-pdf' then
-  begin
-    PdfFileName := TempDir + '\FMXPixie_Demo.pdf';
-    View.SaveAsPdf(PdfFileName);
-    if FileExists(PdfFileName) then
-      SetStatus('PDF сохранён: ' + PdfFileName)
+    if IsInstalled then
+      CloseSetup
     else
-      SetStatus('SaveAsPdf завершился, но файл не найден: ' + PdfFileName);
-    Result := True;
-    Exit;
-  end;
-
-  if Id = 'btn-png' then
-  begin
-    PngFileName := TempDir + '\FMXPixie_Demo.png';
-    View.SaveAsPng(PngFileName, DEMO_FORM_WIDTH, DEMO_FORM_HEIGHT);
-    if FileExists(PngFileName) then
-      SetStatus('PNG сохранён: ' + PngFileName)
-    else
-      SetStatus('SaveAsPng завершился, но файл не найден: ' + PngFileName);
-    Result := True;
-    Exit;
-  end;
-
-  if Id = 'btn-launch-notepad' then
-  begin
-    if Exec(ExpandConstant('{sys}\notepad.exe'), '', '', SW_SHOWNORMAL,
-      ewNoWait, ResultCode) then
-      SetStatus('Блокнот запущен. В своём лаунчере замени путь на EXE приложения.')
-    else
-      SetStatus('Не удалось запустить Блокнот. Код ошибки: ' + IntToStr(ResultCode));
-    Result := True;
-    Exit;
-  end;
-
-  if Id = 'btn-close' then
-  begin
-    CloseSetup;
+      FinishDemoInstall;
     Result := True;
     Exit;
   end;
 end;
 
-// ---------------------------------------------------------------------------
-// Обратный вызов привязки: в этой демонстрации URL-адрес записывается в журнал
-// и отображается в области статуса. Браузер не открывается автоматически.
-// ---------------------------------------------------------------------------
-procedure ViewAnchorClick(Sender, El: TObject; const Url: String);
-begin
-  Log('FMXPixie OnAnchorClick URL=' + Url);
-  SetStatus('OnAnchorClick получен URL: ' + Url);
-end;
-
-procedure ViewAfterParse(Sender: TObject);
-begin
-  Log('FMXPixie OnAfterParse');
-end;
-
-procedure ViewMouseEnter(Sender: TObject);
-begin
-  Log('FMXPixie OnMouseEnter');
-end;
-
-procedure ViewMouseLeave(Sender: TObject);
-begin
-  Log('FMXPixie OnMouseLeave');
-end;
-
-// ---------------------------------------------------------------------------
-// Пользовательская перетаскиваемая строка заголовка. Это событие относится 
-// к TitleView, поэтому координаты являются локальными для независимого заголовка
-// размером 32 пикселя, а не для прокручиваемого содержимого. 
-// Крайние правые 92 пикселей зарезервированы для кнопок в строке заголовка. 
-// ---------------------------------------------------------------------------
 procedure ViewMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Single);
 begin
   if Button <> mbLeft then
     Exit;
-
   if (Y >= 0) and (Y < TITLEBAR_HEIGHT) and
      (X < TitleView.GetWidth - TITLEBAR_BUTTONS_WIDTH) then
     FMXForm.StartWindowDrag;
 end;
 
-// ---------------------------------------------------------------------------
-// Initialization
-// ---------------------------------------------------------------------------
 procedure FMXInit;
 begin
   FMXForm := InitFormHandle;
@@ -557,7 +456,6 @@ begin
   View := InitPixieHtmlView;
   Doc := InitPixieDocument;
   Elem := InitPixieElement;
-  FoundList := InitPixieElementList;
 end;
 
 function InitializeSetup(): Boolean;
@@ -568,50 +466,31 @@ end;
 
 procedure InitializeWizard;
 begin
-  TempDir := ExpandConstant('{tmp}');
-
-  ClickCount := 0;
-  DemoProgress := 0;
-  ZoomFactor := 1.0;
-  SystemEnabled := True;
-  DesktopShortcut := True;
-  LaunchAfterInstall := False;
+  LoadDefaultSettings;
+  IsInstalled := False;
 
   EmptyWizardForm(DEMO_FORM_WIDTH, DEMO_FORM_HEIGHT);
   FMXForm.FCreateBackdropForm(WizardForm.Handle, btMain, True, True);
+  FMXForm.Caption('PIXIE Setup');
+  FMXForm.StayOnTop(False);
 
-// Выделенный вид сверху: область содержимого и полоса прокрутки начинаются под ней,
-// поэтому полосу прокрутки нельзя наложить на кнопки сворачивания и закрытия.
   TitleView.FCreate(FMXForm.Handle);
-  TitleView.Left(0);
-  TitleView.Top(0);
-  TitleView.Width(DEMO_FORM_WIDTH);
-  TitleView.Height(TITLEBAR_HEIGHT);
+  TitleView.SetBounds(0, 0, DEMO_FORM_WIDTH, TITLEBAR_HEIGHT);
   TitleView.ColorScheme(pcsDark);
+  TitleView.HitTest(True);
   TitleView.OnElementClick(@ElementClick);
   TitleView.OnMouseDown(@ViewMouseDown);
-  TitleView.LoadFromString(BuildTitleBarHtml);
+  TitleView.LoadFromString(BuildTitleHtml);
 
-// Основной прокручиваемый HTML-контент занимает только область под строкой заголовка.
   View.FCreate(FMXForm.Handle);
-  View.Left(0);
-  View.Top(TITLEBAR_HEIGHT);
-  View.Width(DEMO_FORM_WIDTH);
-  View.Height(DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT);
+  View.SetBounds(0, TITLEBAR_HEIGHT, DEMO_FORM_WIDTH,
+    DEMO_FORM_HEIGHT - TITLEBAR_HEIGHT);
   View.ColorScheme(pcsDark);
-  View.BaseUrl(TempDir + '\');
-  View.Zoom(ZoomFactor);
+  View.SetScrollbarVisibility(svHide);
+  View.HitTest(True);
   View.OnElementClick(@ElementClick);
-  View.OnAnchorClick(@ViewAnchorClick);
-  View.OnAfterParse(@ViewAfterParse);
-  View.OnMouseEnter(@ViewMouseEnter);
-  View.OnMouseLeave(@ViewMouseLeave);
 
-  View.LoadFromStringUrl(BuildDemoHtml, TempDir + '\');
-  Doc.FCreate(View.GetDocument);
-  ApplyInitialState;
-
-  SetStatus('Готово. HTML загружен из строки; CSS, события и DOM готовы к работе.');
+  ShowOptionsPage;
   FMXForm.Show;
 end;
 
