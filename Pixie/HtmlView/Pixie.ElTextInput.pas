@@ -109,6 +109,7 @@ type
     function IsFocusable: Boolean; override;
 
     function GetCaretDocPos(out X, Y, H: TPixiePixel): Boolean;
+    procedure SetValue(const AValue: string); virtual;
 
     property Value: string read FValue write FValue;
   end;
@@ -117,7 +118,7 @@ type
 
   TPixieElTextInput = class(TPixieElTextBase)
   public
-    procedure SetValue(const AValue: string);
+    procedure SetValue(const AValue: string); override;
     procedure ParseAttributes; override;
     procedure GetContentSize(var Sz: TPixieSize;
       MaxWidth: TPixiePixel); override;
@@ -256,6 +257,30 @@ begin
   FReadOnly := False;
   FMaxLength := -1;
   FMultiLine := False;
+end;
+
+procedure TPixieElTextBase.SetValue(const AValue: string);
+var
+  Doc: TPixieDocument;
+begin
+  if FValue = AValue then
+    Exit;
+
+  FValue := AValue;
+  FCaretPos := Length(FValue);
+  ClearSelection;
+
+  FScrollX := 0;
+  FScrollY := 0;
+  FCaretMoved := True;
+  FUndoSaved := False;
+
+  if FDoc is TPixieDocument then
+  begin
+    Doc := TPixieDocument(FDoc);
+    if Assigned(Doc.OnChange) then
+      Doc.OnChange(Doc);
+  end;
 end;
 
 function TPixieElTextBase.IsReplaced: Boolean;
@@ -1607,28 +1632,12 @@ begin
 end;
 
 procedure TPixieElTextInput.SetValue(const AValue: string);
-var
-  Doc: TPixieDocument;
 begin
   if FValue = AValue then
     Exit;
 
   SetAttr('value', AValue);
-
-  FValue := AValue;
-  FCaretPos := Length(FValue);
-  ClearSelection;
-
-  FScrollX := 0;
-  FCaretMoved := True;
-  FUndoSaved := False;
-
-  if FDoc is TPixieDocument then
-  begin
-    Doc := TPixieDocument(FDoc);
-    if Assigned(Doc.OnChange) then
-      Doc.OnChange(Doc);
-  end;
+  inherited SetValue(AValue);
 end;
 
 procedure TPixieElTextInput.GetContentSize(var Sz: TPixieSize;

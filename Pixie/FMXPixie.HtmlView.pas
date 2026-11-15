@@ -358,7 +358,7 @@ implementation
 uses
   System.SysUtils, System.IOUtils,
   Pixie.PdfExport, Pixie.WebColor, Pixie.ElTextInput, Pixie.ElInput,
-  Pixie.ElSelect;
+  Pixie.ElSelect, Pixie.ElRange;
 
 function AlphaColorToPixieColor(AColor: TAlphaColor): TPixieWebColor;
 begin
@@ -1110,11 +1110,31 @@ begin
 end;
 
 procedure TFPixieElement.SetValue(const FValue: WideString);
+var
+  ValueText: string;
+  RangeValue: Single;
+  Code: Integer;
 begin
-  if ControlElement is TPixieElTextInput then
-    TPixieElTextInput(ControlElement).SetValue(string(FValue))
+  if ControlElement = nil then
+    Exit;
+
+  if ControlElement is TPixieElTextBase then
+    TPixieElTextBase(ControlElement).SetValue(string(FValue))
   else if ControlElement is TPixieElSelect then
-    TPixieElSelect(ControlElement).Value := string(FValue);
+    TPixieElSelect(ControlElement).Value := string(FValue)
+  else if (ControlElement is TPixieElCheckbox) or
+    (ControlElement is TPixieElRadio) then
+    ControlElement.SetAttr('value', string(FValue))
+  else if ControlElement is TPixieElRange then
+  begin
+    ValueText := Trim(string(FValue));
+    if ValueText = '' then
+      Exit;
+
+    Val(ValueText, RangeValue, Code);
+    if Code = 0 then
+      TPixieElRange(ControlElement).Value := RangeValue;
+  end;
 end;
 
 function TFPixieElement.GetChecked: Boolean;
@@ -1136,13 +1156,27 @@ begin
 end;
 
 function TFPixieElement.GetValue: WideString;
+var
+  FormatSettings: TFormatSettings;
 begin
   Result := '';
+  if ControlElement = nil then
+    Exit;
 
   if ControlElement is TPixieElTextBase then
     Result := TPixieElTextBase(ControlElement).Value
   else if ControlElement is TPixieElSelect then
-    Result := TPixieElSelect(ControlElement).Value;
+    Result := TPixieElSelect(ControlElement).Value
+  else if (ControlElement is TPixieElCheckbox) or
+    (ControlElement is TPixieElRadio) then
+    Result := ControlElement.GetAttr('value', 'on')
+  else if ControlElement is TPixieElRange then
+  begin
+    FormatSettings := TFormatSettings.Create;
+    FormatSettings.DecimalSeparator := '.';
+    Result := FloatToStr(TPixieElRange(ControlElement).Value,
+      FormatSettings);
+  end;
 end;
 
 // =============================================================================

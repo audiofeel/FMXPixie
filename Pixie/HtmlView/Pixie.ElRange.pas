@@ -26,6 +26,9 @@ type
     procedure SetValueFromLocalX(LocalX: TPixiePixel);
     function LocalMouseX(DocX: TPixiePixel): TPixiePixel;
   public
+    procedure SetValue(AValue: Single);
+    property Value: Single read FValue write SetValue;
+
     function IsReplaced: Boolean; override;
     function IsFocusable: Boolean; override;
     procedure ParseAttributes; override;
@@ -126,6 +129,26 @@ begin
 end;
 
 // Per-keypress increment: the step for a stepped slider, else a 1/100 nudge.
+procedure TPixieElRange.SetValue(AValue: Single);
+var
+  OldValue: Single;
+  Doc: TPixieDocument;
+begin
+  OldValue := FValue;
+  FValue := AValue;
+  ClampValue;
+
+  if FValue = OldValue then
+    Exit;
+
+  if FDoc is TPixieDocument then
+  begin
+    Doc := TPixieDocument(FDoc);
+    if Assigned(Doc.OnChange) then
+      Doc.OnChange(Doc);
+  end;
+end;
+
 function TPixieElRange.ArrowStep: Single;
 begin
   if FStepAny then
