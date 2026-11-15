@@ -1,5 +1,5 @@
 ﻿
-#define DemoAppName "PIXIE Setup - Appearance Options"
+#define DemoAppName "FMXPixie - CSS Box Shadow Transition Test"
 #define DemoAppVersion "1.0"
 
 [Setup]
@@ -7,7 +7,7 @@ AppName={#DemoAppName}
 AppVersion={#DemoAppVersion}
 CreateAppDir=no
 Uninstallable=no
-OutputBaseFilename=PIXIE Setup - Appearance Options
+OutputBaseFilename=FMXPixie - CSS Box Shadow Transition Test
 //SetupArchitecture=x64
 SetupIconFile=Files\setup.ico
 
@@ -144,44 +144,44 @@ begin
     '.footer{margin-top:12px;padding-top:8px;border-top:1px solid #c5d1df;color:#64748b;font-size:8px;letter-spacing:.8px;}' +
     '</style></head><body>' +
     '<div class="titlebar">' +
-    '<span class="brand">PIXIE SETUP</span>' +
-    '<span class="subtitle">Выбор внешнего вида приложения</span>' +
+    '<span class="brand">FMXPIXIE / BOX-SHADOW LAB</span>' +
+    '<span class="subtitle">DisplayLink shadow test · hover TEST 02–07</span>' +
     '<div class="window-controls">' +
     '<div id="title-minimize" class="window-button" title="Свернуть">−</div>' +
     '<div id="title-close" class="window-button window-close" title="Закрыть">×</div>' +
     '</div></div>' +
     '<div class="page">' +
-    '<div class="eyebrow">PIXIE SETUP · ПРЕДВАРИТЕЛЬНЫЙ ПРОСМОТР</div>' +
-    '<div class="headline">Выберите стиль оформления</div>' +
-    '<div class="intro">Наведите курсор на карточки, чтобы увидеть, как меняется оформление. Выберите подходящую выразительность и сравните спокойный, выразительный и яркий варианты.</div>' +
+    '<div class="eyebrow">CSS BOX-SHADOW / STATIC + TRANSITION</div>' +
+    '<div class="headline">Тень: отрисовка и плавное изменение</div>' +
+    '<div class="intro">Сначала проверьте статическую серую тень слева. Она должна быть видна постоянно и иметь мягкий край. На остальных карточках наведите курсор и уберите его: меняются смещение, размытие, spread и цвет. Тень должна появляться и исчезать без скачка; у карточки 04 начало специально задержано.</div>' +
     '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-15" />' +
     '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-30" checked />' +
     '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-45" />' +
     '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-60" />' +
     '<input type="radio" class="intensity-radio" name="shadow-intensity" id="intensity-75" />' +
-    '<div class="intensity-panel"><span class="intensity-label">ВЫРАЗИТЕЛЬНОСТЬ</span>' +
+    '<div class="intensity-panel"><span class="intensity-label">ИНТЕНСИВНОСТЬ ТЕНИ</span>' +
     '<label class="intensity-choice choice-15" for="intensity-15">15%</label>' +
     '<label class="intensity-choice choice-30" for="intensity-30">30%</label>' +
     '<label class="intensity-choice choice-45" for="intensity-45">45%</label>' +
     '<label class="intensity-choice choice-60" for="intensity-60">60%</label>' +
     '<label class="intensity-choice choice-75" for="intensity-75">75%</label>' +
-    '<span class="intensity-help">Выберите, насколько заметными будут карточки</span></div>' +
+    '<span class="intensity-help">Общий уровень для всех тестов, включая HOVER</span></div>' +
     '<div class="shadow-content">' +
-    '<div class="section-title">ОСНОВНОЙ ВИД</div>' +
+    '<div class="section-title">01 / STATIC SHADOW — БЕЗ АНИМАЦИИ</div>' +
     '<div class="row">' +
-    '<div id="shadow-static" class="card"><div class="card-index">ПО УМОЛЧАНИЮ</div><div class="card-title">Стандартная карточка</div><div class="card-copy">Спокойный вариант для обычных элементов интерфейса.</div><div class="card-hint">0 5px 24px 4px · RGBA + BLUR</div></div>' +
-    '<div id="shadow-hover" class="card"><div class="card-index">МЯГКОЕ ВЫДЕЛЕНИЕ</div><div class="card-title">Выделение при наведении</div><div class="card-copy">Карточка плавно выделяется при наведении.</div><div class="card-hint">340 ms · CUBIC-BEZIER</div></div>' +
-    '<div id="shadow-none" class="card"><div class="card-index">ЯРКАЯ КАРТОЧКА</div><div class="card-title">Контрастный акцент</div><div class="card-copy">Акцент появляется при наведении и исчезает после ухода курсора.</div><div class="card-hint">380 ms · EASE-OUT</div></div>' +
-    '<div id="shadow-delay" class="card"><div class="card-index">ПЛАВНОЕ ПОЯВЛЕНИЕ</div><div class="card-title">Плавное выделение</div><div class="card-copy">Выделение появляется с небольшой задержкой.</div><div class="card-hint">320 ms DELAY · 260 ms DURATION</div></div>' +
+    '<div id="shadow-static" class="card"><div class="card-index">TEST 01 / STATIC</div><div class="card-title">Обычная тень</div><div class="card-copy">Постоянная контрастная RGBA-тень с размытием. Это проверка разбора rgba(), blur и самого вызова отрисовки.</div><div class="card-hint">0 5px 24px 4px · RGBA + BLUR</div></div>' +
+    '<div id="shadow-hover" class="card"><div class="card-index">TEST 02 / HOVER</div><div class="card-title">Изменение параметров</div><div class="card-copy">Смещение, blur, spread и цвет меняются вместе.</div><div class="card-hint">340 ms · CUBIC-BEZIER</div></div>' +
+    '<div id="shadow-none" class="card"><div class="card-index">TEST 03 / NONE → SHADOW</div><div class="card-title">Появление тени</div><div class="card-copy">Переход из box-shadow:none и обратно.</div><div class="card-hint">380 ms · EASE-OUT</div></div>' +
+    '<div id="shadow-delay" class="card"><div class="card-index">TEST 04 / DELAY</div><div class="card-title">Задержка старта</div><div class="card-copy">После наведения тень начинает меняться через 320 ms.</div><div class="card-hint">320 ms DELAY · 260 ms DURATION</div></div>' +
     '</div>' +
-    '<div class="section-title">ДОПОЛНИТЕЛЬНЫЕ ВАРИАНТЫ</div>' +
+    '<div class="section-title">02 / COMBINED + RETARGET + SPREAD</div>' +
     '<div class="row row-three">' +
-    '<div id="shadow-combo" class="card"><div class="card-index">ЦВЕТ И ТЕНЬ</div><div class="card-title">Цветовой акцент</div><div class="card-copy">Фон и карточка меняют оформление вместе.</div><div class="card-hint">BACKGROUND + BOX-SHADOW</div></div>' +
-    '<div id="shadow-retarget" class="card"><div class="card-index">БЫСТРЫЙ ОТКЛИК</div><div class="card-title">Быстрое переключение</div><div class="card-copy">Быстро перемещайте курсор между карточками.</div><div class="card-hint">560 ms · EASE-IN-OUT</div></div>' +
-    '<div id="shadow-spread" class="card"><div class="card-index">ШИРОКОЕ ВЫДЕЛЕНИЕ</div><div class="card-title">Широкий акцент</div><div class="card-copy">Попробуйте вариант с более широкой тенью.</div><div class="card-hint">360 ms · EASE-OUT</div></div>' +
+    '<div id="shadow-combo" class="card"><div class="card-index">TEST 05 / COMBINED</div><div class="card-title">Два свойства</div><div class="card-copy">Цвет фона и тень анимируются одновременно.</div><div class="card-hint">BACKGROUND + BOX-SHADOW</div></div>' +
+    '<div id="shadow-retarget" class="card"><div class="card-index">TEST 06 / RETARGET</div><div class="card-title">Быстрый реверс</div><div class="card-copy">Быстро входите и выходите до окончания анимации.</div><div class="card-hint">560 ms · EASE-IN-OUT</div></div>' +
+    '<div id="shadow-spread" class="card"><div class="card-index">TEST 07 / SPREAD</div><div class="card-title">Распространение</div><div class="card-copy">Отрицательный spread переходит в положительный.</div><div class="card-hint">360 ms · EASE-OUT</div></div>' +
     '</div>' +
-    '<div class="note"><strong>Как пользоваться:</strong> Выберите выразительность выше, затем наведите курсор на карточки. В обычном состоянии они выглядят спокойно; при наведении плавно появляется цветной акцент. Перемещайте курсор между карточками, чтобы сравнить варианты.</div>' +
-    '<div class="footer">PIXIE SETUP · НАСТРОЙКА ВНЕШНЕГО ВИДА</div>' +
+    '<div class="note"><strong>Что проверять:</strong> Регулятор выше меняет интенсивность всех теней (включая состояния HOVER) без изменения геометрии. TEST 01 показывает постоянную тень. TEST 02–07 должны реагировать на наведение и возвращаться к исходному состоянию после ухода курсора. Для TEST 06 быстро наведите и уберите курсор несколько раз до завершения перехода: тень должна менять направление от текущего состояния. У всех теней проверьте мягкость края и соответствие скруглениям карточки. <strong>Ограничения:</strong> одна внешняя тень; поддерживаются 2–4 длины (offset-x, offset-y, blur, spread) и один цвет, включая rgba() и currentColor. Несколько теней через запятую и inset пока не поддерживаются. Размытие аппроксимируется несколькими полупрозрачными скруглёнными слоями, а не точным Gaussian blur.</div>' +
+    '<div class="footer">FMXPIXIE · BOX-SHADOW TRANSITIONS ON FMX DISPLAY LINK · NO NEW TIMER · EXPERIMENTAL BRANCH</div>' +
     '</div></div></body></html>';
 end;
 
