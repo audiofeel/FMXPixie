@@ -84,8 +84,6 @@ type
     FHasFrame: Boolean;
     FPending, FForceGrab, FStateInt: Integer;
     FActiveUntil: Cardinal;
-    // TEMPORARY RENDER DIAGNOSTICS
-    FPresentedFrameCount: Integer;
     FMaxW, FMaxH: Integer;
     FOnState: TVideoStateEvent;
 
@@ -121,8 +119,6 @@ type
       с сохранением пропорций. Ставь ~ размер контрола в пикселях: для 4K-видео в окне
       640x360 с CPU читается 640x360, а не 3840x2160. }
     procedure SetMaxOutput(W, H: Integer);
-    // TEMPORARY RENDER DIAGNOSTICS
-    function GetPresentedFrameCount: Integer;
     property State: TVideoState read GetState;
     property Volume: Single read GetVolume write SetVolume; // 0..1
     property Position: Double read GetPosition write SetPosition; // секунды
@@ -530,8 +526,6 @@ begin
     Bmp.Unmap(Data);
   end;
   FImage.Repaint;
-  // TEMPORARY RENDER DIAGNOSTICS
-  InterlockedIncrement(FPresentedFrameCount);
 end;
 
 procedure TVideoPlayer.WndProc(var Msg: TMessage);
@@ -600,12 +594,6 @@ end;
 function TVideoPlayer.GetState: TVideoState;
 begin
   Result := TVideoState(FStateInt);
-end;
-
-// TEMPORARY RENDER DIAGNOSTICS
-function TVideoPlayer.GetPresentedFrameCount: Integer;
-begin
-  Result := FPresentedFrameCount;
 end;
 
 procedure TVideoPlayer.Open(const AFileName: string);
