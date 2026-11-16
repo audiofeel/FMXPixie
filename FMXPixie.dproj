@@ -112,6 +112,7 @@
         <DCCReference Include="Helpers\FMXPixie.BrushHelpers.pas"/>
         <DCCReference Include="Custom\FMXPixie.Utils.pas"/>
         <DCCReference Include="Pixie\FMXPixie.HtmlView.pas"/>
+        <DCCReference Include="Pixie\Common\FMXPixie.RenderCache.pas"/>
         <DCCReference Include="Pixie\FMXPixie.SvgView.pas"/>
         <DCCReference Include="Pixie\FMXPixie.MarkdownView.pas"/>
         <DCCReference Include="Pixie\FMXPixie.TagBar.pas"/>
