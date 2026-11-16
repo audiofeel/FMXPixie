@@ -40,6 +40,7 @@ type
     function GetWidth: Single; stdcall;
     function GetHeight: Single; stdcall;
     function Handle: TFmxObject; stdcall;
+    function GetPresentedFrameCount: Integer; stdcall;
   end;
 
 type
@@ -90,6 +91,7 @@ type
     function GetWidth: Single; stdcall;
     function GetHeight: Single; stdcall;
     function Handle: TFmxObject; stdcall;
+    function GetPresentedFrameCount: Integer; stdcall;
   end;
 
 // =============================================================================
@@ -343,6 +345,12 @@ end;
 function TFVideoBackground.Handle: TFmxObject;
 begin
   Result := FImage;
+end;
+
+function TFVideoBackground.GetPresentedFrameCount: Integer;
+begin
+  CheckCreated;
+  Result := FPlayer.GetPresentedFrameCount;
 end;
 
 // =============================================================================
