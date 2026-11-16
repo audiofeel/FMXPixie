@@ -88,54 +88,56 @@ begin
 
   FRendering := True;
   try
-    if FBitmap = nil then
-      FBitmap := TBitmap.Create;
-
-    PixelWidth := Max(1, Ceil(ASize.Width * AScale));
-    PixelHeight := Max(1, Ceil(ASize.Height * AScale));
-
-    if FBitmap.CanvasQuality <> ACanvas.Quality then
-      FBitmap.CanvasQuality := ACanvas.Quality;
-
-    // Bitmap dimensions are physical pixels. BitmapScale keeps its logical
-    // size equal to ASize and gives its Canvas the matching HiDPI scale.
-    if (FBitmap.Width <> PixelWidth) or
-       (FBitmap.Height <> PixelHeight) or
-       (Abs(FBitmap.BitmapScale - AScale) > 0.001) then
-    begin
-      FBitmap.BitmapScale := AScale;
-      FBitmap.SetSize(PixelWidth, PixelHeight);
-    end;
-
-    // The HTML view background is transparent. Clear previous pixels before
-    // a full redraw so transparent areas cannot retain stale content.
-    FBitmap.Clear(0);
-
-    BitmapCanvas := FBitmap.Canvas;
-    if BitmapCanvas = nil then
-      Exit;
-
-    SceneStarted := BitmapCanvas.BeginScene;
-    if not SceneStarted then
-      Exit;
-
     try
-      // Clear before rendering, not after: invalidations raised from inside
-      // HandlePaint must remain pending for the next Paint.
-      FDirty := False;
-      ARender(BitmapCanvas, ASize);
-    finally
-      BitmapCanvas.EndScene;
-    end;
+      if FBitmap = nil then
+        FBitmap := TBitmap.Create;
 
-    FCacheWidth := ASize.Width;
-    FCacheHeight := ASize.Height;
-    FCacheScale := AScale;
-    Inc(FRebuildCount);
-    Result := True;
-  except
-    FDirty := True;
-    raise;
+      PixelWidth := Max(1, Ceil(ASize.Width * AScale));
+      PixelHeight := Max(1, Ceil(ASize.Height * AScale));
+
+      if FBitmap.CanvasQuality <> ACanvas.Quality then
+        FBitmap.CanvasQuality := ACanvas.Quality;
+
+      // Bitmap dimensions are physical pixels. BitmapScale keeps its logical
+      // size equal to ASize and gives its Canvas the matching HiDPI scale.
+      if (FBitmap.Width <> PixelWidth) or
+         (FBitmap.Height <> PixelHeight) or
+         (Abs(FBitmap.BitmapScale - AScale) > 0.001) then
+      begin
+        FBitmap.BitmapScale := AScale;
+        FBitmap.SetSize(PixelWidth, PixelHeight);
+      end;
+
+      // The HTML view background is transparent. Clear previous pixels before
+      // a full redraw so transparent areas cannot retain stale content.
+      FBitmap.Clear(0);
+
+      BitmapCanvas := FBitmap.Canvas;
+      if BitmapCanvas = nil then
+        Exit;
+
+      SceneStarted := BitmapCanvas.BeginScene;
+      if not SceneStarted then
+        Exit;
+
+      try
+        // Clear before rendering, not after: invalidations raised from inside
+        // HandlePaint must remain pending for the next Paint.
+        FDirty := False;
+        ARender(BitmapCanvas, ASize);
+      finally
+        BitmapCanvas.EndScene;
+      end;
+
+      FCacheWidth := ASize.Width;
+      FCacheHeight := ASize.Height;
+      FCacheScale := AScale;
+      Inc(FRebuildCount);
+      Result := True;
+    except
+      FDirty := True;
+      raise;
+    end;
   finally
     // Do not clear FDirty here. An invalidation raised by ARender is valid
     // and must cause another rebuild.
