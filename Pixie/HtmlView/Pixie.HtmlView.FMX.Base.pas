@@ -30,8 +30,8 @@ type
     FCore: TPixieHtmlViewCore;
     FCache: TRenderCache;
     FCaretTimer: TTimer;
-    procedure RenderHtml(ACanvas: TCanvas; const ASize: TSizeF);
     FTextService: TTextService;
+    procedure RenderHtml(ACanvas: TCanvas; const ASize: TSizeF);
     FLastMouseX: Single;
     FLastMouseY: Single;
     {$IF CompilerVersion >= 37}
