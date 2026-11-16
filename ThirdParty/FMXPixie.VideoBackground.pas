@@ -90,7 +90,6 @@ type
     function GetWidth: Single; stdcall;
     function GetHeight: Single; stdcall;
     function Handle: TFmxObject; stdcall;
-    function GetPresentedFrameCount: Integer; stdcall;
   end;
 
 // =============================================================================
