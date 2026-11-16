@@ -630,8 +630,6 @@ type
     function GetWidth: Single;
     function GetHeight: Single;
     function Handle: TFmxObject;
-    // TEMPORARY RENDER DIAGNOSTICS
-    function GetPresentedFrameCount: Integer;
   end;
 
 function InitVideoBackground: FVideoBackground;
