@@ -40,8 +40,6 @@ type
     function GetWidth: Single; stdcall;
     function GetHeight: Single; stdcall;
     function Handle: TFmxObject; stdcall;
-    // TEMPORARY RENDER DIAGNOSTICS
-    function GetPresentedFrameCount: Integer; stdcall;
   end;
 
 type
@@ -346,13 +344,6 @@ end;
 function TFVideoBackground.Handle: TFmxObject;
 begin
   Result := FImage;
-end;
-
-// TEMPORARY RENDER DIAGNOSTICS
-function TFVideoBackground.GetPresentedFrameCount: Integer;
-begin
-  CheckCreated;
-  Result := FPlayer.GetPresentedFrameCount;
 end;
 
 // =============================================================================
