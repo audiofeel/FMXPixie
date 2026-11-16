@@ -39,7 +39,6 @@ type
     {$ENDIF}
 
     procedure RenderHtml(ACanvas: TCanvas; const ASize: TSizeF);
-    {$ENDIF}
 
     procedure DoCaretTimer(Sender: TObject);
     procedure HostCssTransitionActivityChanged;
