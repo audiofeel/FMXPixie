@@ -31,12 +31,14 @@ type
     FCache: TRenderCache;
     FCaretTimer: TTimer;
     FTextService: TTextService;
-    procedure RenderHtml(ACanvas: TCanvas; const ASize: TSizeF);
     FLastMouseX: Single;
     FLastMouseY: Single;
     {$IF CompilerVersion >= 37}
     FDisplayLinkService: IFMXDisplayLinkService;
     FDisplayLinkSubscribed: Boolean;
+    {$ENDIF}
+
+    procedure RenderHtml(ACanvas: TCanvas; const ASize: TSizeF);
     {$ENDIF}
 
     procedure DoCaretTimer(Sender: TObject);
