@@ -630,6 +630,7 @@ type
     function GetWidth: Single;
     function GetHeight: Single;
     function Handle: TFmxObject;
+    function GetPresentedFrameCount: Integer;
   end;
 
 function InitVideoBackground: FVideoBackground;
