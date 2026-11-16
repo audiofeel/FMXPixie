@@ -24,7 +24,9 @@ uses
   FMXPixie.SystemInfo in 'Custom\FMXPixie.SystemInfo.pas',
   FMXPixie.System in 'FMX\FMXPixie.System.pas',
   FMXPixie.AudioPlayer in 'ThirdParty\FMXPixie.AudioPlayer.pas',
-  FMXPixie.Input in 'ThirdParty\FMXPixie.Input.pas';
+  FMXPixie.Input in 'ThirdParty\FMXPixie.Input.pas',
+  FMXPixie.VideoBackground in 'ThirdParty\FMXPixie.VideoBackground.pas',
+  FMXPixie.Layouts in 'FMX\FMXPixie.Layouts.pas';
 
 begin
 //
