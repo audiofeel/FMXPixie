@@ -286,6 +286,9 @@ begin
   TitleView.FCreate(TitleLayer.Handle);
   TitleView.SetBounds(0, 0, DEMO_WIDTH, TITLE_HEIGHT);
   TitleView.SetClipParent(True);
+  TitleView.Enabled(True);
+  TitleView.Visible(True);
+  TitleView.HitTest(True);
   TitleView.ColorScheme(pcsDark);
   TitleView.SetScrollbarVisibility(svHide);
   TitleView.OnAfterPaint(@TitleViewAfterPaint);
@@ -301,6 +304,9 @@ begin
   ControlsView.FCreate(ControlsLayer.Handle);
   ControlsView.SetBounds(0, 0, CONTROLS_WIDTH, CONTROLS_HEIGHT);
   ControlsView.SetClipParent(True);
+  ControlsView.Enabled(True);
+  ControlsView.Visible(True);
+  ControlsView.HitTest(True);
   ControlsView.ColorScheme(pcsDark);
   ControlsView.SetScrollbarVisibility(svHide);
   ControlsView.OnAfterPaint(@ControlsViewAfterPaint);
