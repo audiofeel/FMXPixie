@@ -102,7 +102,6 @@ type
     procedure Kick(AMs: Cardinal = 1500);
     procedure RequestFrame;
     function GetState: TVideoState;
-    function GetPresentedFrameCount: Integer;
     function GetVolume: Single;
     procedure SetVolume(const Value: Single);
     function GetPosition: Double;
