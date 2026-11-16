@@ -275,6 +275,7 @@ begin
   VideoBackground.FCreate(VideoLayer.Handle, VideoFileName, True);
   VideoBackground.Align(Contents);
   VideoBackground.MaxOutputSize(DEMO_WIDTH, DEMO_HEIGHT);
+  VideoBackground.Volume(0.70);
   VideoBackground.SendToBack;
   VideoLayer.SendToBack;
 
