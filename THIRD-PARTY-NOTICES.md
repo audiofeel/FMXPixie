@@ -54,6 +54,15 @@ Other selected units in the same folder, including FMXAudio.Audio.PCM.pas, FMXAu
 
 The upstream license text is included at [Custom/AudioPlayer/Dependencies/PCMAudio/LICENSE](Custom/AudioPlayer/Dependencies/PCMAudio/LICENSE). Retain it with redistributed copies of PCMAudio source.
 
+## MfPack — FactoryX
+
+- Upstream: [FactoryXCode/MfPack](https://github.com/FactoryXCode/MfPack).
+- Purpose in FMXPixie: Delphi declarations for Microsoft Media Foundation and related Windows APIs, used by the video playback implementation.
+- Vendored MfPack-derived source: API declaration units under `ThirdParty/MfPack/WinApi.*` and `ThirdParty/MfPack/WinApiTypes.inc`.
+- FMXPixie integration code: `ThirdParty/MfPack/FMXPixie.VideoPlayer.pas` implements the FMXPixie `TVideoPlayer` layer using those declarations. `ThirdParty/FMXPixie.VideoBackground.pas` exposes the FMX `FVideoBackground` wrapper built on `TVideoPlayer`. These are FMXPixie integration units, not copied MfPack source; the root MIT license applies to their original audiofeel-authored portions only.
+- License: the upstream repository supplies the Mozilla Public License 2.0 (MPL-2.0). A copy is retained at [ThirdParty/MfPack/LICENSE](ThirdParty/MfPack/LICENSE). Preserve the original copyright and license headers in all vendored source files.
+- Additional upstream distribution notice: the upstream `MfPack/License.txt` and the headers in MfPack source units state that users may distribute the source only with the complete header retained, and specifically state that commercial users are not allowed to distribute the source code as part of their product. The notice is reproduced verbatim at [ThirdParty/MfPack/UPSTREAM-LICENSE-NOTICE.txt](ThirdParty/MfPack/UPSTREAM-LICENSE-NOTICE.txt). This additional statement is not standard MPL-2.0 wording and appears alongside the MPL-2.0 license. Its legal relationship to MPL-2.0 is not resolved by this repository; obtain clarification from the MfPack maintainer before commercially redistributing the affected source. The FMXPixie MIT license does not override or remove the upstream notice.
+
 ## Embarcadero FireMonkey platform source
 
 - Related file: Fix/FMX.Platform.Win.pas.
