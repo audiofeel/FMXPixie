@@ -19,7 +19,8 @@ uses
   Pixie.Types, Pixie.WebColor, Pixie.Document,
   Pixie.Canvas, Pixie.NativeContainer,
   Pixie.CustomControl.FMX,
-  Pixie.HtmlView.Core;
+  Pixie.HtmlView.Core,
+  Pixie.RenderCache;
 
 type
   { TPixieHtmlViewBase }
@@ -27,6 +28,7 @@ type
   TPixieHtmlViewBase = class(TPixieFmxCustomControl, ITextInput)
   private
     FCore: TPixieHtmlViewCore;
+    FCache: TRenderCache;
     FCaretTimer: TTimer;
     FTextService: TTextService;
     FLastMouseX: Single;
@@ -35,6 +37,8 @@ type
     FDisplayLinkService: IFMXDisplayLinkService;
     FDisplayLinkSubscribed: Boolean;
     {$ENDIF}
+
+    procedure RenderHtml(ACanvas: TCanvas; const ASize: TSizeF);
 
     procedure DoCaretTimer(Sender: TObject);
     procedure HostCssTransitionActivityChanged;
@@ -257,6 +261,7 @@ var
   TextSvc: IFMXTextService;
 begin
   FCore := nil;
+  FCache := nil;
   FTextService := nil;
   FLastMouseX := 0;
   FLastMouseY := 0;
@@ -266,6 +271,7 @@ begin
   {$ENDIF}
 
   inherited Create(AOwner);
+  FCache := TRenderCache.Create;
   ClipChildren := True;
   AutoCapture := True;
   Width := 400;
@@ -305,6 +311,7 @@ begin
   {$ENDIF}
   FreeAndNil(FCaretTimer);
   FreeAndNil(FTextService);
+  FreeAndNil(FCache);
   FreeAndNil(FCore);
   inherited Destroy;
 end;
@@ -315,6 +322,8 @@ end;
 
 procedure TPixieHtmlViewBase.HostInvalidate;
 begin
+  if FCache <> nil then
+    FCache.Invalidate;
   InvalidateRect(LocalRect);
 end;
 
@@ -322,6 +331,8 @@ procedure TPixieHtmlViewBase.HostInvalidateRect(const R: TPixiePosition);
 var
   Rf: TRectF;
 begin
+  if FCache <> nil then
+    FCache.Invalidate;
   Rf.Left := R.X;
   Rf.Top := R.Y;
   Rf.Right := R.X + R.Width;
@@ -433,7 +444,16 @@ end;
 
 procedure TPixieHtmlViewBase.SetScrollY(Value: TPixiePixel);
 begin
-  FCore.ScrollY := Value;
+  if FCore = nil then
+    Exit;
+
+  if FCore.ScrollY <> Value then
+  begin
+    FCore.ScrollY := Value;
+    if FCache <> nil then
+      FCache.Invalidate;
+    InvalidateRect(LocalRect);
+  end;
 end;
 
 function TPixieHtmlViewBase.GetLines: TStrings;
@@ -712,6 +732,8 @@ end;
 
 procedure TPixieHtmlViewBase.IMEStateUpdated;
 begin
+  if FCache <> nil then
+    FCache.Invalidate;
   Repaint;
 end;
 
@@ -797,15 +819,21 @@ begin
 end;
 
 procedure TPixieHtmlViewBase.DoPaint;
-var
-  Upd: TPixiePosition;
 begin
-  if FCore = nil then Exit;
-  // FMX always paints the full viewport; partial-repaint dirty-rect
-  // plumbing is deferred (FMX Canvas.ClipRect coord-space mismatches
-  // logical Width/Height and needs separate handling).
-  Upd := TPixiePosition.Create(0, 0, Width, Height);
-  FCore.HandlePaint(GetPaintHandle, Upd);
+  if (FCore = nil) or (FCache = nil) then
+    Exit;
+
+  FCache.Draw(Canvas, TSizeF.Create(Width, Height), 1.0, RenderHtml);
+end;
+
+procedure TPixieHtmlViewBase.RenderHtml(ACanvas: TCanvas;
+  const ASize: TSizeF);
+begin
+  if FCore = nil then
+    Exit;
+
+  FCore.HandlePaint(PtrUInt(Pointer(ACanvas)),
+    TPixiePosition.Create(0, 0, ASize.Width, ASize.Height));
 end;
 
 procedure TPixieHtmlViewBase.DoMouseLeave;
