@@ -35,7 +35,7 @@ FMXPixie предназначен прежде всего для Inno Setup. П�
 
 ### Примеры интерфейсов приложений
 
-- [Main Demo](<Examples/FMXPixie - Form Values.iss>) — демонстрация формы FMX и взаимодействия со значениями элементов управления.
+- [Form Values](<Examples/FMXPixie - Form Values.iss>) — демонстрация формы FMX и взаимодействия со значениями элементов управления.
 - [MORROW / Object Archive](<Examples/FMXPixie - Morrow.iss>) — интерфейс каталога в стиле приложения с карточками, фильтрацией и обновлением DOM.
 - [FluentInstaller](<Examples/FMXPixie - Installer Settings.iss>) — композиция интерфейса в стиле установщика.
 - [MELE Launcher](<Examples/FMXPixie - MELE Launcher.iss>) — интерфейс в стиле лаунчера.
@@ -48,22 +48,21 @@ FMXPixie предназначен прежде всего для Inno Setup. П�
 - [MarkdownView](<Examples/FMXPixie - MarkdownView.iss>)
 - [PaintBox](<Examples/FMXPixie - PaintBox.iss>)
 - [TagBar](<Examples/FMXPixie - TagBar Demo.iss>)
-- [SpanControls](<Examples/FMXPixie - Select Option.iss>)
+- [Select Option](<Examples/FMXPixie - Select Option.iss>)
 - [Component Size](<Examples/FMXPixie - Component Size Demo.iss>)
 - [Hover Event Visual](<Examples/FMXPixie - Hover Event Visual.iss>)
 
 ### Аудио, видео и устройства ввода
 
 - [AudioPlayer](<Examples/FMXPixie - AudioPlayer.iss>)
-- [Volume Slider](<Examples/FMXPixie - AudioPlayer.iss>) — управление громкостью показано в примере AudioPlayer.
 - [Gamepad Input](<Examples/FMXPixie - Gamepad Input.iss>)
 - [VideoBackground](<Examples/FMXPixie - VideoBackground.iss>) — воспроизведение видео в FMX-форме с использованием Media Foundation.
 
 ### Тесты CSS и отрисовки
 
 - [CSS Background Image Gradient](<Examples/FMXPixie - CSS Background Image Gradient Test.iss>)
-- [CSS Box Shadow Transition](<Examples/FMXPixie - CSS Box Shadow Transition Test.iss>)
-- [CSS Size/Layout Transition](<Examples/FMXPixie - CSS Size Layout Transition Test.iss>)
+- [CSS Box Shadow Transition](<Examples/FMXPixie - CSS Box Shadow Transition.iss>)
+- [CSS Size/Layout Transition](<Examples/FMXPixie - CSS Size Layout Transition.iss>)
 - [CSS Transition / DisplayLink](<Examples/FMXPixie - CSS Transition DisplayLink.iss>)
 
 Вспомогательные ресурсы находятся в каталоге [`Examples/Files/`](Examples/Files/).
@@ -151,7 +150,7 @@ end;
 
 Текущий файл подключения предоставляет процедуры `FMXPixieShutDown` и `FMXPixieShutDownUn`. Они вызывают экспорт DLL для завершения работы, а затем вызывают Windows `EndTask` для окна выполнения Setup или Uninstall. Это вспомогательные процедуры завершения работы окна хост-приложения, а не универсальные обёртки `UnloadDLL` и не гарантия безопасной выгрузки произвольной DLL.
 
-Для службы устройств ввода остановите опрос состояния и вызовите `FInput.Shutdown` до выгрузки FMXPixie, как описано в [README включённого FMXInput](ThirdParty/FMXInput/README.md). Перед завершением процесса хоста уничтожьте объекты FMX и остановите таймеры и службы.
+Для службы устройств ввода остановите опрос состояния и вызовите `FInput.Shutdown` до выгрузки FMXPixie, Сначала остановите опрос состояния и вызовите `FInput.Shutdown`; не выгружайте DLL, пока служба ввода или её объекты ещё используются. Перед завершением процесса хоста уничтожьте объекты FMX и остановите таймеры и службы.
 
 ## Модель API
 
