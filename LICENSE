@@ -6,6 +6,8 @@ The MIT License below applies only to original source code authored by audiofeel
 
 This file does not grant permission to redistribute or sublicense third-party source code, third-party binaries or resources, the modified Embarcadero platform source, or external packages. In particular, the FMXAudioLib-derived units with no stated upstream license are not covered by this license.
 
+The MfPack-derived Windows API declaration files under `ThirdParty/MfPack/WinApi.*` and `ThirdParty/MfPack/WinApiTypes.inc` are excluded from this MIT License. They retain the upstream Mozilla Public License 2.0 text and the separate upstream distribution notice, both reproduced under `ThirdParty/MfPack/`. The notice includes an additional restriction concerning commercial redistribution of the source code. The original FMXPixie integration units `ThirdParty/MfPack/FMXPixie.VideoPlayer.pas` and `ThirdParty/FMXPixie.VideoBackground.pas` are covered by this MIT License only to the extent that their contents are original code authored by audiofeel and do not include third-party code. This MIT License does not override the MfPack upstream notices.
+
 MIT License
 
 Copyright (c) 2026 audiofeel
