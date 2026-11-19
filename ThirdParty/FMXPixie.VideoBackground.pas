@@ -5,7 +5,7 @@ interface
 
 uses
   System.SysUtils, System.Classes,
-  FMX.Types, FMX.Objects, FMXPixie.VideoPlayer;
+  FMX.Types, FMX.Objects, FMX.VideoPlayer;
 
 // =============================================================================
 // FVideoBackground
